@@ -1,0 +1,438 @@
+<title>Passeios em Fortaleza</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: coluna única de leitura no celular; abre com um "voucher" de veredito, depois blocos curtos com números grandes, cartões e linha do tempo */
+:root{
+  --bg:#F3F7F8; --surface:#FFFFFF; --ink:#10242E; --muted:#557079; --line:#D6E2E5;
+  --mar:#0B7A83; --mar-soft:#DDF0F1; --sol:#E9A825; --sol-soft:#FCF0D2;
+  --bom:#1F8A4C; --bom-soft:#DFF3E7; --ruim:#C2412D; --ruim-soft:#F9E1DC;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C171C; --surface:#13232A; --ink:#E6F0F2; --muted:#93AEB5; --line:#24393F;
+  --mar:#4EC3CB; --mar-soft:#163A3E; --sol:#F2C14E; --sol-soft:#3A3018;
+  --bom:#5BCB8A; --bom-soft:#163527; --ruim:#F08A75; --ruim-soft:#3D1F1A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C171C; --surface:#13232A; --ink:#E6F0F2; --muted:#93AEB5; --line:#24393F;
+  --mar:#4EC3CB; --mar-soft:#163A3E; --sol:#F2C14E; --sol-soft:#3A3018;
+  --bom:#5BCB8A; --bom-soft:#163527; --ruim:#F08A75; --ruim-soft:#3D1F1A; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+main{max-width:680px;margin:0 auto;padding-block:20px 56px;display:flex;flex-direction:column;gap:44px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:2rem;font-weight:800;letter-spacing:-.01em}
+h2{font-size:1.5rem;font-weight:700}
+h3{font-size:1.08rem;font-weight:700}
+p{margin:0}
+a{color:var(--mar)}
+section{display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:var(--display);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mar)}
+.lead{font-size:1.08rem;color:var(--muted)}
+.src{font-size:.82rem;color:var(--muted)}
+.src a{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Voucher de abertura */
+.voucher{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.voucher-top{padding:22px 20px 18px;display:flex;flex-direction:column;gap:12px}
+.stamp{align-self:flex-start;font-family:var(--display);font-weight:800;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--bom);border:2px solid var(--bom);border-radius:8px;padding:3px 10px;transform:rotate(-2deg)}
+.tear{position:relative;border-top:2px dashed var(--line);margin:0 14px}
+.tear::before,.tear::after{content:"";position:absolute;top:-12px;width:22px;height:22px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.tear::before{left:-26px}.tear::after{right:-26px}
+.voucher-bottom{padding:16px 20px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.voucher-bottom div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.voucher-bottom b{font-family:var(--display);font-size:1.35rem;font-weight:800}
+.voucher-bottom span{font-size:.8rem;color:var(--muted);line-height:1.3}
+
+.callout{background:var(--sol-soft);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.callout b{font-family:var(--display)}
+
+/* Números grandes */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--display);font-size:1.6rem;font-weight:800;color:var(--mar)}
+.stat span{font-size:.88rem;color:var(--muted);line-height:1.35}
+
+/* Temporada */
+.season{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;align-items:end;height:92px}
+.season i{display:block;border-radius:4px 4px 0 0;background:var(--mar)}
+.season i.baixa{background:var(--line)}
+.season-labels{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;font-size:.72rem;color:var(--muted);text-align:center}
+
+/* Concorrentes */
+.cards{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tag{font-size:.78rem;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--mar-soft);color:var(--mar);white-space:nowrap}
+.weak{font-size:.92rem;color:var(--ruim);background:var(--ruim-soft);border-radius:8px;padding:6px 10px}
+.gaps{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gap{background:var(--mar-soft);border-radius:12px;padding:12px;font-size:.95rem;min-width:0}
+.gap b{display:block;font-family:var(--display);color:var(--mar)}
+
+/* Barras de ganho */
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:flex;flex-direction:column;gap:4px}
+.bar-label{display:flex;justify-content:space-between;gap:10px;font-size:.95rem}
+.bar-label span:last-child{font-weight:700;white-space:nowrap}
+.track{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.fill{height:100%;background:var(--sol);border-radius:7px}
+.fill.low{background:var(--muted)}
+
+/* Divisão do cupom */
+.split{display:flex;height:44px;border-radius:10px;overflow:hidden;font-size:.78rem;font-weight:700}
+.split div{display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;line-height:1.1;padding:0 2px}
+.s-cli{background:#7A93A0}.s-ag{background:var(--mar)}.s-lid{background:var(--sol);color:#10242E!important}.s-emp{background:#2F4A55}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.92rem}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:baseline}
+.l-cli::before{background:#7A93A0}.l-ag::before{background:var(--mar)}.l-lid::before{background:var(--sol)}.l-emp::before{background:#2F4A55}
+.rules{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.rules li{display:flex;gap:10px;align-items:flex-start}
+.rules li::before{content:"✓";font-weight:800;color:var(--bom);flex:none}
+.rules.no li::before{content:"✕";color:var(--ruim)}
+
+/* Tecnologia */
+.steps2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.phase ul{margin:0;padding-left:18px;font-size:.95rem}
+.reuse{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.9rem}
+
+/* Cenários */
+.scen{display:flex;flex-direction:column;gap:12px}
+.scen-row{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center}
+.scen-row .name{font-weight:700;font-size:.95rem}
+.axis{position:relative;height:30px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.axis .zero{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--muted)}
+.axis .v{position:absolute;top:4px;bottom:4px;border-radius:5px}
+.axis .v.pos{background:var(--bom)}.axis .v.neg{background:var(--ruim)}
+.axis .lbl{position:absolute;top:50%;transform:translateY(-50%);font-size:.85rem;font-weight:700;white-space:nowrap}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;min-width:420px}
+th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-family:var(--display);font-size:.8rem;color:var(--muted);font-weight:700}
+tr:last-child td{border-bottom:0}
+.pos{color:var(--bom);font-weight:700}.neg{color:var(--ruim);font-weight:700}
+
+/* Plano */
+.timeline{display:flex;flex-direction:column;gap:0;border-left:3px solid var(--mar-soft);margin-left:8px}
+.week{position:relative;padding:0 0 22px 22px;display:flex;flex-direction:column;gap:8px}
+.week::before{content:"";position:absolute;left:-10px;top:4px;width:17px;height:17px;border-radius:50%;background:var(--surface);border:3px solid var(--mar)}
+.week.goal::before{background:var(--sol);border-color:var(--sol)}
+.week-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.week-title small{color:var(--muted);font-size:.85rem}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.who div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:.92rem;min-width:0}
+.who b{display:block;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mar);margin-bottom:2px}
+.goal-pill{background:var(--sol-soft);border-radius:10px;padding:8px 12px;font-weight:700}
+
+/* Riscos e perguntas */
+.risk{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.risk .lvl{flex:none;font-size:.72rem;font-weight:700;border-radius:6px;padding:2px 8px;margin-top:2px}
+.lvl.alto{background:var(--ruim-soft);color:var(--ruim)}.lvl.medio{background:var(--sol-soft);color:#8A5A00}
+:root[data-theme="dark"] .lvl.medio{color:var(--sol)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lvl.medio{color:var(--sol)}}
+.risk div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.risk span{font-size:.92rem;color:var(--muted)}
+.qs{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;counter-reset:q}
+.qs li{counter-increment:q;display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.qs li::before{content:counter(q);flex:none;width:26px;height:26px;border-radius:50%;background:var(--mar);color:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+.qs li.done{opacity:.7}
+.qs li.done::before{content:"✓";background:var(--bom)}
+.legal{display:flex;flex-direction:column;gap:8px}
+.legal div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.legal div:last-child{border-bottom:0}
+.legal span:last-child{color:var(--muted);text-align:right;font-size:.92rem}
+footer{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+
+@media (max-width:420px){
+  h1{font-size:1.7rem}
+  .gaps,.steps2,.who{grid-template-columns:1fr}
+  .voucher-bottom b{font-size:1.15rem}
+  .scen-row{grid-template-columns:78px 1fr}
+}
+@media (prefers-reduced-motion:no-preference){.fill,.axis .v{transition:width .6s ease}}
+</style>
+
+<main>
+
+<header class="voucher">
+  <div class="voucher-top">
+    <span class="eyebrow">Passeios em Fortaleza · estudo de viabilidade</span>
+    <span class="stamp">Viável</span>
+    <h1>Dá dinheiro se vendermos Jeri, privativos e extras</h1>
+    <p class="lead">O passeio comum deixa pouco. O lucro vem de pacotes maiores, pagamento online na hora e uma rede de agentes que só recebe quando vende.</p>
+  </div>
+  <div class="tear" aria-hidden="true"></div>
+  <div class="voucher-bottom">
+    <div><b class="num">52</b><span>pedidos por mês para empatar</span></div>
+    <div><b class="num">R$ 19 mil</b><span>lucro no 1º ano (cenário base)</span></div>
+    <div><b class="num">3 sem.</b><span>até a primeira venda online</span></div>
+  </div>
+</header>
+
+<div class="callout">
+  <b>O número que decide tudo está com o Bruno</b>
+  <p>Quanto ele paga a cada fornecedor (a tarifa líquida). Os cálculos usam estimativas nossas e mudam quando ele passar os valores reais.</p>
+</div>
+
+<section>
+  <span class="eyebrow">O mercado</span>
+  <h2>Turista não falta</h2>
+  <div class="stats">
+    <div class="stat"><b class="num">4,13 mi</b><span>visitantes em Fortaleza em 2025, recorde</span></div>
+    <div class="stat"><b class="num">R$ 5.546</b><span>gasto médio por visitante, em 6,3 dias</span></div>
+    <div class="stat"><b class="num">72,7%</b><span>já tinham vindo antes: querem passeio novo</span></div>
+    <div class="stat"><b class="num">42,7%</b><span>vêm do Sudeste, só SP é 25%</span></div>
+  </div>
+  <h3>Quando vende mais</h3>
+  <div>
+    <div class="season" aria-label="Movimento estimado por mês: alto em dezembro, janeiro, fevereiro e julho; baixo de março a junho">
+      <i style="height:95%"></i><i style="height:88%"></i><i class="baixa" style="height:45%"></i><i class="baixa" style="height:35%"></i><i class="baixa" style="height:32%"></i><i class="baixa" style="height:38%"></i><i style="height:85%"></i><i style="height:55%"></i><i style="height:55%"></i><i style="height:58%"></i><i style="height:62%"></i><i style="height:100%"></i>
+    </div>
+    <div class="season-labels"><span>jan</span><span>fev</span><span>mar</span><span>abr</span><span>mai</span><span>jun</span><span>jul</span><span>ago</span><span>set</span><span>out</span><span>nov</span><span>dez</span></div>
+  </div>
+  <p>Picos no Réveillon (95% dos hotéis cheios), em julho com o Fortal e no Carnaval. De março a junho chove e o movimento cai. Começar agora pega a alta estação inteira.</p>
+  <p class="src">Desenho ilustrativo da sazonalidade. Fontes: <a href="https://www.portalin.com.br/negocios/fortaleza-recebe-413-milhoes-de-turistas-e-movimenta-r-317-bi-na-economia/">Portal IN</a>, <a href="https://www.opovo.com.br/noticias/economia/2026/03/06/alta-estacao-movimenta-mais-de-rs-43-bilhoes-no-ceara.html">O Povo</a>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Concorrentes</span>
+  <h2>Todos vendem a mesma coisa</h2>
+  <p>As cinco agências que o Bruno indicou têm o mesmo catálogo de praias e fecham a venda pelo WhatsApp. A diferença está no atendimento depois da venda, e é aí que elas tropeçam.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-head"><h3>Sim7</h3><span class="tag">a maior</span></div>
+      <p>Mais de 15 anos, hotéis e frota próprios, parcela em 10x. Jeri a R$ 199,80, 3 Praias a R$ 99,80. Usa cupom de 10% com blogueiros.</p>
+      <p class="weak">66 reclamações no 1º semestre de 2026 e 19 dias para responder</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>PlanetaTur</h3><span class="tag">loja na Beira Mar</span></div>
+      <p>Loja na Av. Beira Mar, 2500. Nota 4,8 com 3.250 avaliações no Tripadvisor. Não mostra preços no site.</p>
+      <p class="weak">Queixas de direção rápida, extras caros e cancelamento</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Girafatur</h3><span class="tag">a mais barata</span></div>
+      <p>Cumbuco a R$ 54,90, Jeri de R$ 120 a R$ 150. Vende também na Viator, Booking e Expedia.</p>
+      <p class="weak">"Não entrega o que vende", veículo quebrado, nenhuma reclamação respondida</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Canoa Brasil Tur</h3><span class="tag">a mais cara</span></div>
+      <p>Cumbuco a R$ 80, Jeri a R$ 280. Site sem CNPJ, endereço nem Cadastur.</p>
+      <p class="weak">Nenhuma reclamação respondida</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Enseada Turismo</h3><span class="tag">sem dados</span></div>
+      <p>Citada em 2022 como uma das maiores do Ceará, vendendo por promotores. O site está fora do ar.</p>
+    </div>
+  </div>
+  <h3>Onde ganhamos deles</h3>
+  <div class="gaps">
+    <div class="gap"><b>Pagar no site</b>Pix ou cartão e voucher na hora. Nenhum dos cinco faz.</div>
+    <div class="gap"><b>Preço sem surpresa</b>Buggy, almoço e entradas listados antes.</div>
+    <div class="gap"><b>Regra de chuva</b>Cancelamento e chuva publicados. Ninguém mostra.</div>
+    <div class="gap"><b>Resposta rápida</b>IA responde em minutos, humano fecha.</div>
+  </div>
+  <p class="src">Fontes: <a href="https://sim7viagens.com">Sim7</a>, <a href="https://www.reclameaqui.com.br/empresa/sim7-turismo/lista-reclamacoes/">Reclame Aqui</a>, <a href="https://www.tripadvisor.pt/Attraction_Review-g303293-d17912291-Reviews-or30-Planetatur_Viagens-Fortaleza_State_of_Ceara.html">Tripadvisor</a>, <a href="https://www.girafatur.com.br">Girafatur</a>, <a href="https://canoabrasil.com.br">Canoa Brasil</a>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Onde está o dinheiro</span>
+  <h2>Um casal em Jeri vale mais que 15 Cumbucos</h2>
+  <p>Quanto sobra para a empresa em cada venda, estimando margem de 20% a 25%:</p>
+  <div class="bars">
+    <div class="bar-row"><div class="bar-label"><span>Jeri 3 dias com pousada (por pessoa)</span><span class="num">R$ 120–200</span></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+    <div class="bar-row"><div class="bar-label"><span>Privativo em van (por carro)</span><span class="num">R$ 80–250</span></div><div class="track"><div class="fill" style="width:82%"></div></div></div>
+    <div class="bar-row"><div class="bar-label"><span>Combo 5 praias em 3 dias</span><span class="num">R$ 55–70</span></div><div class="track"><div class="fill" style="width:32%"></div></div></div>
+    <div class="bar-row"><div class="bar-label"><span>Jeri bate-volta</span><span class="num">R$ 40–70</span></div><div class="track"><div class="fill" style="width:28%"></div></div></div>
+    <div class="bar-row"><div class="bar-label"><span>Passeio comum (Cumbuco, Águas Belas)</span><span class="num">R$ 15–25</span></div><div class="track"><div class="fill low" style="width:10%"></div></div></div>
+  </div>
+  <p>O passeio comum serve para atrair o cliente. O site, a IA e os agentes empurram Jeri, privativos, combos e o buggy vendido antes da viagem (R$ 400 a R$ 600 por carro).</p>
+  <p class="src">Ganhos são estimativa. Preços: <a href="https://primecearareceptivo.com/todos-os-servicos/">Prime Ceará</a>, <a href="https://www.montaltur.com.br/tabela-de-precos">Montaltur</a>, <a href="https://canoabrasil.com.br">Canoa Brasil</a>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Agentes e cupons</span>
+  <h2>Cada um ganha só quando vende</h2>
+  <p>O Bruno tem um cupom no site que prova as vendas dele. Outros agentes também têm cupom, e o Bruno ganha uma parte do que a equipe dele vende.</p>
+  <h3>Como se divide um passeio vendido com cupom</h3>
+  <p class="src">Sugestão inicial sobre o preço, com margem de 25%. Ajustar quando o Bruno passar as tarifas.</p>
+  <div class="split" role="img" aria-label="5% desconto do cliente, 8% agente, 2% Bruno líder, cerca de 10% empresa">
+    <div class="s-cli" style="flex:5">5%</div><div class="s-ag" style="flex:8">8%</div><div class="s-lid" style="flex:2">2%</div><div class="s-emp" style="flex:10">≈10%</div>
+  </div>
+  <div class="legend">
+    <span class="l-cli">Desconto do cliente</span><span class="l-ag">Agente que vendeu</span>
+    <span class="l-lid">Bruno como líder</span><span class="l-emp">Fica na empresa</span>
+  </div>
+  <p>Os outros 75% vão para o fornecedor do passeio. Desconto, agente e líder somados nunca passam de 60% da margem.</p>
+  <h3>Para ser legal, e não pirâmide</h3>
+  <ul class="rules">
+    <li>O dinheiro vem só de passeio vendido para turista de verdade</li>
+    <li>Comissão paga depois que o passeio acontece</li>
+    <li>O líder ganha sobre um nível só</li>
+    <li>Agente com contrato de autônomo, de preferência MEI emitindo nota</li>
+  </ul>
+  <ul class="rules no">
+    <li>Ninguém paga para entrar nem compra kit</li>
+    <li>Ninguém ganha por recrutar pessoas</li>
+  </ul>
+  <p><b>Melhores agentes:</b> recepcionistas de pousada, motoristas e influenciadores, vendendo por link e QR code. Vendedor novo na orla não dá: a Prefeitura suspendeu novas licenças em 2025.</p>
+  <p class="src">Fontes: <a href="https://www.serasaexperian.com.br/conteudos/marketing-mul/">Serasa Experian</a>, <a href="https://diariodonordeste.verdesmares.com.br/ceara/primeiro-dia-de-rodizio-na-beira-mar-tem-protesto-e-reclamacoes-de-comerciantes-1.3699014">Diário do Nordeste</a>. Contrato do agente deve passar por advogado.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Tecnologia</span>
+  <h2>Vender já, sistema completo depois</h2>
+  <div class="steps2">
+    <div class="phase">
+      <h3>Agora, 3 semanas</h3>
+      <ul>
+        <li>Site de uma página com 10 passeios</li>
+        <li>IA no WhatsApp com as falas do Bruno</li>
+        <li>Link de Pix e cartão</li>
+        <li>Cupom BRUNO</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <h3>Dezembro a fevereiro</h3>
+      <ul>
+        <li>Sistema aberto <b>pretix</b>: datas, vagas, cupons, voucher com QR</li>
+        <li>Painel do agente e comissão do líder</li>
+        <li>Lembrete na véspera</li>
+      </ul>
+    </div>
+  </div>
+  <p>O pretix é aberto, atualizado e nosso para modificar. Não existe sistema pronto de agência de passeios que seja bom e aberto; todos os que achamos são pequenos ou abandonados.</p>
+  <h3>O que vem da TENKiTER</h3>
+  <div class="reuse">
+    <span class="chip">Resposta automática sem duplicar</span>
+    <span class="chip">Filas de atendimento</span>
+    <span class="chip">Manual passo a passo</span>
+    <span class="chip">Regra de não inventar</span>
+    <span class="chip">Verificações automáticas</span>
+  </div>
+  <p>O mensageiro novo usa o WhatsApp oficial da Meta, que não corre risco de bloqueio na alta estação. Conversa vinda de anúncio fica grátis por 7 dias.</p>
+  <div class="stats">
+    <div class="stat"><b class="num">≈ R$ 300</b><span>por mês de tecnologia</span></div>
+    <div class="stat"><b class="num">1,5% a 8%</b><span>por venda, se fosse sistema pago pronto</span></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Previsão financeira</span>
+  <h2>Quanto pode sobrar no primeiro ano</h2>
+  <div class="stats">
+    <div class="stat"><b class="num">R$ 9 mil</b><span>investimento inicial, com R$ 3 mil de reserva</span></div>
+    <div class="stat"><b class="num">R$ 2.500</b><span>custo fixo por mês, sendo R$ 1.500 de anúncio</span></div>
+    <div class="stat"><b class="num">R$ 300</b><span>pedido médio (2,5 pessoas)</span></div>
+    <div class="stat"><b class="num">R$ 48</b><span>sobra por pedido depois de taxas e comissões</span></div>
+  </div>
+  <h3>Lucro em 12 meses</h3>
+  <div class="scen">
+    <div class="scen-row"><span class="name">Pessimista</span>
+      <div class="axis"><span class="zero" style="left:20%"></span><span class="v neg" style="left:17.8%;width:2.2%"></span><span class="lbl neg" style="left:23%">−R$ 5,4 mil</span></div></div>
+    <div class="scen-row"><span class="name">Base</span>
+      <div class="axis"><span class="zero" style="left:20%"></span><span class="v pos" style="left:20%;width:31%"></span><span class="lbl pos" style="left:53%">+R$ 19 mil</span></div></div>
+    <div class="scen-row"><span class="name">Otimista</span>
+      <div class="axis"><span class="zero" style="left:20%"></span><span class="v pos" style="left:20%;width:62%"></span><span class="lbl pos" style="left:62%;transform:translate(-100%,-50%);color:var(--surface);padding-right:8px">+R$ 48,8 mil</span></div></div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Cenário</th><th>Pedidos/ano</th><th>Vendas</th><th>Jan (alta)</th><th>Abr (baixa)</th></tr></thead>
+      <tbody>
+        <tr><td>Pessimista</td><td>465</td><td>R$ 139,5 mil</td><td>R$ 0</td><td class="neg">−R$ 800</td></tr>
+        <tr><td>Base</td><td>1.020</td><td>R$ 306 mil</td><td class="pos">+R$ 2.300</td><td class="pos">+R$ 860</td></tr>
+        <tr><td>Otimista</td><td>1.650</td><td>R$ 495 mil</td><td class="pos">+R$ 5.300</td><td class="pos">+R$ 2.550</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>No cenário base o investimento volta por volta de julho. O lucro médio de R$ 1.600 por mês ainda se divide entre os sócios: é um começo, não um salário.</p>
+  <div class="callout">
+    <b>A alavanca mais forte é o tamanho do pedido</b>
+    <p>Com pedido médio de R$ 450, puxado por Jeri e pacotes, o empate cai de 52 para 36 pedidos por mês.</p>
+  </div>
+  <p class="src">Todos os volumes, margens e custos desta seção são estimativas para fechar a conta.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Plano</span>
+  <h2>Quatro semanas até a primeira venda</h2>
+  <div class="timeline">
+    <div class="week">
+      <div class="week-title"><h3>Semana 1</h3><small>16 a 22/11</small></div>
+      <div class="who">
+        <div><b>Bruno</b>Tarifas por escrito de 3 a 5 fornecedores, regras de chuva, áudios com as falas de venda</div>
+        <div><b>Pablo</b>Abrir a empresa, pedir o Cadastur, domínio, Instagram, WhatsApp oficial e conta de pagamento</div>
+      </div>
+    </div>
+    <div class="week">
+      <div class="week-title"><h3>Semana 2</h3><small>23 a 29/11</small></div>
+      <div class="who">
+        <div><b>Bruno</b>Testar a IA fingindo ser turista; levar clientes da orla para pagar pelo link</div>
+        <div><b>Pablo</b>Site com 10 passeios, IA no WhatsApp, cupom BRUNO, voucher automático</div>
+      </div>
+    </div>
+    <div class="week goal">
+      <div class="week-title"><h3>Semana 3</h3><small>30/11 a 6/12</small></div>
+      <p class="goal-pill">Meta: primeira venda paga online com cupom</p>
+      <div class="who">
+        <div><b>Bruno</b>Recrutar 2 ou 3 agentes em pousadas</div>
+        <div><b>Pablo</b>Anúncio a R$ 50 por dia, manual do agente, contrato revisado</div>
+      </div>
+    </div>
+    <div class="week">
+      <div class="week-title"><h3>Semana 4</h3><small>7 a 13/12</small></div>
+      <div class="who">
+        <div><b>Bruno</b>Pedir avaliações; negociar comissão de buggy e pousada em Jeri</div>
+        <div><b>Pablo</b>Lembrete na véspera; pretix em teste</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">Papéis</span>
+  <h2>O que a lei pede</h2>
+  <div class="legal">
+    <div><span>Empresa ME no Simples, CNAE 7911-2/00</span><span>imposto a partir de 6%</span></div>
+    <div><span>Cadastur de agência no CNPJ novo</span><span>multa de R$ 4 mil sem ele</span></div>
+    <div><span>Guia de turismo regional no passeio</span><span>multa de R$ 5 mil. O Bruno já é guia</span></div>
+    <div><span>Licença de ambulante para vender na rua</span><span>novas licenças suspensas</span></div>
+  </div>
+  <p class="src">O cadastro do Bruno é pessoal; a empresa nova tira o dela. Fontes: <a href="https://www.contabeis.com.br/legislacao/4851185/lei-10659-2018/">Lei 10.659/2018</a>, <a href="https://www.legisweb.com.br/legislacao/?id=422772">Portaria MTur 38/2021</a>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Riscos</span>
+  <h2>O que pode dar errado</h2>
+  <div class="risk"><span class="lvl alto">alto</span><div><b>Margem fina</b><span>Abaixo de 20%, cupom e anúncio comem o lucro. Focar em Jeri e privativos.</span></div></div>
+  <div class="risk"><span class="lvl alto">alto</span><div><b>Fornecedor ruim</b><span>A reclamação cai na nossa marca. Padrão de frota por escrito e um fornecedor reserva por passeio.</span></div></div>
+  <div class="risk"><span class="lvl medio">médio</span><div><b>Chuva de março a junho</b><span>A reserva de R$ 3 mil e o corte de anúncio seguram o caixa.</span></div></div>
+  <div class="risk"><span class="lvl medio">médio</span><div><b>IA inventar informação</b><span>Ela só responde o que está cadastrado e passa para humano na dúvida.</span></div></div>
+  <div class="risk"><span class="lvl medio">médio</span><div><b>Orla</b><span>Reordenamento da Prefeitura e pressão de facções. Por isso, agentes em pousadas e no digital.</span></div></div>
+</section>
+
+<section>
+  <span class="eyebrow">Para o Bruno</span>
+  <h2>Perguntas antes de investir</h2>
+  <ol class="qs">
+    <li>Quantos passeios vende hoje por dia, na alta e na baixa, e qual o valor médio?</li>
+    <li>Quanto ganha por venda? Quais as tarifas de cada fornecedor, por escrito?</li>
+    <li>Tem contrato ou exclusividade com alguma agência? Pode levar os clientes?</li>
+    <li>Tem licença de ambulante válida depois do reordenamento da orla?</li>
+    <li>Quais fornecedores traria? Têm guia, seguro, veículo bom e regra de chuva?</li>
+    <li>Consegue comissão de buggy, pousada em Jeri e Beach Park? De quanto?</li>
+    <li>Quantos agentes consegue liderar? Quanto eles ganham hoje?</li>
+    <li>Como fica a sociedade: quem coloca os R$ 9 mil e como se divide o lucro?</li>
+    <li class="done">Cadastur e guia credenciado: já confirmado</li>
+  </ol>
+</section>
+
+<footer>Pesquisa feita em 15/11/2026 com fontes públicas. Onde não havia dado público, usamos estimativas, marcadas no texto. Projeto Turismo (nome provisório).</footer>
+</main>
