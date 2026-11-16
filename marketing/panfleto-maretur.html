@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Maré Tur · Tarifário 2026</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+@page{size:105mm 210mm;margin:0}
+:root{--mar:#0B7A83;--mar-d:#075B62;--ink:#10242E;--muted:#557079;--sol:#E9A825;--sol-soft:#FCF0D2;--areia:#FBF7EF;--line:#D6E2E5;
+  --display:"Bricolage Grotesque",system-ui,sans-serif;--body:"Source Sans 3",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#888;font-family:var(--body);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:105mm;height:210mm;overflow:hidden;background:var(--areia);position:relative;margin:0 auto 6mm;display:flex;flex-direction:column}
+@media print{body{background:none}.page{margin:0;page-break-after:always}}
+h1,h2,h3,.disp{font-family:var(--display)}
+.num{font-variant-numeric:tabular-nums}
+
+/* capa */
+.hero{position:relative;height:47mm;background:url(../site-v2/fotos/hero-2.jpg) center/cover;color:#fff}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,40,46,.15) 0%,rgba(7,40,46,.75) 100%)}
+.hero .in{position:absolute;left:5mm;right:5mm;bottom:3.5mm;z-index:1;display:flex;justify-content:space-between;align-items:flex-end}
+.logo b{display:block;font-family:var(--display);font-weight:800;font-size:27pt;line-height:.95;letter-spacing:-.01em}
+.logo b i{font-style:normal;color:var(--sol)}
+.logo small{display:block;font-size:6.6pt;letter-spacing:.22em;text-transform:uppercase;font-weight:700;margin-top:1.2mm}
+.wave{display:block;width:30mm;height:3mm;margin-bottom:1.6mm}
+.tag{background:var(--sol);color:var(--ink);font-family:var(--display);font-weight:800;font-size:7pt;padding:1.2mm 2.4mm;border-radius:2mm;letter-spacing:.06em;text-transform:uppercase}
+.promise{display:flex;justify-content:space-between;background:var(--mar);color:#fff;font-size:6.3pt;font-weight:700;padding:1.6mm 4mm;letter-spacing:.02em}
+.promise span::before{content:"✓ ";color:var(--sol)}
+
+.body{padding:3mm 4mm 0;display:flex;flex-direction:column;gap:3mm;flex:1}
+.sec{font-family:var(--display);font-weight:800;font-size:10.5pt;color:var(--mar-d);display:flex;align-items:center;gap:2mm}
+.sec::after{content:"";flex:1;height:.3mm;background:var(--line)}
+.sec small{font-family:var(--body);font-weight:700;font-size:6pt;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+/* jeri */
+.jeri{display:grid;grid-template-columns:repeat(3,1fr);gap:2mm}
+.card{background:#fff;border-radius:2.6mm;overflow:hidden;box-shadow:0 .4mm 1.2mm rgba(16,36,46,.12);display:flex;flex-direction:column}
+.card .ph{height:21mm;background-size:cover;background-position:center;position:relative}
+.card .ph .d{position:absolute;left:1.2mm;top:1.2mm;background:rgba(255,255,255,.93);color:var(--ink);font-size:5pt;font-weight:700;padding:.5mm 1.3mm;border-radius:1mm;letter-spacing:.04em;text-transform:uppercase}
+.card .tx{padding:1.6mm 1.8mm 0;flex:1}
+.card h3{font-size:7.6pt;line-height:1.08;font-weight:800}
+.card h3 em{font-style:normal;color:var(--mar)}
+.card ul{list-style:none;margin-top:1mm}
+.card li{font-size:5.4pt;line-height:1.22;color:#2E4650;padding-left:2mm;position:relative}
+.card li::before{content:"";position:absolute;left:.3mm;top:1.2mm;width:.9mm;height:.9mm;border-radius:50%;background:var(--sol)}
+.card p{font-size:5.4pt;line-height:1.22;color:#2E4650;margin-top:.8mm}
+.price{margin-top:1.4mm;background:var(--sol-soft);padding:1.1mm 1.8mm;display:flex;align-items:baseline;justify-content:space-between}
+.price small{font-size:4.8pt;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;line-height:1.1}
+.price b{font-family:var(--display);font-weight:800;font-size:11pt;color:var(--ink)}
+.price b sup{font-size:5.5pt;vertical-align:.32em;margin-right:.3mm}
+.note{font-size:5.2pt;color:var(--muted);margin-top:-1.2mm}
+
+/* transfers */
+.transfer{background:var(--mar-d);color:#fff;border-radius:2.6mm;padding:2.2mm 2.4mm}
+.transfer h3{font-size:8pt;font-weight:800;margin-bottom:1.6mm}
+.transfer h3 span{color:var(--sol)}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4mm}
+.t{background:rgba(255,255,255,.1);border:.25mm solid rgba(255,255,255,.22);border-radius:1.8mm;padding:1.3mm 1.2mm;text-align:center}
+.t small{display:block;font-size:4.8pt;opacity:.85;text-transform:uppercase;letter-spacing:.05em;line-height:1.15}
+.t b{display:block;font-family:var(--display);font-weight:800;font-size:7pt;margin:.3mm 0}
+.t strong{display:block;font-family:var(--display);font-weight:800;font-size:9.5pt;color:var(--sol)}
+
+/* lista p2 */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.6mm 2mm}
+.grid .card .ph{height:21mm}
+.grid .card h3{font-size:7.2pt}
+
+.contact{background:var(--mar);color:#fff;border-radius:2.6mm;padding:2mm;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1mm}
+.contact img{width:19mm;height:19mm;background:#fff;border-radius:1.4mm;padding:.8mm}
+.contact b{font-family:var(--display);font-size:7pt;line-height:1.1}
+.contact span{font-size:5.2pt;opacity:.9;line-height:1.15}
+
+.foot{margin-top:auto;background:var(--ink);color:#fff;padding:2.6mm 4mm 2.4mm;display:flex;flex-direction:column;gap:1.4mm}
+.foot .row{display:flex;justify-content:space-between;align-items:center;gap:3mm}
+.foot .site{font-family:var(--display);font-weight:800;font-size:11pt;color:var(--sol);letter-spacing:.01em}
+.foot .wa{font-family:var(--display);font-weight:800;font-size:9.5pt;display:flex;align-items:center;gap:1.4mm}
+.foot .wa svg{width:3.6mm;height:3.6mm;color:#25D366}
+.foot .who{font-size:5.6pt;opacity:.8;line-height:1.2}
+.terms{font-size:4.7pt;line-height:1.3;color:var(--muted);padding:1.6mm 4mm 0}
+.credits{font-size:3.8pt;color:#8AA0A6;padding:.6mm 4mm 1.6mm;line-height:1.25}
+</style>
+</head>
+<body>
+
+<!-- ===================== FRENTE ===================== -->
+<section class="page">
+  <div class="hero">
+    <div class="in">
+      <div class="logo">
+        <svg class="wave" viewBox="0 0 60 6" aria-hidden="true"><path d="M0 4 Q7.5 0 15 4 T30 4 T45 4 T60 4" stroke="#E9A825" stroke-width="1.6" fill="none"/></svg>
+        <b>Maré <i>Tur</i></b>
+        <small>Passeios em Fortaleza</small>
+      </div>
+      <span class="tag">Tarifário 2026</span>
+    </div>
+  </div>
+  <div class="promise"><span>Busca no seu hotel</span><span>Guia Cadastur</span><span>Reserve com 20%</span></div>
+
+  <div class="body">
+    <div class="sec">Jericoacoara em 1 dia <small>saídas diárias</small></div>
+    <div class="jeri">
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/jeribv-1.jpg)"><span class="d">Economy</span></div>
+        <div class="tx"><h3>Jeri <em>Economy</em></h3><ul><li>Transporte ida e volta</li><li>Passeio de 4x4</li><li>Lagoa do Paraíso</li><li>Árvore da Preguiça</li><li>Pôr do sol</li></ul></div>
+        <div class="price"><small>por<br>pessoa</small><b class="num"><sup>R$</sup>200</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/jeribv-2.jpg)"><span class="d">Entradas inclusas</span></div>
+        <div class="tx"><h3>Jeri <em>Premium</em></h3><ul><li>Transporte ida e volta</li><li>Caraúba Beach</li><li>Lagun Beach</li><li>Buraco Azul Caiçara</li><li>Árvore da Preguiça e pôr do sol</li></ul></div>
+        <div class="price"><small>por<br>pessoa</small><b class="num"><sup>R$</sup>300</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/alchymist-1.jpg)"><span class="d">Entradas inclusas</span></div>
+        <div class="tx"><h3>Jeri <em>Blue Day</em></h3><ul><li>Transporte ida e volta</li><li>Alchymist Blue Lagoon</li><li>Lagun Beach</li><li>Buraco Azul Caiçara</li><li>Árvore da Preguiça e pôr do sol</li></ul></div>
+        <div class="price"><small>por<br>pessoa</small><b class="num"><sup>R$</sup>450</b></div></div>
+    </div>
+    <p class="note">Pedra Furada opcional. Taxa ambiental de Jeri não inclusa. No Economy, a entrada da Lagoa do Paraíso é à parte.</p>
+
+    <div class="transfer">
+      <h3>Transfer Fortaleza ↔ <span>Jericoacoara</span></h3>
+      <div class="tgrid">
+        <div class="t"><b>Economy</b><small>ida e volta + passeios</small><strong class="num">R$ 260</strong></div>
+        <div class="t"><b>Premium</b><small>ida e volta + passeios</small><strong class="num">R$ 310</strong></div>
+        <div class="t"><b>Blue</b><small>ida e volta + passeios</small><strong class="num">R$ 580</strong></div>
+        <div class="t"><b>Trecho</b><small>só ida ou só volta</small><strong class="num">R$ 125</strong></div>
+      </div>
+    </div>
+
+    <div class="sec">3 Praias em 1 dia <small>saídas diárias</small></div>
+    <div class="jeri">
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/3praias-1.jpg)"><span class="d">Sem buggy</span></div>
+        <div class="tx"><h3>3 Praias</h3><p>Canoa Quebrada, Morro Branco e Praia das Fontes. Guia Cadastur e apoio para almoço.</p></div>
+        <div class="price"><small>por<br>pessoa</small><b class="num"><sup>R$</sup>100</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/morro-1.jpg)"><span class="d">Buggy incluso</span></div>
+        <div class="tx"><h3>3 Praias <em>com buggy</em></h3><p>Buggy em Morro Branco incluso. Em Canoa Quebrada, buggy opcional.</p></div>
+        <div class="price"><small>por<br>pessoa</small><b class="num"><sup>R$</sup>220</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/canoa-2.jpg)"><span class="d">Buggy + pôr do sol</span></div>
+        <div class="tx"><h3>3 Praias <em>+ pôr do sol</em></h3><p>Buggy em Morro Branco e pôr do sol ao som de saxofone.</p></div>
+        <div class="price"><small>por<br>pessoa</small><b class="num"><sup>R$</sup>250</b></div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="row">
+      <span class="site">maretur.com.br</span>
+      <span class="wa"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Z"/></svg>(85) 99768-7598</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== VERSO ===================== -->
+<section class="page">
+  <div class="body" style="padding-top:4mm">
+    <div class="sec">Praias e passeios <small>saindo de Fortaleza</small></div>
+    <div class="grid">
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/cumbuco-1.jpg)"><span class="d">Todo dia</span></div>
+        <div class="tx"><h3>Cumbuco</h3><p>Transfer, guia Cadastur e apoio para almoço.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>60</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/lagoinha-1.jpg)"><span class="d">Seg a sáb</span></div>
+        <div class="tx"><h3>Lagoinha</h3><p>Transfer, guia Cadastur e apoio para almoço.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>100</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/lagoinha-2.jpg)"><span class="d">Ter · qui · sáb</span></div>
+        <div class="tx"><h3>Combo <em>Lagoinha</em></h3><p>Buggy, catamarã e pau de arara inclusos.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>200</b></div></div>
+
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/paracuru-1.jpg)"><span class="d">Todo dia</span></div>
+        <div class="tx"><h3>Paracuru</h3><p>Apoio para almoço no Mix Beach.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>100</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/paracuru-2.jpg)"><span class="d">Ter · qui · sáb</span></div>
+        <div class="tx"><h3>Combo <em>Paracuru</em></h3><p>Com passeio de buggy e apoio no Mix Beach.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>220</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/aguas-1.jpg)"><span class="d">Ter · qui · sáb</span></div>
+        <div class="tx"><h3>Águas Belas</h3><p>Encontro do rio com o mar. Passeios no local opcionais.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>90</b></div></div>
+
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/flexau-1.jpg)"><span class="d">Qua · sex · dom</span></div>
+        <div class="tx"><h3>Combo <em>Flexaú</em></h3><p>Catamarã em Mundaú e almoço em Flecheiras.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>220</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/alchymist-2.jpg)"><span class="d">Todo dia</span></div>
+        <div class="tx"><h3>Lagoa Encantada <em>do Alchymist</em></h3><p>Transfer de ida e volta e guia Cadastur.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>120</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/beachpark-2.jpg)"><span class="d">Todo dia</span></div>
+        <div class="tx"><h3>Beach Park</h3><p>Transfer de ida e volta. Ingresso à parte.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>80</b></div></div>
+
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/jeri3-1.jpg)"><span class="d">Todo dia</span></div>
+        <div class="tx"><h3>Leste Oeste <em>Economy</em></h3><p>3 Praias sem buggy + Jeri em 1 dia Economy.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>300</b></div></div>
+      <div class="card"><div class="ph" style="background-image:url(../site-v2/fotos/jeri3-2.jpg)"><span class="d">Seg a sáb</span></div>
+        <div class="tx"><h3>Leste Oeste <em>VIP</em></h3><p>Jeri com Alchymist + 3 Praias com buggy em Morro Branco.</p></div>
+        <div class="price"><small>por pessoa</small><b class="num"><sup>R$</sup>660</b></div></div>
+      <div class="contact">
+        <img src="qr-whatsapp.svg" alt="QR code do WhatsApp">
+        <b>Reserve pelo WhatsApp</b>
+        <span>Aponte a câmera do celular</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="terms">Preços por pessoa, no Pix ou em dinheiro. Cartão em até 4x com 5% de acréscimo. Reserve com 20% de sinal e pague o restante no embarque. Não incluem hospedagem, alimentação, entradas não indicadas, taxa ambiental de Jeri e passeios opcionais (buggy, jangada, quadriciclo). Cancelamento sem justificativa médica ou legal não é reembolsado. Tolerância de 10 minutos no embarque. Preços sujeitos a alteração e à disponibilidade.</p>
+  <p class="credits">Fotos ilustrativas (Wikimedia Commons, licenças CC BY, CC BY-SA e domínio público). Autores e licenças em maretur.com.br/creditos.html</p>
+
+  <div class="foot">
+    <div class="row">
+      <div><span class="site">maretur.com.br</span><div class="who">Guia Bruno · credenciado no Cadastur</div></div>
+      <span class="wa"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Z"/></svg>(85) 99768-7598</span>
+    </div>
+  </div>
+</section>
+</body>
+</html>
