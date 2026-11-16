@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Passeios em Fortaleza com busca no hotel | Jericoacoara, Cumbuco, Canoa Quebrada</title>
+<meta name="description" content="Passeios saindo de Fortaleza com busca no hotel: Jericoacoara, Cumbuco, Canoa Quebrada, Lagoinha, 3 Praias e transfers. Pix com desconto, cartão em 4x e cancelamento grátis até 24 h.">
+<meta property="og:title" content="Passeios em Fortaleza com busca no hotel">
+<meta property="og:description" content="Jericoacoara, Cumbuco, Canoa Quebrada e mais. Reserve em 2 minutos e pague no Pix.">
+<meta property="og:image" content="fotos/hero-1.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B7A83'/%3E%3Cpath d='M6 21 Q16 13 26 21' stroke='%23E9A825' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","name":"Passeios em Fortaleza","areaServed":"Fortaleza, Ceará, Brasil","address":{"@type":"PostalAddress","addressLocality":"Fortaleza","addressRegion":"CE","addressCountry":"BR"}}</script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="./"><b data-brand>Maré</b><small data-brand-sub>Passeios · Fortaleza</small></a>
+  <a class="btn btn-sol" href="#passeios">Reservar passeio</a>
+</div></header>
+
+<div class="coupon-band" id="couponBand" hidden><div class="wrap"><b id="couponTxt"></b><span>O desconto já entra em qualquer passeio que você reservar.</span></div></div>
+
+<section class="hero" id="inicio">
+  <div class="photo" id="heroPhoto"></div>
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="chip-dark" id="heroEyebrow">Receptivo em Fortaleza · Cadastur</span>
+      <h1 id="heroTitle">Passeios saindo do seu hotel em Fortaleza</h1>
+      <ul class="promises" id="promises"></ul>
+      <p class="hero-price">a partir de <b class="num" id="fromPrice">R$ 49,90</b> por pessoa no Pix</p>
+      <div class="rating"><span class="stars" aria-hidden="true">★★★★★</span><b id="ratingValue">4,9</b><span id="ratingCount">· 128 avaliações</span></div>
+    </div>
+    <form class="search" id="search" aria-label="Buscar passeio">
+      <label for="dest">Destino<select id="dest"><option value="">Todos os destinos</option></select></label>
+      <label for="when">Data<input type="date" id="when"></label>
+      <button class="btn btn-sol" type="submit">Ver passeios</button>
+      <button class="btn btn-ghost" type="button" id="packOpen">Montar pacote com vários passeios</button>
+    </form>
+  </div>
+</section>
+
+<main>
+  <section class="band"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Como funciona</span><h2>Reservar leva 2 minutos</h2></div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3>Escolha o passeio</h3><p class="muted">Veja roteiro, horários, o que está incluso e quanto custam os extras. Dúvidas, chama no WhatsApp.</p></div>
+      <div class="step"><span class="n">2</span><h3>Pague como preferir</h3><p class="muted">Pix com desconto, cartão em até 4x ou só um sinal e o resto no embarque.</p></div>
+      <div class="step"><span class="n">3</span><h3>Embarque no hotel</h3><p class="muted">A confirmação chega no WhatsApp, e o horário da busca chega na véspera.</p></div>
+    </div>
+  </div></section>
+
+  <section class="band" id="passeios" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Passeios</span><h2 id="listTitle">Escolha seu dia de praia</h2></div>
+    <div class="filters" id="filters" role="group" aria-label="Categorias"></div>
+    <div class="cards" id="cards"><div class="empty">Carregando passeios…</div></div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="pack-cta">
+      <div><h3>Vai ficar mais dias? Monte um pacote</h3><p style="opacity:.85">Escolha 2 passeios ou mais e ganhe <span id="packPct">5</span>% de desconto em tudo, numa reserva só.</p></div>
+      <button class="btn btn-sol" type="button" id="packCta">Montar meu pacote</button>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Por que reservar com a gente</span><h2>Sem surpresa do embarque à volta</h2></div>
+    <div class="diffs">
+      <div class="diff"><h3>Preço dos extras antes</h3><p class="muted">Buggy, jangada e almoço com valor na página. Você decide antes, não no meio da duna.</p></div>
+      <div class="diff"><h3>Resposta em minutos</h3><p class="muted">Atendimento no WhatsApp, e uma pessoa assume quando você quiser.</p></div>
+      <div class="diff"><h3>Choveu? Troca grátis</h3><p class="muted">Passeio cancelado pela chuva vira outra data ou dinheiro de volta.</p></div>
+      <div class="diff"><h3>Frota conferida</h3><p class="muted">Só trabalhamos com veículos revisados e motoristas bem avaliados.</p></div>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Clientes</span><h2>O que dizem de nós</h2></div>
+    <div class="reviews" id="reviews"></div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="agent">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span class="eyebrow">Seja parceiro</span>
+        <h2 style="font-size:1.6rem">Indique passeios e ganhe por cada venda</h2>
+        <p>Trabalha em pousada, dirige por aplicativo ou cria conteúdo de viagem? Receba um cupom com seu nome.</p>
+        <ul><li>Seu cliente ganha desconto</li><li>Você ganha comissão de cada passeio realizado</li><li>Não paga nada para entrar</li></ul>
+      </div>
+      <form id="partnerForm">
+        <div class="field"><label class="label" for="pName">Seu nome</label><input id="pName" required maxlength="120" autocomplete="name"></div>
+        <div class="field"><label class="label" for="pPhone">WhatsApp com DDD</label><input id="pPhone" required inputmode="tel" maxlength="30" autocomplete="tel"></div>
+        <div class="field"><label class="label" for="pRole">Onde você trabalha</label><select id="pRole"><option>Pousada ou hotel</option><option>Motorista</option><option>Criador de conteúdo</option><option>Vendedor de passeios</option><option>Outro</option></select></div>
+        <button class="btn btn-mar" type="submit">Quero meu cupom</button>
+      </form>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Informações</span><h2>Tudo claro na sua reserva</h2></div>
+    <div id="faqs"></div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="news">
+      <div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.85">Promoções da semana</span><h2 style="font-size:1.5rem">Receba os roteiros e descontos no seu WhatsApp</h2><p style="opacity:.85">Só o que vale a pena. Sair da lista é uma mensagem.</p></div>
+      <form id="newsForm"><input id="newsPhone" type="tel" inputmode="tel" maxlength="30" placeholder="Seu WhatsApp com DDD" aria-label="Seu WhatsApp com DDD"><button class="btn btn-sol" type="submit">Quero receber</button></form>
+    </div>
+  </div></section>
+
+  <section class="band"><div class="wrap final">
+    <h2>Pronto para o seu dia de praia?</h2>
+    <a class="btn btn-sol" href="#passeios">Escolher meu passeio</a>
+  </div></section>
+</main>
+
+<footer class="site"><div class="wrap"><span data-footer>Maré Passeios · Fortaleza, CE</span><span><a href="creditos.html">Créditos das fotos</a></span></div></footer>
+
+<div class="packbar" id="packbar" hidden><div class="in">
+  <div class="info"><span id="packCount"></span><br><small id="packSave"></small></div>
+  <b class="num" id="packTotal"></b>
+  <a class="btn btn-sol" id="packGo" href="#">Reservar pacote</a>
+</div></div>
+<a class="chat" id="chat" href="#" aria-label="Falar no WhatsApp"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Zm4.4-5.6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.4.4 0 0 0 0-.4l-.7-1.7c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg></a>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/home.js"></script>
+</body>
+</html>

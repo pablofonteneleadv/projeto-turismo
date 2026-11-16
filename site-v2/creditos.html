@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Créditos das fotos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="logo" href="./"><b>Passeios</b><small>Fortaleza</small></a></div></header>
+<main class="wrap band">
+  <div class="sec-head"><span class="eyebrow">Fotos</span><h1 style="font-size:1.8rem">Créditos das fotos</h1><p class="muted">As fotos dos destinos são do Wikimedia Commons, com licenças livres. Agradecemos aos autores.</p></div>
+  <div id="list" style="display:flex;flex-direction:column;gap:10px"></div>
+</main>
+<script>
+fetch("fotos/creditos.json").then(function (r) { return r.json(); }).then(function (list) {
+  var esc = function (s) { return String(s || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  document.getElementById("list").innerHTML = list.map(function (c) {
+    return '<div class="item" style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center"><img src="fotos/' + esc(c.arquivo) + '" alt="" style="width:96px;height:64px;object-fit:cover;border-radius:8px"><div><b>' + esc(c.destino) + '</b><br><span class="muted">Foto: ' + esc(c.autor) + ' · <a href="' + esc(c.licenca_url) + '" target="_blank" rel="noopener">' + esc(c.licenca) + '</a> · <a href="' + esc(c.fonte) + '" target="_blank" rel="noopener">fonte</a></span></div></div>';
+  }).join("");
+}).catch(function () { document.getElementById("list").textContent = "Lista de créditos indisponível."; });
+</script>
+</body>
+</html>
