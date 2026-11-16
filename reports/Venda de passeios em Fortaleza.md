@@ -131,7 +131,7 @@ O **maior risco é a margem fina**. Se a tarifa líquida dos fornecedores deixar
 1. Quantos passeios ele vende hoje por dia, na alta e na baixa, e qual o valor médio de cada venda?
 2. Quanto ele ganha hoje por venda: é comissão ou ele compra pela tarifa líquida e revende? Quais são, por escrito, as tarifas de cada fornecedor?
 3. Ele tem exclusividade ou contrato com alguma agência, como a PlanetaTur? Pode levar esses clientes para uma empresa nova?
-4. Ele tem licença de ambulante válida após o reordenamento? Tem Cadastur ou credencial de Guia de Turismo Regional?
+4. Ele tem licença de ambulante válida após o reordenamento? (Já confirmado: ele tem Cadastur e é guia credenciado; a empresa nova precisa do Cadastur de agência próprio.)
 5. Quais fornecedores ele traria? Eles têm guia credenciado, seguro e veículos em bom estado? Qual a regra de cancelamento, chuva e no-show de cada um? É preciso pagar o fornecedor antes do passeio?
 6. Ele consegue comissão sobre buggy, pousadas em Jeri e ingressos do Beach Park? De quanto?
 7. Quantos agentes ele conhece e consegue liderar? Quanto eles ganham hoje por venda?
