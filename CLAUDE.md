@@ -17,6 +17,10 @@ Projeto **novo e independente**, na área de turismo, em estágio de montagem.
 
 Pablo trabalha pelo celular, sem teclado/mouse no computador: resolva acessos sozinho, não peça passos manuais, respostas curtas com o resultado primeiro.
 
+## Custo zero primeiro
+
+Começar de graça ou quase: planos grátis (Cloudflare, etc.), código aberto maduro e comprovado, canais orgânicos e comissão só sobre venda. Gasto pago só na fase de escala, quando houver receita, e com o gatilho que o justifica.
+
 ## Estado atual
 
 Montagem. Nome, público, modelo de negócio e stack ainda não definidos — ver `docs/decisoes.md`.
