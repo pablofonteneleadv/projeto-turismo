@@ -307,7 +307,7 @@
       p.querySelectorAll("[data-del]").forEach(function (b) { b.addEventListener("click", async function () { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toque de novo para excluir"; return; } var u = await sb.from(table).delete().eq("id", b.dataset.del); if (!fail(u)) render(); }); });
     };
   }
-  VIEWS.avaliacoes = simpleCrud("reviews", [["name", "Nome", "", 1], ["origin", "Estado ou país"], ["tour", "Passeio"], ["month", "Mês (ex.: Nov 2026)"], ["text", "Texto da avaliação", "ta", 1]], "avaliação");
+  VIEWS.avaliacoes = simpleCrud("reviews", [["name", "Nome", "", 1], ["origin", "Estado ou país"], ["tour", "Passeio"], ["month", "Mês (ex.: Nov 2026)"], ["stars", "Estrelas (1 a 5)", "", 1], ["text", "Texto da avaliação (só de cliente real)", "ta", 1]], "avaliação");
   VIEWS.perguntas = simpleCrud("faqs", [["question", "Pergunta", "", 1], ["answer", "Resposta", "ta", 1]], "pergunta");
 
   VIEWS.config = async function (p) {

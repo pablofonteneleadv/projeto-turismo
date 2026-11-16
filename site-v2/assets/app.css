@@ -233,3 +233,14 @@ body.has-bar .chat{bottom:calc(92px + env(safe-area-inset-bottom, 0px))}
   .top .btn-sol{display:none}
   .news form{flex-direction:column}
 }
+
+/* Revisão 16/11/2026: leitura e toque no celular */
+.hero h1{font-size:clamp(1.8rem,6.5vw,2.6rem)}
+.label,.search label,.price-from small,.fact small,.bar small{font-size:.78rem}
+.logo small{font-size:.7rem}
+.card .price small{font-size:.72rem}
+.top .btn,.actions .btn,.filters button,.seg button,.coupon .btn{min-height:44px}
+body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+a.rating{color:inherit;text-decoration:none}
+.review .stars{letter-spacing:.1em}
+.rating[hidden]{display:none}

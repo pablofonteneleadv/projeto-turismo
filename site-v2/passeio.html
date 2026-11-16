@@ -3,8 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Passeio saindo de Fortaleza</title>
-<meta name="description" content="Passeio saindo de Fortaleza com busca no hotel, guia Cadastur, Pix com desconto e cancelamento grátis até 24 h.">
+<title>Passeios em Fortaleza | Maré Tur</title>
+<meta name="description" content="Passeio saindo de Fortaleza com busca no hotel, guia cadastrado no Cadastur e reserva com 20% de sinal no Pix.">
+<meta property="og:title" content="Passeios em Fortaleza | Maré Tur">
+<meta property="og:description" content="Jericoacoara, Cumbuco, Canoa Quebrada e mais, com busca no hotel. Reserve com 20% de sinal.">
+<meta property="og:image" content="https://maretur.onrender.com/fotos/hero-2.jpg">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B7A83'/%3E%3Cpath d='M6 21 Q16 13 26 21' stroke='%23E9A825' stroke-width='3' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,18 +43,18 @@
 <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-box">
     <div id="step1">
-      <h3 id="modalTitle">Quase lá</h3>
+      <h3 id="modalTitle">Seus dados para a reserva</h3>
       <p class="muted" id="sumLine" style="margin:6px 0 12px"></p>
       <form id="custForm" style="display:flex;flex-direction:column;gap:10px">
         <div class="field"><label class="label" for="cName">Seu nome</label><input id="cName" required maxlength="120" autocomplete="name"></div>
         <div class="field"><label class="label" for="cPhone">WhatsApp com DDD</label><input id="cPhone" required inputmode="tel" maxlength="30" autocomplete="tel"></div>
         <div class="field"><label class="label" for="cHotel">Hotel ou endereço da busca</label><input id="cHotel" maxlength="160"></div>
-        <button class="btn btn-sol" type="submit" id="confirmBtn">Confirmar reserva</button>
+        <button class="btn btn-sol" type="submit" id="confirmBtn">Enviar pedido de reserva</button>
         <button class="btn btn-ghost" type="button" data-close-modal>Voltar</button>
       </form>
     </div>
     <div id="step2" hidden>
-      <h3>Reserva recebida</h3>
+      <h3>Pedido de reserva recebido</h3>
       <p id="doneTxt"></p>
       <div class="pixbox" id="pixBox"></div>
       <a class="btn btn-sol" id="sendWa" href="#" target="_blank" rel="noopener">Enviar comprovante no WhatsApp</a>
@@ -68,9 +73,9 @@
     <div class="pax">
       <div class="pax-row"><div><b>Adultos</b><small>11 anos ou mais</small></div><div class="stepper"><button type="button" data-step="adults" data-d="-1" aria-label="Menos adultos">−</button><output data-out="adults">2</output><button type="button" data-step="adults" data-d="1" aria-label="Mais adultos">+</button></div></div>
       <div class="pax-row"><div><b>Crianças</b><small>5 a 10 anos</small></div><div class="stepper"><button type="button" data-step="children" data-d="-1" aria-label="Menos crianças">−</button><output data-out="children">0</output><button type="button" data-step="children" data-d="1" aria-label="Mais crianças">+</button></div></div>
-      <div class="pax-row"><div><b>Idosos</b><small>60 anos ou mais</small></div><div class="stepper"><button type="button" data-step="seniors" data-d="-1" aria-label="Menos idosos">−</button><output data-out="seniors">0</output><button type="button" data-step="seniors" data-d="1" aria-label="Mais idosos">+</button></div></div>
+      <div class="pax-row"><div><b>Idosos</b><small>60 anos ou mais · preço de adulto</small></div><div class="stepper"><button type="button" data-step="seniors" data-d="-1" aria-label="Menos idosos">−</button><output data-out="seniors">0</output><button type="button" data-step="seniors" data-d="1" aria-label="Mais idosos">+</button></div></div>
     </div>
-    <p class="note">Até 4 anos: no colo, grátis.</p>
+    <p class="note">Até 4 anos: no colo, grátis. De 5 a 10 anos: o valor é confirmado no WhatsApp; o total abaixo usa o preço de adulto.</p>
   </div>
   <label class="addon" data-buggy-field><input type="checkbox" data-k="buggy"><span data-buggy-label></span></label>
   <div class="field"><label class="label" for="CUP">Cupom</label>

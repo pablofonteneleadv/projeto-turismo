@@ -6,16 +6,19 @@
   try { favs = JSON.parse(localStorage.getItem("site-favs") || "{}") || {}; } catch (e) { favs = {}; }
 
   U.brand(S); U.chat(S);
-  document.getElementById("heroPhoto").innerHTML = U.photo({ url: "fotos/hero-2.jpg", credit: "Foto: MTur Destinos · Domínio público" }, "hero", "Praia de Iracema e Beira Mar de Fortaleza");
-  document.getElementById("heroEyebrow").textContent = S.hero_eyebrow;
-  document.getElementById("heroTitle").textContent = S.hero_title;
+  document.getElementById("heroPhoto").innerHTML = U.photo({ url: "fotos/hero-2.jpg", credit: "Foto: MTur Destinos · Domínio público" }, "hero", "Praia de Iracema e Beira Mar de Fortaleza", true);
+  if (S.hero_eyebrow) document.getElementById("heroEyebrow").textContent = S.hero_eyebrow;
+  if (S.hero_title) document.getElementById("heroTitle").textContent = S.hero_title;
   document.getElementById("promises").innerHTML = (S.hero_promises || []).map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("");
-  var showRatings = !!String(S.rating_count || "").trim();
-  if (showRatings) {
-    document.getElementById("ratingValue").textContent = S.rating_value;
-    document.getElementById("ratingCount").textContent = "· " + S.rating_count + " avaliações";
-  } else document.querySelector(".hero .rating").hidden = true;
+  // Avaliações: só notas reais. Usa a nota do Google cadastrada no painel ou a média das avaliações publicadas (mínimo 3).
+  var R = U.ratings(S, data.reviews), showRatings = !!R;
+  if (R) {
+    var hr = document.querySelector(".hero .rating"); hr.hidden = false;
+    document.getElementById("ratingValue").textContent = R.value;
+    document.getElementById("ratingCount").textContent = "· " + R.label;
+  }
   if (!data.reviews.length) document.getElementById("reviewsSection").hidden = true;
+  else document.getElementById("reviewsSummary").textContent = data.reviews.length >= 3 ? "Nota média " + U.ratings(null, data.reviews).value + " de 5, de quem já viajou com a gente." : "De quem já viajou com a gente.";
   document.getElementById("packPct").textContent = S.pack_discount_pct;
   var minPix = T.filter(function (t) { return !t.per_vehicle; }).reduce(function (m, t) { return Math.min(m, Number(t.price_pix)); }, Infinity);
   if (isFinite(minPix)) document.getElementById("fromPrice").textContent = D.brl(minPix);
@@ -48,11 +51,11 @@
       var inPack = pack.indexOf(t.slug) > -1, fav = !!favs[t.slug];
       var el = document.createElement("article"); el.className = "card";
       el.innerHTML =
-        '<div style="position:relative">' + U.photo((t.photos || [])[0], t.slug, t.name) +
+        '<div style="position:relative">' + U.photo((t.photos || [])[0], t.slug, U.alt(t, 0)) +
         '<div class="tags"><span class="tag">' + (t.category === "transfers" ? "Porta a porta" : "Busca no hotel") + "</span>" + (t.featured ? '<span class="tag hot">Destaque</span>' : "") + "</div>" +
         '<button class="fav" type="button" aria-pressed="' + fav + '" aria-label="Salvar ' + esc(t.name) + '">' + (fav ? "♥" : "♡") + "</button></div>" +
         '<div class="body"><h3>' + esc(t.name) + "</h3>" +
-        '<div class="where"><span>📍 ' + esc(t.location) + "</span>" + (showRatings ? '<span><span class="stars" aria-hidden="true">★</span> ' + Number(t.rating || 5).toFixed(1).replace(".", ",") + "</span>" : "") + "</div>" +
+        '<div class="where"><span>📍 ' + esc(t.location) + "</span>" + (function () { var tr = U.tourRating(t, data.reviews); return tr ? '<span><span class="stars" aria-hidden="true">★</span> ' + tr.value + ' <small class="muted">(' + tr.count + ")</small></span>" : ""; })() + "</div>" +
         '<div class="time">' + esc(t.times) + "</div>" +
         '<div class="price"><div><small>A partir de · ' + (t.per_vehicle ? "por veículo" : "por pessoa") + '</small><b class="num">' + D.brl(t.price_card) + '</b></div><span class="pix num">' + D.brl(t.price_pix) + " no Pix</span></div>" +
         '<div class="row"><a class="btn btn-mar" href="' + link(t) + '">Ver passeio</a>' +
@@ -85,9 +88,7 @@
   document.getElementById("packOpen").addEventListener("click", goPack);
   document.getElementById("packCta").addEventListener("click", goPack);
 
-  document.getElementById("reviews").innerHTML = data.reviews.map(function (r) {
-    return '<article class="review">' + (r.tour ? '<span class="trip">' + esc(r.tour) + "</span>" : "") + "<p>" + esc(r.text) + "</p><footer><span>" + esc(r.name) + (r.origin ? " · " + esc(r.origin) : "") + "</span><span>" + esc(r.month) + "</span></footer></article>";
-  }).join("");
+  document.getElementById("reviews").innerHTML = data.reviews.map(U.review).join("");
   document.getElementById("faqs").innerHTML = data.faqs.map(function (q) { return "<details><summary>" + esc(q.question) + "</summary><p>" + esc(q.answer) + "</p></details>"; }).join("");
 
   function phoneOk(v) { return v.replace(/\D/g, "").length >= 10; }

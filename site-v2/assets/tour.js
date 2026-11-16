@@ -9,8 +9,13 @@
   U.brand(S);
   if (!t) { page.innerHTML = '<div class="empty" style="margin-top:24px">Passeio não encontrado. <a href="./">Ver todos os passeios</a></div>'; document.getElementById("bar").hidden = true; return; }
 
-  document.title = t.name + " saindo de Fortaleza | " + S.brand + " Passeios";
-  var md = document.querySelector('meta[name="description"]'); if (md) md.content = (t.summary || "") + " Busca no hotel, guia Cadastur e Pix com desconto.";
+  document.title = t.name + " saindo de Fortaleza | " + S.brand;
+  var md = document.querySelector('meta[name="description"]'); if (md) md.content = (t.summary || "") + " Busca no hotel, guia cadastrado no Cadastur e reserva com 20% de sinal.";
+  var tr = U.tourRating(t, data.reviews), mine = U.tourReviews(t, data.reviews);
+  var shown = mine.concat(data.reviews.filter(function (r) { return mine.indexOf(r) < 0; })).slice(0, 6);
+  var noHotel = t.slug === "transfer-jeri-volta";
+  var bring = t.category === "transfers" ? "" : '<section class="block"><h2>Leve com você</h2><ul class="list"><li>Protetor solar, chapéu e óculos de sol</li><li>Roupa de banho e toalha</li><li>Dinheiro ou cartão para alimentação e opcionais</li><li>Documento com foto</li></ul><p class="note">Alimentação e passeios opcionais não estão inclusos, salvo quando aparecem na lista de incluso.</p></section>';
+  var day = (t.itinerary || []).length || t.category !== "passeios" ? "" : '<section class="block"><h2>Como é o dia</h2><ol class="route"><li>Busca no seu hotel pela manhã. O horário exato chega no WhatsApp na véspera.</li><li>Viagem com guia cadastrado no Cadastur, contando a história de cada lugar.</li><li>Tempo livre na praia, com ponto de apoio para o almoço quando indicado.</li><li>Volta ao hotel no fim do dia.</li></ol></section>';
   U.chat(S, "Olá! Tenho uma dúvida sobre o passeio " + t.name + ".");
 
   var buggyExtra = (t.extras || []).filter(function (e) { return e.buggy && typeof e.price === "number"; })[0];
@@ -24,35 +29,35 @@
 
   var photos = (t.photos || []).slice(0, 3);
   var galClass = photos.length <= 1 ? "gallery one" : photos.length === 2 ? "gallery two" : "gallery";
-  var gal = photos.length ? photos.map(function (p, i) { return U.photo(p, t.slug + i, t.name).replace('<div class="photo">', '<div class="photo">' + (i === 0 && t.featured ? '<span class="badge">Destaque</span>' : "")); }).join("") : U.photo(null, t.slug);
+  var gal = photos.length ? photos.map(function (p, i) { return U.photo(p, t.slug + i, U.alt(t, i), i === 0).replace('<div class="photo">', '<div class="photo">' + (i === 0 && t.featured ? '<span class="badge">Destaque</span>' : "")); }).join("") : U.photo(null, t.slug);
 
   var others = data.tours.filter(function (x) { return x.slug !== t.slug; }).sort(function (a, b) { return (b.category === t.category) - (a.category === t.category); }).slice(0, 6);
 
   page.innerHTML =
     '<nav class="crumbs" aria-label="Caminho"><a href="./">Início</a><span aria-hidden="true">›</span><a href="./#passeios">Passeios</a><span aria-hidden="true">›</span><span>' + esc(t.name) + "</span></nav>" +
     '<section class="head"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1>' + esc(t.name) + '</h1><span class="code">#' + esc(t.slug.toUpperCase()) + "</span></div>" +
-    '<div class="meta"><span>📍 ' + esc(t.location) + "</span>" + (String(S.rating_count || "").trim() ? '<span><span class="stars" aria-hidden="true">★★★★★</span> <b>' + Number(t.rating || 5).toFixed(1).replace(".", ",") + "</b></span>" : "") + "</div>" +
+    '<div class="meta"><span>📍 ' + esc(t.location) + "</span>" + (tr ? '<span><span class="stars" aria-hidden="true">★</span> <b>' + tr.value + "</b> · " + tr.count + (tr.count === 1 ? " avaliação" : " avaliações") + "</span>" : "") + "</div>" +
     '<div class="actions"><button class="btn btn-ghost" type="button" id="share">Compartilhar</button><button class="btn btn-ghost" type="button" id="save" aria-pressed="false">♡ Salvar</button></div></section>' +
     '<section class="' + galClass + '" aria-label="Fotos">' + gal + "</section>" +
     '<div class="grid"><div class="content">' +
       '<section class="facts" aria-label="Resumo">' +
         '<div class="fact"><small>Duração</small><b>' + esc(t.duration || "—") + "</b></div>" +
         '<div class="fact"><small>Horários</small><b>' + esc(t.times || "—") + "</b></div>" +
-        '<div class="fact"><small>Busca</small><b>' + (t.category === "transfers" ? "Porta a porta" : "No seu hotel") + "</b></div>" +
+        '<div class="fact"><small>Busca</small><b>' + (noHotel ? "Combinada no WhatsApp" : t.category === "transfers" ? "Porta a porta" : "No seu hotel") + "</b></div>" +
         '<div class="fact"><small>Confirmação</small><b>No WhatsApp</b></div></section>' +
       '<section class="block"><h2>Sobre o passeio</h2><p>' + esc(t.description || t.summary) + "</p></section>" +
-      ((t.itinerary || []).length ? '<section class="block"><h2>Roteiro previsto</h2><ol class="route">' + t.itinerary.map(function (r) { return "<li><time>" + esc(r.time) + "</time> · " + esc(r.text) + "</li>"; }).join("") + "</ol></section>" : "") +
+      ((t.itinerary || []).length ? '<section class="block"><h2>Roteiro previsto</h2><ol class="route">' + t.itinerary.map(function (r) { return "<li><time>" + esc(r.time) + "</time> · " + esc(r.text) + "</li>"; }).join("") + "</ol></section>" : day) +
       '<section class="block"><h2>O que está incluso e o que é à parte</h2><div class="two">' +
         '<ul class="list"><li><h3 style="font-size:1rem">Incluso</h3></li>' + (t.includes || []).map(function (i) { return '<li class="yes">' + esc(i) + "</li>"; }).join("") + "</ul>" +
-        '<ul class="list"><li><h3 style="font-size:1rem">À parte, com preço de hoje</h3></li>' + ((t.extras || []).length ? t.extras.map(function (e) { return '<li><span class="extra"><span>' + esc(e.name) + '</span><span class="num">' + esc(D.money(e.price)) + "</span></span></li>"; }).join("") : '<li class="muted">Nada à parte neste passeio.</li>') + "</ul>" +
-      '</div><p class="note">Sem surpresa no dia: você vê o preço dos extras antes de reservar.</p></section>' +
+        '<ul class="list"><li><h3 style="font-size:1rem">À parte</h3></li>' + ((t.extras || []).length ? t.extras.map(function (e) { return '<li><span class="extra"><span>' + esc(e.name) + '</span><span class="num">' + esc(D.money(e.price)) + "</span></span></li>"; }).join("") : '<li class="muted">Nada à parte além da alimentação.</li>') + "</ul>" +
+      '</div><p class="note">Opcionais e taxas são pagos no local. Quer saber o valor do dia antes de reservar? Pergunte no WhatsApp.</p></section>' + bring +
       '<section class="block"><h2>Como pagar</h2><div class="pay">' +
         '<div class="pay-card rec"><span class="pill">Mais fácil</span><b>Sinal de ' + DEP + '% no Pix</b><p class="muted">Garanta a vaga pagando ' + DEP + '% agora. O restante é pago no embarque, ao guia, em dinheiro, Pix ou cartão.</p></div>' +
         '<div class="pay-card"><b>Tudo de uma vez</b><p class="muted">Pague o total no Pix ou no cartão em até 4x. O link do cartão chega no seu WhatsApp.</p></div></div></section>' +
-      '<section class="rain"><h2 style="font-size:1.2rem">Se chover ou você desistir</h2><p>' + esc(S.cancel_policy) + "</p></section>" +
-      (data.reviews.length ? '<section class="block"><h2>O que dizem os clientes</h2><div class="reviews">' + data.reviews.map(function (r) { return '<article class="review">' + (r.tour ? '<span class="trip">' + esc(r.tour) + "</span>" : "") + "<p>" + esc(r.text) + "</p><footer><span>" + esc(r.name) + (r.origin ? " · " + esc(r.origin) : "") + "</span><span>" + esc(r.month) + "</span></footer></article>"; }).join("") + "</div></section>" : "") +
+      '<section class="rain"><h2 style="font-size:1.2rem">Política de cancelamento</h2><p>' + esc(S.cancel_policy) + "</p></section>" +
+      (shown.length ? '<section class="block"><h2>O que os clientes dizem</h2><div class="reviews">' + shown.map(U.review).join("") + "</div></section>" : "") +
       '<section class="block"><h2>Perguntas frequentes</h2><div>' + data.faqs.map(function (q) { return "<details><summary>" + esc(q.question) + "</summary><p>" + esc(q.answer) + "</p></details>"; }).join("") + "</div></section>" +
-      '<section class="block"><h2>Monte seu roteiro</h2><div class="similar">' + others.map(function (o) { return '<a class="sim" href="passeio.html?p=' + encodeURIComponent(o.slug) + '">' + U.photo((o.photos || [])[0], o.slug, o.name) + '<div class="t"><b>' + esc(o.name) + '</b><span class="muted">a partir de ' + D.brl(o.price_pix) + "</span></div></a>"; }).join("") + "</div></section>" +
+      '<section class="block"><h2>Monte seu roteiro</h2><div class="similar">' + others.map(function (o) { return '<a class="sim" href="passeio.html?p=' + encodeURIComponent(o.slug) + '">' + U.photo((o.photos || [])[0], o.slug, U.alt(o, 0)) + '<div class="t"><b>' + esc(o.name) + '</b><span class="muted">a partir de ' + D.brl(o.price_pix) + "</span></div></a>"; }).join("") + "</div></section>" +
     '</div><aside class="book" id="book" aria-label="Reserva"></aside></div>';
 
   document.getElementById("barPrice").textContent = D.brl(t.price_pix);
@@ -143,7 +148,7 @@
     var row = { tour_slug: t.slug, tour_name: t.name, tour_date: st.date, kind: t.per_vehicle ? "priv" : st.kind, adults: st.adults, children: st.children, seniors: st.seniors,
       buggy_cars: r.cars, coupon: coupon ? coupon.code : null, pay_method: st.pay, total: r.total, customer_name: name, phone: phone, hotel: hotel || null, status: "pendente" };
     var res = await D.insert("bookings", row);
-    btn.disabled = false; btn.textContent = "Confirmar reserva";
+    btn.disabled = false; btn.textContent = "Enviar pedido de reserva";
     if (res.error) return U.toast("Não deu para registrar agora. Tente de novo ou chame no WhatsApp.");
     lastBooking = row;
     var lines = ["Olá! Acabei de reservar pelo site:", t.name + " · " + fmtDate(st.date), (row.kind === "priv" ? "Privativo" : "Em grupo") + " · " + st.adults + " adulto(s), " + st.children + " criança(s), " + st.seniors + " idoso(s)"];

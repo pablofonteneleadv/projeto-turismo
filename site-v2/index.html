@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Maré Tur · Passeios em Fortaleza com busca no hotel | Jericoacoara, Cumbuco, Canoa Quebrada</title>
-<meta name="description" content="Passeios saindo de Fortaleza com busca no hotel: Jericoacoara, Cumbuco, Canoa Quebrada, Lagoinha, 3 Praias e transfers. Pix com desconto, cartão em 4x e cancelamento grátis até 24 h.">
+<title>Maré Tur · Passeios em Fortaleza com busca no hotel</title>
+<meta name="description" content="Passeios saindo de Fortaleza com busca no hotel: Jericoacoara, Cumbuco, Canoa Quebrada, Lagoinha, 3 Praias e transfers. Guia cadastrado no Cadastur, reserve com 20% de sinal e pague o resto no embarque.">
+<link rel="canonical" href="https://maretur.onrender.com/">
 <meta property="og:title" content="Maré Tur · Passeios em Fortaleza com busca no hotel">
-<meta property="og:description" content="Jericoacoara, Cumbuco, Canoa Quebrada e mais. Reserve em 2 minutos e pague no Pix.">
+<meta property="og:description" content="Jericoacoara, Cumbuco, Canoa Quebrada e mais. Reserve em 2 minutos com 20% de sinal no Pix.">
 <meta property="og:image" content="https://maretur.onrender.com/fotos/hero-2.jpg">
+<meta property="og:url" content="https://maretur.onrender.com/">
+<meta property="og:locale" content="pt_BR">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230B7A83'/%3E%3Cpath d='M6 21 Q16 13 26 21' stroke='%23E9A825' stroke-width='3' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,15 +31,15 @@
   <div class="photo" id="heroPhoto"></div>
   <div class="wrap">
     <div class="hero-copy">
-      <span class="chip-dark" id="heroEyebrow">Receptivo em Fortaleza · Cadastur</span>
-      <h1 id="heroTitle">Passeios saindo do seu hotel em Fortaleza</h1>
+      <span class="chip-dark" id="heroEyebrow">Guia de turismo cadastrado no Cadastur</span>
+      <h1 id="heroTitle">Jericoacoara, Cumbuco e Canoa Quebrada saindo do seu hotel em Fortaleza</h1>
       <ul class="promises" id="promises"></ul>
-      <p class="hero-price">a partir de <b class="num" id="fromPrice">R$ 49,90</b> por pessoa no Pix</p>
-      <div class="rating"><span class="stars" aria-hidden="true">★★★★★</span><b id="ratingValue">4,9</b><span id="ratingCount">· 128 avaliações</span></div>
+      <p class="hero-price">a partir de <b class="num" id="fromPrice">R$ 80,00</b> por pessoa no Pix</p>
+      <a class="rating" href="#reviewsSection" hidden><span class="stars" aria-hidden="true">★★★★★</span><b id="ratingValue"></b><span id="ratingCount"></span></a>
     </div>
     <form class="search" id="search" aria-label="Buscar passeio">
       <label for="dest">Destino<select id="dest"><option value="">Todos os destinos</option></select></label>
-      <label for="when">Data<input type="date" id="when"></label>
+      <label for="when">Data do passeio<input type="date" id="when"></label>
       <button class="btn btn-sol" type="submit">Ver passeios</button>
       <button class="btn btn-ghost" type="button" id="packOpen">Montar pacote com vários passeios</button>
     </form>
@@ -44,19 +47,19 @@
 </section>
 
 <main>
-  <section class="band"><div class="wrap">
-    <div class="sec-head"><span class="eyebrow">Como funciona</span><h2>Reservar leva 2 minutos</h2></div>
-    <div class="steps">
-      <div class="step"><span class="n">1</span><h3>Escolha o passeio</h3><p class="muted">Veja roteiro, horários, o que está incluso e quanto custam os extras. Dúvidas, chama no WhatsApp.</p></div>
-      <div class="step"><span class="n">2</span><h3>Pague como preferir</h3><p class="muted">Pague 20% de sinal no Pix e o restante no embarque, em dinheiro, Pix ou cartão.</p></div>
-      <div class="step"><span class="n">3</span><h3>Embarque no hotel</h3><p class="muted">A confirmação chega no WhatsApp, e o horário da busca chega na véspera.</p></div>
-    </div>
-  </div></section>
-
-  <section class="band" id="passeios" style="padding-top:0"><div class="wrap">
+  <section class="band" id="passeios"><div class="wrap">
     <div class="sec-head"><span class="eyebrow">Passeios</span><h2 id="listTitle">Escolha seu dia de praia</h2></div>
     <div class="filters" id="filters" role="group" aria-label="Categorias"></div>
     <div class="cards" id="cards"><div class="empty">Carregando passeios…</div></div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Como funciona</span><h2>Reservar leva 2 minutos</h2></div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3>Escolha o passeio</h3><p class="muted">Veja o que está incluso e o que é opcional. Dúvidas? Chame no WhatsApp.</p></div>
+      <div class="step"><span class="n">2</span><h3>Garanta a vaga com 20%</h3><p class="muted">Pague 20% de sinal no Pix. O restante é pago no embarque, em dinheiro, Pix ou cartão.</p></div>
+      <div class="step"><span class="n">3</span><h3>Embarque no hotel</h3><p class="muted">A confirmação chega no WhatsApp, e o horário da busca chega na véspera.</p></div>
+    </div>
   </div></section>
 
   <section class="band" style="padding-top:0"><div class="wrap">
@@ -69,25 +72,25 @@
   <section class="band" style="padding-top:0"><div class="wrap">
     <div class="sec-head"><span class="eyebrow">Por que reservar com a gente</span><h2>Sem surpresa do embarque à volta</h2></div>
     <div class="diffs">
-      <div class="diff"><h3>Preço dos extras antes</h3><p class="muted">Buggy, jangada e almoço com valor na página. Você decide antes, não no meio da duna.</p></div>
-      <div class="diff"><h3>Resposta em minutos</h3><p class="muted">Atendimento no WhatsApp, e uma pessoa assume quando você quiser.</p></div>
+      <div class="diff"><h3>Opcionais por escrito</h3><p class="muted">Cada passeio mostra o que está incluso e o que é opcional, como buggy, jangada e almoço. Você confirma o valor do dia no WhatsApp antes de pagar.</p></div>
+      <div class="diff"><h3>Gente de verdade no WhatsApp</h3><p class="muted">Você fala direto com quem organiza o seu passeio, antes e durante a viagem.</p></div>
       <div class="diff"><h3>Reserve com 20%</h3><p class="muted">Garanta a vaga com um sinal no Pix e pague o restante no embarque.</p></div>
       <div class="diff"><h3>Guia credenciado</h3><p class="muted">Todos os passeios com guia de turismo credenciado no Cadastur.</p></div>
     </div>
   </div></section>
 
   <section class="band" id="reviewsSection" style="padding-top:0"><div class="wrap">
-    <div class="sec-head"><span class="eyebrow">Clientes</span><h2>O que dizem de nós</h2></div>
+    <div class="sec-head"><span class="eyebrow">Clientes</span><h2>O que os clientes dizem</h2><p class="muted" id="reviewsSummary"></p></div>
     <div class="reviews" id="reviews"></div>
   </div></section>
 
   <section class="band" style="padding-top:0"><div class="wrap">
     <div class="agent">
       <div style="display:flex;flex-direction:column;gap:10px">
-        <span class="eyebrow">Seja parceiro</span>
+        <span class="eyebrow">Seja nosso parceiro</span>
         <h2 style="font-size:1.6rem">Indique passeios e ganhe por cada venda</h2>
         <p>Trabalha em pousada, dirige por aplicativo ou cria conteúdo de viagem? Receba um cupom com seu nome.</p>
-        <ul><li>Seu cliente ganha desconto</li><li>Você ganha comissão de cada passeio realizado</li><li>Não paga nada para entrar</li></ul>
+        <ul><li>Seu cliente ganha desconto</li><li>Você ganha comissão por passeio realizado (percentual e prazo combinados com você no WhatsApp)</li><li>Não paga nada para entrar</li></ul>
       </div>
       <form id="partnerForm">
         <div class="field"><label class="label" for="pName">Seu nome</label><input id="pName" required maxlength="120" autocomplete="name"></div>
@@ -99,13 +102,13 @@
   </div></section>
 
   <section class="band" style="padding-top:0"><div class="wrap">
-    <div class="sec-head"><span class="eyebrow">Informações</span><h2>Tudo claro na sua reserva</h2></div>
+    <div class="sec-head"><span class="eyebrow">Informações</span><h2>Perguntas frequentes</h2></div>
     <div id="faqs"></div>
   </div></section>
 
   <section class="band" style="padding-top:0"><div class="wrap">
     <div class="news">
-      <div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.85">Promoções da semana</span><h2 style="font-size:1.5rem">Receba os roteiros e descontos no seu WhatsApp</h2><p style="opacity:.85">Só o que vale a pena. Sair da lista é uma mensagem.</p></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.85">Promoções no WhatsApp</span><h2 style="font-size:1.5rem">Receba os roteiros e descontos no seu WhatsApp</h2><p style="opacity:.85">Só o que vale a pena. Ao enviar, você aceita receber nossas mensagens; responda SAIR para parar quando quiser.</p></div>
       <form id="newsForm"><input id="newsPhone" type="tel" inputmode="tel" maxlength="30" placeholder="Seu WhatsApp com DDD" aria-label="Seu WhatsApp com DDD"><button class="btn btn-sol" type="submit">Quero receber</button></form>
     </div>
   </div></section>
