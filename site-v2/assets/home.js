@@ -10,8 +10,12 @@
   document.getElementById("heroEyebrow").textContent = S.hero_eyebrow;
   document.getElementById("heroTitle").textContent = S.hero_title;
   document.getElementById("promises").innerHTML = (S.hero_promises || []).map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("");
-  document.getElementById("ratingValue").textContent = S.rating_value;
-  document.getElementById("ratingCount").textContent = "· " + S.rating_count + " avaliações";
+  var showRatings = !!String(S.rating_count || "").trim();
+  if (showRatings) {
+    document.getElementById("ratingValue").textContent = S.rating_value;
+    document.getElementById("ratingCount").textContent = "· " + S.rating_count + " avaliações";
+  } else document.querySelector(".hero .rating").hidden = true;
+  if (!data.reviews.length) document.getElementById("reviewsSection").hidden = true;
   document.getElementById("packPct").textContent = S.pack_discount_pct;
   var minPix = T.filter(function (t) { return !t.per_vehicle; }).reduce(function (m, t) { return Math.min(m, Number(t.price_pix)); }, Infinity);
   if (isFinite(minPix)) document.getElementById("fromPrice").textContent = D.brl(minPix);
@@ -45,10 +49,10 @@
       var el = document.createElement("article"); el.className = "card";
       el.innerHTML =
         '<div style="position:relative">' + U.photo((t.photos || [])[0], t.slug, t.name) +
-        '<div class="tags"><span class="tag">' + (t.category === "transfers" ? "Porta a porta" : "Busca no hotel") + "</span>" + (t.featured ? '<span class="tag hot">Mais vendido</span>' : "") + "</div>" +
+        '<div class="tags"><span class="tag">' + (t.category === "transfers" ? "Porta a porta" : "Busca no hotel") + "</span>" + (t.featured ? '<span class="tag hot">Destaque</span>' : "") + "</div>" +
         '<button class="fav" type="button" aria-pressed="' + fav + '" aria-label="Salvar ' + esc(t.name) + '">' + (fav ? "♥" : "♡") + "</button></div>" +
         '<div class="body"><h3>' + esc(t.name) + "</h3>" +
-        '<div class="where"><span>📍 ' + esc(t.location) + '</span><span><span class="stars" aria-hidden="true">★</span> ' + Number(t.rating || 5).toFixed(1).replace(".", ",") + "</span></div>" +
+        '<div class="where"><span>📍 ' + esc(t.location) + "</span>" + (showRatings ? '<span><span class="stars" aria-hidden="true">★</span> ' + Number(t.rating || 5).toFixed(1).replace(".", ",") + "</span>" : "") + "</div>" +
         '<div class="time">' + esc(t.times) + "</div>" +
         '<div class="price"><div><small>A partir de · ' + (t.per_vehicle ? "por veículo" : "por pessoa") + '</small><b class="num">' + D.brl(t.price_card) + '</b></div><span class="pix num">' + D.brl(t.price_pix) + " no Pix</span></div>" +
         '<div class="row"><a class="btn btn-mar" href="' + link(t) + '">Ver passeio</a>' +

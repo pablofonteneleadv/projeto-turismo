@@ -9,7 +9,7 @@
     hero_title: "Passeios saindo do seu hotel em Fortaleza",
     hero_promises: ["Busca no seu hotel", "Guia credenciado Cadastur", "Pix ou cartão em até 4x", "Cancelamento grátis até 24 h", "Extras com preço na página", "Troca de data se chover"],
     pack_discount_pct: 5, deposit_per_person: 20, child_factor: 0.5,
-    rating_value: "4,9", rating_count: "128",
+    rating_value: "", rating_count: "",
     cancel_policy: "Cancelamento grátis até 24 h antes, com devolução em até 2 dias úteis. Se o passeio for cancelado pela chuva, você escolhe outra data ou recebe tudo de volta.",
     footer_note: "Fortaleza, CE · Cadastur em andamento"
   };
@@ -98,12 +98,8 @@
       photos: [{ url: "fotos/veleiro-1.jpg" }] })
   ];
 
-  var REVIEWS = [
-    { name: "Renata", origin: "SP", tour: "Jericoacoara", text: "Voucher chegou na hora, a busca foi pontual às 2h30 e o guia explicou tudo. Valeu cada real.", month: "Nov 2026" },
-    { name: "Paulo", origin: "MG", tour: "Cumbuco", text: "Já sabia o preço do buggy antes de ir, então não teve aquela negociação chata. Muito organizado.", month: "Nov 2026" },
-    { name: "Família Lima", origin: "RJ", tour: "3 Praias", text: "Choveu no dia marcado e trocaram a data sem cobrar nada. Atendimento rápido pelo WhatsApp.", month: "Out 2026" },
-    { name: "Juliana", origin: "DF", tour: "Pacote 3 dias", text: "Montei Cumbuco, Lagoinha e Canoa num pacote só e paguei menos. Recomendo.", month: "Out 2026" }
-  ];
+  /* Avaliações só entram quando forem de clientes reais (cadastradas no painel). */
+  var REVIEWS = [];
 
   var FAQS = [
     { question: "Como funciona a reserva?", answer: "Você escolhe o passeio, a data e quantas pessoas, deixa seu nome e WhatsApp e paga no Pix. A confirmação e o voucher chegam no WhatsApp." },
@@ -137,7 +133,7 @@
       return {
         settings: Object.assign({}, SETTINGS, (r[0].data && r[0].data.data) || {}),
         tours: (r[1].data && r[1].data.length) ? r[1].data : TOURS,
-        reviews: (r[2].data && r[2].data.length) ? r[2].data : REVIEWS,
+        reviews: r[2].data || [],
         faqs: (r[3].data && r[3].data.length) ? r[3].data : FAQS,
         live: true
       };

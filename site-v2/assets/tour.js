@@ -23,14 +23,14 @@
 
   var photos = (t.photos || []).slice(0, 3);
   var galClass = photos.length <= 1 ? "gallery one" : photos.length === 2 ? "gallery two" : "gallery";
-  var gal = photos.length ? photos.map(function (p, i) { return U.photo(p, t.slug + i, t.name).replace('<div class="photo">', '<div class="photo">' + (i === 0 && t.featured ? '<span class="badge">Mais vendido</span>' : "")); }).join("") : U.photo(null, t.slug);
+  var gal = photos.length ? photos.map(function (p, i) { return U.photo(p, t.slug + i, t.name).replace('<div class="photo">', '<div class="photo">' + (i === 0 && t.featured ? '<span class="badge">Destaque</span>' : "")); }).join("") : U.photo(null, t.slug);
 
   var others = data.tours.filter(function (x) { return x.slug !== t.slug; }).sort(function (a, b) { return (b.category === t.category) - (a.category === t.category); }).slice(0, 6);
 
   page.innerHTML =
     '<nav class="crumbs" aria-label="Caminho"><a href="./">Início</a><span aria-hidden="true">›</span><a href="./#passeios">Passeios</a><span aria-hidden="true">›</span><span>' + esc(t.name) + "</span></nav>" +
     '<section class="head"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1>' + esc(t.name) + '</h1><span class="code">#' + esc(t.slug.toUpperCase()) + "</span></div>" +
-    '<div class="meta"><span>📍 ' + esc(t.location) + '</span><span><span class="stars" aria-hidden="true">★★★★★</span> <b>' + Number(t.rating || 5).toFixed(1).replace(".", ",") + "</b></span></div>" +
+    '<div class="meta"><span>📍 ' + esc(t.location) + "</span>" + (String(S.rating_count || "").trim() ? '<span><span class="stars" aria-hidden="true">★★★★★</span> <b>' + Number(t.rating || 5).toFixed(1).replace(".", ",") + "</b></span>" : "") + "</div>" +
     '<div class="actions"><button class="btn btn-ghost" type="button" id="share">Compartilhar</button><button class="btn btn-ghost" type="button" id="save" aria-pressed="false">♡ Salvar</button></div></section>' +
     '<section class="' + galClass + '" aria-label="Fotos">' + gal + "</section>" +
     '<div class="grid"><div class="content">' +

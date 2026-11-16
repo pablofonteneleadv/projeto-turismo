@@ -44,7 +44,7 @@
   }
   document.getElementById("logout").addEventListener("click", async function () { await sb.auth.signOut(); loginView(); });
 
-  var TABS = [["inicio", "Resumo"], ["reservas", "Reservas"], ["passeios", "Passeios"], ["cupons", "Cupons e agentes"], ["parceiros", "Parceiros"], ["contatos", "Contatos"], ["avaliacoes", "Avaliações"], ["perguntas", "Perguntas"], ["config", "Configurações"]];
+  var TABS = [["inicio", "Resumo"], ["reservas", "Reservas"], ["precos", "Preços"], ["passeios", "Passeios"], ["cupons", "Cupons e agentes"], ["parceiros", "Parceiros"], ["contatos", "Contatos"], ["avaliacoes", "Avaliações"], ["perguntas", "Perguntas"], ["config", "Configurações"]];
 
   function shell(inner) {
     app.innerHTML = '<div class="adm"><nav class="tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + "</button>"; }).join("") + '</nav><section class="panel" id="panel">' + inner + "</section></div>";
@@ -85,7 +85,7 @@
       var tours = S.tours.map(function (x) { var y = Object.assign({}, x); return y; });
       var a = await sb.from("tours").upsert(tours); if (fail(a)) return;
       var c = await sb.from("settings").upsert({ id: 1, data: S.settings }); if (fail(c)) return;
-      var d = await sb.from("reviews").insert(S.reviews.map(function (x, i) { return Object.assign({ sort: i + 1 }, x); })); if (fail(d)) return;
+      if (S.reviews.length) { var d = await sb.from("reviews").insert(S.reviews.map(function (x, i) { return Object.assign({ sort: i + 1 }, x); })); if (fail(d)) return; }
       var e = await sb.from("faqs").insert(S.faqs.map(function (x, i) { return Object.assign({ sort: i + 1 }, x); })); if (fail(e)) return;
       U.toast("Dados iniciais carregados."); render();
     });
@@ -101,10 +101,12 @@
       (list.map(function (x) {
         var people = x.adults + " ad., " + x.children + " cri., " + x.seniors + " ido.";
         var wa = D.waLink(x.phone, "Olá, " + x.customer_name.split(" ")[0] + "! Sobre sua reserva de " + x.tour_name + " em " + ddmm(x.tour_date) + ":");
+        var conf = D.waLink(x.phone, ["✅ Reserva confirmada · " + S.brand + " Passeios", "", "Passeio: " + x.tour_name, "Data: " + ddmm(x.tour_date), "Pessoas: " + people + (x.buggy_cars ? " · Buggy: " + x.buggy_cars : ""), "Busca: " + (x.hotel || "a confirmar"), "Valor: " + D.brl(x.total) + " (" + (x.status === "pendente" ? "a pagar" : "pago") + ")", "Código: #" + x.id, "", "O horário exato da busca vai na véspera. " + (S.cancel_policy || "")].join("\n"));
         return '<div class="item"><div class="item-head"><div><h3>' + esc(x.tour_name) + " · " + ddmm(x.tour_date) + '</h3><p class="small muted">#' + x.id + " · feita em " + ddmm(x.created_at) + "</p></div><span class=\"st st-" + x.status + '">' + STATUS_TXT[x.status] + "</span></div>" +
           '<p class="small"><b>' + esc(x.customer_name) + "</b> · " + esc(x.phone) + (x.hotel ? " · Busca: " + esc(x.hotel) : "") + "</p>" +
           '<p class="small">' + (x.kind === "priv" ? "Privativo" : "Em grupo") + " · " + people + (x.buggy_cars ? " · Buggy: " + x.buggy_cars : "") + (x.coupon ? " · Cupom " + esc(x.coupon) : "") + " · <b>" + D.brl(x.total) + "</b> " + (x.pay_method === "pix" ? "Pix" : "cartão") + "</p>" +
           '<div class="row"><select data-status="' + x.id + '" style="width:auto">' + STATUS.map(function (s) { return '<option value="' + s + '"' + (s === x.status ? " selected" : "") + ">" + STATUS_TXT[s] + "</option>"; }).join("") + "</select>" +
+          (conf ? '<a class="btn btn-mar" href="' + conf + '" target="_blank" rel="noopener">Mandar confirmação</a>' : "") +
           (wa ? '<a class="btn btn-ghost" href="' + wa + '" target="_blank" rel="noopener">WhatsApp do cliente</a>' : "") +
           '<button class="btn btn-ghost" type="button" data-note="' + x.id + '">Anotação</button></div>' + (x.notes ? '<p class="small muted">📝 ' + esc(x.notes) + "</p>" : "") + "</div>";
       }).join("") || '<div class="empty">Nenhuma reserva aqui.</div>');
@@ -117,6 +119,33 @@
       box.querySelector("button").addEventListener("click", async function () { var u = await sb.from("bookings").update({ notes: box.querySelector("textarea").value }).eq("id", x.id); if (!fail(u)) { U.toast("Anotação salva."); render(); } });
     }); });
     void S;
+  };
+
+  VIEWS.precos = async function (p) {
+    var r = await sb.from("tours").select("slug,name,price_card,price_pix,price_private,per_vehicle,active,extras").order("sort");
+    if (fail(r)) return;
+    p.innerHTML = '<p class="note">Revise e toque em Salvar tudo. Pix normalmente fica de 5% a 10% abaixo do cartão. O privativo é o preço do veículo inteiro.</p>' +
+      r.data.map(function (t) {
+        var bug = (t.extras || []).filter(function (e) { return e.buggy; })[0];
+        return '<div class="item" data-slug="' + esc(t.slug) + '"><div class="item-head"><h3>' + esc(t.name) + "</h3>" + (t.active ? "" : '<span class="st st-cancelado">Oculto</span>') + '</div><div class="formgrid">' +
+          f("pc_" + t.slug, "Cartão (R$)" + (t.per_vehicle ? " por veículo" : " por pessoa"), t.price_card, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
+          f("pp_" + t.slug, "Pix (R$)", t.price_pix, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
+          (t.per_vehicle ? "" : f("pv_" + t.slug, "Privativo por veículo (vazio = não oferece)", t.price_private == null ? "" : t.price_private, "", 'type="number" step="0.01" min="0" inputmode="decimal"')) +
+          (bug ? f("pb_" + t.slug, "Buggy por carro (R$)", bug.price, "", 'type="number" step="0.01" min="0" inputmode="decimal"') : "") +
+          "</div></div>";
+      }).join("") + '<div class="row" style="position:sticky;bottom:0;background:var(--bg);padding-block:10px"><button class="btn btn-mar" type="button" id="saveAll" style="flex:1">Salvar tudo</button></div>';
+    document.getElementById("saveAll").addEventListener("click", async function () {
+      var btn = this; btn.disabled = true; btn.textContent = "Salvando…"; var errs = 0;
+      for (var i = 0; i < r.data.length; i++) {
+        var t = r.data[i], v = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : null; };
+        var row = { price_card: Number(v("pc_" + t.slug)) || 0, price_pix: Number(v("pp_" + t.slug)) || 0, updated_at: new Date().toISOString() };
+        if (!t.per_vehicle) row.price_private = v("pv_" + t.slug) === "" ? null : Number(v("pv_" + t.slug));
+        if (v("pb_" + t.slug) !== null) row.extras = (t.extras || []).map(function (e) { return e.buggy ? Object.assign({}, e, { price: Number(v("pb_" + t.slug)) || 0 }) : e; });
+        var u = await sb.from("tours").update(row).eq("slug", t.slug); if (u.error) errs++;
+      }
+      btn.disabled = false; btn.textContent = "Salvar tudo";
+      U.toast(errs ? "Alguns preços não salvaram (" + errs + "). Tente de novo." : "Preços salvos. O site já mostra os novos valores.");
+    });
   };
 
   VIEWS.passeios = async function (p) {
@@ -287,7 +316,7 @@
     var s = Object.assign({}, D.SEED.settings, (r.data && r.data.data) || {});
     var F = [["brand", "Nome da marca"], ["brand_sub", "Linha abaixo do nome"], ["whatsapp", "WhatsApp de atendimento (com 55 e DDD)"], ["instagram", "Instagram (sem @)"],
       ["pix_key", "Chave Pix"], ["pix_name", "Nome que aparece no Pix"], ["hero_eyebrow", "Selo da capa"], ["hero_title", "Título da capa"],
-      ["rating_value", "Nota mostrada (ex.: 4,9)"], ["rating_count", "Quantidade de avaliações"], ["pack_discount_pct", "Desconto de pacote (%)", "n"], ["deposit_per_person", "Sinal por pessoa (R$)", "n"],
+      ["rating_value", "Nota real do Google (deixe vazio até ter)"], ["rating_count", "Quantidade real de avaliações (vazio esconde as notas)"], ["pack_discount_pct", "Desconto de pacote (%)", "n"], ["deposit_per_person", "Sinal por pessoa (R$)", "n"],
       ["child_factor", "Criança paga (0,5 = meia)", "n"], ["footer_note", "Rodapé"]];
     p.innerHTML = '<div class="item"><h3>Configurações do site</h3><form id="sf" class="formgrid">' +
       F.map(function (x) { return f("s_" + x[0], x[1], s[x[0]], "", x[2] === "n" ? 'type="number" step="0.01"' : ""); }).join("") +
