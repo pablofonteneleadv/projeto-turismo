@@ -1,0 +1,474 @@
+<title>Cumbuco · Maré Passeios</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: página de passeio mobile-first; no desktop, conteúdo à esquerda e caixa de reserva fixa à direita; no celular, barra de preço fixa embaixo que abre a reserva */
+:root{
+  --bg:#F3F7F8; --surface:#FFFFFF; --ink:#10242E; --muted:#557079; --line:#D6E2E5;
+  --mar:#0B7A83; --mar-ink:#FFFFFF; --mar-soft:#DDF0F1; --sol:#E9A825; --sol-soft:#FCF0D2;
+  --bom:#1F8A4C; --bom-soft:#DFF3E7; --warn-soft:#FCF0D2; --shade:rgba(16,36,46,.45);
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C171C; --surface:#13232A; --ink:#E6F0F2; --muted:#93AEB5; --line:#24393F;
+  --mar:#4EC3CB; --mar-ink:#06262A; --mar-soft:#163A3E; --sol:#F2C14E; --sol-soft:#3A3018;
+  --bom:#5BCB8A; --bom-soft:#163527; --warn-soft:#3A3018; --shade:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C171C; --surface:#13232A; --ink:#E6F0F2; --muted:#93AEB5; --line:#24393F;
+  --mar:#4EC3CB; --mar-ink:#06262A; --mar-soft:#163A3E; --sol:#F2C14E; --sol-soft:#3A3018;
+  --bom:#5BCB8A; --bom-soft:#163527; --warn-soft:#3A3018; --shade:rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.proto{background:var(--sol-soft);font-size:.82rem;text-align:center;padding:6px 16px}
+
+/* Topo */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:30;background:var(--surface)}
+.top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;padding-block:10px}
+.logo{display:flex;flex-direction:column;line-height:1;margin-right:auto}
+.logo b{font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--mar)}
+.logo small{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn-sol{background:var(--sol);color:#10242E}
+.btn-mar{background:var(--mar);color:var(--mar-ink)}
+.btn-ghost{background:var(--surface);border:1px solid var(--line)}
+.lang{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 10px;font-size:.85rem;font-weight:700}
+
+/* Cabeçalho do passeio */
+.crumbs{display:flex;gap:6px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);padding-top:14px}
+.crumbs span[aria-hidden]{opacity:.6}
+.head{display:flex;flex-direction:column;gap:10px;padding-block:12px 16px}
+.title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:2rem;font-weight:800}
+.code{font-size:.8rem;font-weight:700;color:var(--mar);background:var(--mar-soft);border-radius:8px;padding:3px 8px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:.95rem}
+.stars{color:var(--sol);letter-spacing:1px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.actions .btn{padding:8px 14px;font-size:.92rem}
+.saved{color:#C2412D}
+
+/* Galeria ilustrada (fotos reais entram aqui) */
+.gallery{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:8px;height:360px}
+.ph{position:relative;border-radius:16px;overflow:hidden;min-width:0}
+.ph:first-child{grid-row:1 / 3}
+.ph svg{width:100%;height:100%;display:block}
+.badge{position:absolute;left:12px;bottom:12px;background:rgba(16,36,46,.82);color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:8px;padding:4px 10px}
+.ph .cap{position:absolute;right:10px;top:10px;background:rgba(255,255,255,.88);color:#10242E;font-size:.72rem;border-radius:6px;padding:2px 8px}
+
+/* Grade principal */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;padding-block:22px 120px;align-items:start}
+.content{display:flex;flex-direction:column;gap:26px;min-width:0}
+.block{display:flex;flex-direction:column;gap:12px}
+.block h2{font-size:1.35rem;font-weight:800}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.fact small{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.fact b{font-size:.95rem}
+
+/* Roteiro */
+.route{list-style:none;margin:0;padding:0;border-left:3px solid var(--mar-soft);margin-left:6px}
+.route li{position:relative;padding:0 0 16px 20px}
+.route li::before{content:"";position:absolute;left:-9px;top:5px;width:15px;height:15px;border-radius:50%;background:var(--surface);border:3px solid var(--mar)}
+.route time{font-family:var(--display);font-weight:800;color:var(--mar)}
+
+/* Incluso e extras */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.list{list-style:none;margin:0;padding:14px;display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.list h3{font-size:1rem;margin-bottom:2px}
+.list li{display:flex;gap:8px;align-items:flex-start;font-size:.95rem}
+.yes::before{content:"✓";color:var(--bom);font-weight:800}
+.extra{display:flex;justify-content:space-between;gap:10px;width:100%}
+.extra span:last-child{font-weight:700;white-space:nowrap}
+
+/* Como pagar */
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pay-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.pay-card.rec{border:2px solid var(--mar)}
+.pill{align-self:flex-start;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:var(--mar);color:var(--mar-ink);border-radius:6px;padding:2px 8px}
+
+/* Chuva */
+.rain{background:var(--mar-soft);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+
+/* Avaliações */
+.reviews{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.review{flex:0 0 270px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.review footer{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted)}
+.verified{font-size:.72rem;font-weight:700;color:var(--bom);background:var(--bom-soft);border-radius:6px;padding:2px 8px;align-self:flex-start}
+
+/* Perguntas */
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+details+details{margin-top:8px}
+summary{font-weight:700;cursor:pointer}
+details p{margin-top:8px;color:var(--muted)}
+
+/* Similares */
+.similar{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.sim{flex:0 0 200px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.sim svg{width:100%;height:110px;display:block}
+.sim div{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.sim b{font-family:var(--display)}
+
+/* Caixa de reserva */
+.book{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 76px);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 30px -18px var(--shade)}
+.price-from small{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.price-from b{display:block;font-family:var(--display);font-size:2rem;font-weight:800}
+.label{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.field{display:flex;flex-direction:column;gap:6px}
+input[type=date],input[type=text]{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;border-radius:8px;padding:8px;font-weight:700;font-size:.92rem}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 4px var(--shade)}
+.pax{display:flex;flex-direction:column;gap:8px}
+.pax-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pax-row div:first-child{display:flex;flex-direction:column;line-height:1.2}
+.pax-row small{color:var(--muted);font-size:.82rem}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-weight:800;font-size:1.1rem;line-height:1}
+.stepper output{min-width:18px;text-align:center;font-weight:700}
+.note{font-size:.82rem;color:var(--muted)}
+.addon{display:flex;gap:10px;align-items:flex-start;background:var(--sol-soft);border-radius:12px;padding:10px 12px;font-size:.92rem}
+.addon input{margin-top:4px;width:18px;height:18px;accent-color:var(--mar)}
+.coupon{display:flex;gap:8px}
+.coupon .btn{padding:8px 14px}
+.coupon-ok{font-size:.85rem;color:var(--bom);font-weight:700}
+.seals{display:flex;flex-wrap:wrap;gap:6px}
+.seal{font-size:.78rem;font-weight:700;background:var(--mar-soft);color:var(--mar);border-radius:999px;padding:4px 10px}
+.total{display:flex;flex-direction:column;gap:4px;border-top:1px dashed var(--line);padding-top:12px}
+.total-row{display:flex;justify-content:space-between;gap:10px;font-size:.92rem}
+.total-row.big{font-size:1.15rem;font-weight:800;font-family:var(--display)}
+.disc{color:var(--bom)}
+.book .btn-sol{padding:14px;font-size:1.05rem}
+.links{display:flex;flex-direction:column;gap:8px}
+
+/* Barra fixa no celular */
+.bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));align-items:center;gap:12px}
+.bar div{margin-right:auto;line-height:1.2}
+.bar small{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.bar b{font-family:var(--display);font-size:1.3rem}
+.chat{position:fixed;right:calc(16px + env(safe-area-inset-right, 0px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));z-index:24;width:56px;height:56px;border-radius:50%;border:0;background:#1F8A4C;color:#fff;box-shadow:0 8px 20px -8px var(--shade);display:flex;align-items:center;justify-content:center}
+
+/* Gaveta e aviso */
+.sheet-bg{position:fixed;inset:0;background:var(--shade);z-index:40}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-height:88vh;overflow:auto;background:var(--surface);border-radius:20px 20px 0 0;
+  padding:16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.sheet .book{position:static;border:0;box-shadow:none;padding:0}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.x{border:0;background:var(--bg);width:36px;height:36px;border-radius:50%;font-size:1.1rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom, 0px));z-index:50;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 16px;font-size:.92rem;max-width:calc(100% - 32px)}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--shade)}
+.modal-box{background:var(--surface);border-radius:18px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}
+.modal-box pre{white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:12px;font-family:var(--body);font-size:.9rem;margin:0}
+
+@media (max-width:900px){
+  .grid{grid-template-columns:minmax(0,1fr)}
+  .grid > .book{display:none}
+  .bar{display:flex}
+  .chat{bottom:calc(84px + env(safe-area-inset-bottom, 0px))}
+  .gallery{grid-template-columns:1fr;grid-template-rows:none;height:auto}
+  .gallery .ph{height:240px}
+  .gallery .ph:not(:first-child){display:none}
+  .facts{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  h1{font-size:1.7rem}
+  .two,.pay{grid-template-columns:1fr}
+  .top .btn-sol{display:none}
+}
+</style>
+
+<div class="proto">Protótipo · nome, fotos, preços e avaliações são exemplos</div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="logo"><b>Maré</b><small>Passeios · Fortaleza</small></div>
+    <button class="btn btn-sol" type="button" data-open-book>Reservar passeio</button>
+    <button class="lang" type="button" id="lang" aria-label="Idioma">PT</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="crumbs" aria-label="Caminho"><span>Início</span><span aria-hidden="true">›</span><span>Passeios no Ceará</span><span aria-hidden="true">›</span><span>Cumbuco</span></nav>
+
+  <section class="head">
+    <div class="title-row"><h1>Cumbuco</h1><span class="code">#FOR-001</span></div>
+    <div class="meta">
+      <span>📍 Caucaia · 35 km de Fortaleza</span>
+      <span><span class="stars" aria-hidden="true">★★★★★</span> <b>4,9</b> <span class="muted">(128 avaliações)</span></span>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" type="button" id="share">Compartilhar</button>
+      <button class="btn btn-ghost" type="button" id="save" aria-pressed="false">♡ Salvar</button>
+    </div>
+  </section>
+
+  <section class="gallery" aria-label="Fotos do passeio">
+    <div class="ph"><svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="600" height="400" fill="#7FC8D8"/><circle cx="470" cy="90" r="42" fill="#F6D06A"/><path d="M0 230 Q150 200 300 225 T600 215 V400 H0Z" fill="#1C8FA0"/><path d="M0 285 Q140 250 280 280 T600 270 V400 H0Z" fill="#E8D3A2"/><path d="M80 290 l6 -110 M86 180 q-40 -10 -60 10 M86 180 q40 -20 62 0 M86 180 q-20 -30 -50 -30 M86 180 q20 -34 52 -28" stroke="#2E5A3A" stroke-width="7" fill="none" stroke-linecap="round"/></svg><span class="badge">Destaque</span><span class="cap">foto da praia</span></div>
+    <div class="ph"><svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="300" height="200" fill="#F2DDB0"/><path d="M0 120 Q90 40 180 110 T300 90 V200 H0Z" fill="#E2C083"/><path d="M0 160 Q120 130 300 150 V200 H0Z" fill="#3FA7B5"/></svg><span class="cap">dunas e lagoa</span></div>
+    <div class="ph"><svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="300" height="200" fill="#1C8FA0"/><path d="M60 150 L150 40 L150 150Z" fill="#F7F3E8"/><path d="M40 150 H200 L185 170 H55Z" fill="#8A5A2B"/></svg><span class="cap">jangada</span></div>
+  </section>
+
+  <div class="grid">
+    <div class="content">
+      <section class="facts" aria-label="Resumo">
+        <div class="fact"><small>Duração</small><b>Dia inteiro, 9 h</b></div>
+        <div class="fact"><small>Tipo</small><b>Grupo ou privativo</b></div>
+        <div class="fact"><small>Busca</small><b>No seu hotel</b></div>
+        <div class="fact"><small>Voucher</small><b>No WhatsApp</b></div>
+      </section>
+
+      <section class="block">
+        <h2>Sobre o passeio</h2>
+        <p>Cumbuco tem dunas altas, lagoas de água doce e vento constante, o paraíso do kitesurf. Você passa o dia na praia e pode descer as dunas de skibunda até cair na Lagoa do Parnamirim. A busca é no seu hotel em Fortaleza, com guia credenciado no Cadastur e seguro.</p>
+      </section>
+
+      <section class="block">
+        <h2>Roteiro previsto</h2>
+        <ol class="route">
+          <li><time>08:00</time> · Busca nos hotéis da Beira Mar, Meireles e Iracema</li>
+          <li><time>09:30</time> · Chegada em Cumbuco e tempo livre na praia</li>
+          <li><time>11:00</time> · Opcional: buggy pelas dunas e lagoas</li>
+          <li><time>16:00</time> · Saída de volta para Fortaleza</li>
+          <li><time>17:00</time> · Chegada aos hotéis. Pode variar com o trânsito; evite marcar no dia do voo.</li>
+        </ol>
+      </section>
+
+      <section class="block">
+        <h2>O que está incluso e o que é à parte</h2>
+        <div class="two">
+          <ul class="list">
+            <li><h3>Incluso</h3></li>
+            <li class="yes">Transporte com ar-condicionado</li>
+            <li class="yes">Guia credenciado no Cadastur</li>
+            <li class="yes">Seguro viagem do passeio</li>
+            <li class="yes">Busca e volta ao hotel</li>
+          </ul>
+          <ul class="list">
+            <li><h3>À parte, com preço de hoje</h3></li>
+            <li><span class="extra"><span>Buggy (até 4 pessoas)</span><span class="num">R$ 450</span></span></li>
+            <li><span class="extra"><span>Passeio de jangada</span><span class="num">R$ 40</span></span></li>
+            <li><span class="extra"><span>Skibunda</span><span class="num">R$ 15</span></span></li>
+            <li><span class="extra"><span>Almoço na barraca</span><span class="num">R$ 60–90</span></span></li>
+          </ul>
+        </div>
+        <p class="note">Sem surpresa no dia: você vê o preço dos extras antes de reservar e pode garantir o buggy já na reserva.</p>
+      </section>
+
+      <section class="block">
+        <h2>Como pagar</h2>
+        <div class="pay">
+          <div class="pay-card rec"><span class="pill">Recomendado</span><b>Pague agora</b><p class="muted">Pix com desconto ou cartão em até 4x. A vaga fica garantida na hora e o voucher chega no seu WhatsApp.</p></div>
+          <div class="pay-card"><b>Reserve com sinal</b><p class="muted">Pague R$ 20 por pessoa no Pix para segurar a vaga e o restante no embarque.</p></div>
+        </div>
+      </section>
+
+      <section class="rain">
+        <h2>Se chover ou você desistir</h2>
+        <p>Cancelamento grátis até 24 h antes, com devolução em até 2 dias úteis. Se o passeio for cancelado pela chuva, você escolhe outra data ou recebe tudo de volta.</p>
+      </section>
+
+      <section class="block">
+        <h2>O que dizem os clientes</h2>
+        <div class="reviews">
+          <article class="review"><span class="verified">Compra verificada</span><p>Comprei pelo site, o voucher chegou na hora e o guia foi pontual. O buggy já estava pago, não tive dor de cabeça.</p><footer><span>Mariana · SP</span><span>Nov 2026</span></footer></article>
+          <article class="review"><span class="verified">Compra verificada</span><p>Responderam no WhatsApp em minutos, até de noite. Passeio muito bem organizado.</p><footer><span>Carlos · MG</span><span>Out 2026</span></footer></article>
+          <article class="review"><span class="verified">Compra verificada</span><p>Choveu no dia marcado e trocaram para o dia seguinte sem cobrar nada.</p><footer><span>Família Souza · RJ</span><span>Out 2026</span></footer></article>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Perguntas frequentes</h2>
+        <div>
+          <details><summary>Criança paga?</summary><p>Até 4 anos vai no colo, grátis e sem ocupar banco. De 5 a 10 anos paga meia.</p></details>
+          <details><summary>Onde é a busca?</summary><p>No seu hotel ou pousada em Fortaleza. Mandamos o horário exato no WhatsApp na véspera.</p></details>
+          <details><summary>Posso pagar o buggy lá?</summary><p>Pode, mas reservando aqui você garante o carro e o preço.</p></details>
+          <details><summary>E se eu tiver um cupom de um agente?</summary><p>Digite o código na reserva. O desconto aparece na hora, e o agente que te atendeu ganha pela indicação.</p></details>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Monte seu roteiro</h2>
+        <div class="similar">
+          <a class="sim" href="#" data-soon><svg viewBox="0 0 200 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="200" height="110" fill="#F2DDB0"/><path d="M0 70 Q60 20 120 60 T200 50 V110 H0Z" fill="#E2A24F"/></svg><div><b>Jericoacoara</b><span class="muted">bate-volta · a partir de R$ 189</span></div></a>
+          <a class="sim" href="#" data-soon><svg viewBox="0 0 200 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="200" height="110" fill="#E7B98A"/><path d="M0 60 L60 30 L120 55 L200 25 V110 H0Z" fill="#C1673A"/></svg><div><b>Canoa Quebrada</b><span class="muted">a partir de R$ 119</span></div></a>
+          <a class="sim" href="#" data-soon><svg viewBox="0 0 200 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="200" height="110" fill="#8FD0DA"/><path d="M0 70 Q100 50 200 70 V110 H0Z" fill="#2B9FB0"/></svg><div><b>Lagoinha</b><span class="muted">a partir de R$ 89</span></div></a>
+          <a class="sim" href="#" data-soon><svg viewBox="0 0 200 110" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="200" height="110" fill="#F0C9A0"/><path d="M0 75 Q50 40 100 70 T200 60 V110 H0Z" fill="#B85A3A"/></svg><div><b>Morro Branco</b><span class="muted">a partir de R$ 89</span></div></a>
+        </div>
+      </section>
+    </div>
+
+    <aside class="book" id="book" aria-label="Reserva"></aside>
+  </div>
+</main>
+
+<div class="bar">
+  <div><small>A partir de</small><br><b class="num" id="barPrice">R$ 69,90</b> <span class="muted">por pessoa no Pix</span></div>
+  <button class="btn btn-sol" type="button" data-open-book>Reservar</button>
+</div>
+<button class="chat" type="button" id="chat" aria-label="Falar no WhatsApp"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Zm4.4-5.6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.4.4 0 0 0 0-.4l-.7-1.7c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg></button>
+
+<div class="sheet-bg" id="sheetBg" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Reserva">
+  <div class="sheet-head"><b>Sua reserva</b><button class="x" type="button" id="closeSheet" aria-label="Fechar">✕</button></div>
+  <div id="sheetBook"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-label="Resumo da reserva">
+  <div class="modal-box">
+    <h3>Resumo da reserva</h3>
+    <pre id="summary"></pre>
+    <p class="note">No site real, aqui abre o Pix ou o cartão e o voucher chega no WhatsApp.</p>
+    <button class="btn btn-mar" type="button" id="closeModal">Entendi</button>
+  </div>
+</div>
+
+<template id="bookTpl">
+  <div class="price-from"><small>Por pessoa a partir de</small><b class="num">R$ 69,90</b><span class="muted">no Pix · R$ 74,90 em até 4x</span></div>
+  <div class="field"><label class="label" for="DATE">Data</label><input type="date" id="DATE" data-k="date"></div>
+  <div class="field"><span class="label">Tipo</span>
+    <div class="seg" role="group" aria-label="Tipo de passeio"><button type="button" data-type="grupo" aria-pressed="true">Em grupo</button><button type="button" data-type="priv" aria-pressed="false">Privativo</button></div>
+  </div>
+  <div class="field"><span class="label">Viajantes</span>
+    <div class="pax">
+      <div class="pax-row"><div><b>Adultos</b><small>11 anos ou mais</small></div><div class="stepper"><button type="button" data-step="ad" data-d="-1" aria-label="Menos adultos">−</button><output data-out="ad">2</output><button type="button" data-step="ad" data-d="1" aria-label="Mais adultos">+</button></div></div>
+      <div class="pax-row"><div><b>Crianças</b><small>5 a 10 anos, meia</small></div><div class="stepper"><button type="button" data-step="cr" data-d="-1" aria-label="Menos crianças">−</button><output data-out="cr">0</output><button type="button" data-step="cr" data-d="1" aria-label="Mais crianças">+</button></div></div>
+      <div class="pax-row"><div><b>Idosos</b><small>60 anos ou mais</small></div><div class="stepper"><button type="button" data-step="id" data-d="-1" aria-label="Menos idosos">−</button><output data-out="id">0</output><button type="button" data-step="id" data-d="1" aria-label="Mais idosos">+</button></div></div>
+    </div>
+    <p class="note">Até 4 anos: no colo, grátis.</p>
+  </div>
+  <label class="addon"><input type="checkbox" data-k="buggy"><span><b>Garantir o buggy</b> · R$ 450 por carro, até 4 pessoas. Sem fila e sem negociar no dia.</span></label>
+  <div class="field"><label class="label" for="CUP">Cupom do agente</label>
+    <div class="coupon"><input type="text" id="CUP" data-k="coupon" placeholder="Ex.: BRUNO" autocomplete="off"><button class="btn btn-ghost" type="button" data-apply>Aplicar</button></div>
+    <span class="coupon-ok" data-coupon-msg hidden></span>
+  </div>
+  <div class="field"><span class="label">Pagamento</span>
+    <div class="seg" role="group" aria-label="Forma de pagamento"><button type="button" data-pay="pix" aria-pressed="true">Pix</button><button type="button" data-pay="card" aria-pressed="false">Cartão 4x</button></div>
+  </div>
+  <div class="seals"><span class="seal">Guia Cadastur</span><span class="seal">Cancelamento grátis 24 h</span><span class="seal">Troca por chuva</span></div>
+  <div class="total" data-total></div>
+  <button class="btn btn-sol" type="button" data-reserve>Reservar agora</button>
+  <div class="links">
+    <button class="btn btn-ghost" type="button" data-pack>Juntar com outros passeios</button>
+    <button class="btn btn-ghost" type="button" data-chat>Dúvidas? Fale com a gente</button>
+  </div>
+</template>
+
+<script>
+(function(){
+  var PRICE = {grupo:{pix:69.90, card:74.90}, priv:{pix:420, card:449}};
+  var COUPONS = {BRUNO:{pct:5, agente:"Bruno"}, POUSADA10:{pct:5, agente:"Pousada parceira"}};
+  var st = {date:"", type:"grupo", ad:2, cr:0, id:0, buggy:false, coupon:"", pay:"pix"};
+  var brl = function(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});};
+
+  try{ var q = new URLSearchParams(location.search).get("cupom"); if(q && COUPONS[q.toUpperCase()]) st.coupon = q.toUpperCase(); }catch(e){}
+  try{ var saved = localStorage.getItem("mare-cupom"); if(!st.coupon && saved && COUPONS[saved]) st.coupon = saved; }catch(e){}
+
+  var d = new Date(); d.setDate(d.getDate()+1);
+  st.date = d.toISOString().slice(0,10);
+
+  function mount(target, suffix){
+    var node = document.getElementById("bookTpl").content.cloneNode(true);
+    node.querySelectorAll("[id]").forEach(function(el){ var nid = el.id + suffix; node.querySelectorAll('label[for="'+el.id+'"]').forEach(function(l){l.htmlFor = nid;}); el.id = nid; });
+    target.appendChild(node);
+    var date = target.querySelector('[data-k="date"]'); date.value = st.date; date.min = st.date;
+    date.addEventListener("change", function(){ st.date = date.value; sync(); });
+    target.querySelectorAll("[data-type]").forEach(function(b){ b.addEventListener("click", function(){ st.type = b.dataset.type; sync(); }); });
+    target.querySelectorAll("[data-pay]").forEach(function(b){ b.addEventListener("click", function(){ st.pay = b.dataset.pay; sync(); }); });
+    target.querySelectorAll("[data-step]").forEach(function(b){ b.addEventListener("click", function(){
+      var k = b.dataset.step; var v = st[k] + Number(b.dataset.d);
+      if(v < 0) v = 0; if(k === "ad" && v + st.id < 1 && st.cr === 0) v = st[k]; if(v > 20) v = 20;
+      st[k] = v; sync(); }); });
+    target.querySelector('[data-k="buggy"]').addEventListener("change", function(e){ st.buggy = e.target.checked; sync(); });
+    var cup = target.querySelector('[data-k="coupon"]');
+    target.querySelector("[data-apply]").addEventListener("click", function(){
+      var c = (cup.value || "").trim().toUpperCase();
+      if(!c){ st.coupon = ""; sync(); return; }
+      if(COUPONS[c]){ st.coupon = c; try{ localStorage.setItem("mare-cupom", c); }catch(e){} toast("Cupom aplicado: " + COUPONS[c].pct + "% de desconto"); }
+      else { toast("Cupom não encontrado. Confira com quem te indicou."); }
+      sync(); });
+    target.querySelector("[data-reserve]").addEventListener("click", reserve);
+    target.querySelector("[data-pack]").addEventListener("click", function(){ document.querySelector(".similar").scrollIntoView({behavior:"smooth"}); closeSheet(); });
+    target.querySelector("[data-chat]").addEventListener("click", chat);
+  }
+
+  function calc(){
+    var p = PRICE[st.type][st.pay], people = st.ad + st.id + st.cr, base;
+    if(st.type === "priv"){ base = p; }
+    else { base = (st.ad + st.id) * p + st.cr * p / 2; }
+    var buggy = st.buggy ? Math.max(1, Math.ceil(people / 4)) * 450 : 0;
+    var disc = st.coupon ? base * COUPONS[st.coupon].pct / 100 : 0;
+    return {base:base, buggy:buggy, disc:disc, total:base - disc + buggy, people:people, cars: st.buggy ? Math.max(1, Math.ceil(people/4)) : 0};
+  }
+
+  function sync(){
+    var r = calc();
+    document.querySelectorAll(".book, #sheetBook").forEach(function(box){
+      box.querySelectorAll("[data-type]").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.type === st.type); });
+      box.querySelectorAll("[data-pay]").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.pay === st.pay); });
+      ["ad","cr","id"].forEach(function(k){ var o = box.querySelector('[data-out="'+k+'"]'); if(o) o.textContent = st[k]; });
+      var bg = box.querySelector('[data-k="buggy"]'); if(bg) bg.checked = st.buggy;
+      var dt = box.querySelector('[data-k="date"]'); if(dt && dt.value !== st.date) dt.value = st.date;
+      var cp = box.querySelector('[data-k="coupon"]'); if(cp && document.activeElement !== cp) cp.value = st.coupon;
+      var msg = box.querySelector("[data-coupon-msg]");
+      if(msg){ msg.hidden = !st.coupon; if(st.coupon) msg.textContent = "✓ " + COUPONS[st.coupon].pct + "% de desconto · indicação de " + COUPONS[st.coupon].agente; }
+      var t = box.querySelector("[data-total]");
+      if(t){
+        var label = st.type === "priv" ? "Privativo, até 6 pessoas" : r.people + (r.people === 1 ? " pessoa" : " pessoas");
+        var h = '<div class="total-row"><span>' + label + '</span><span class="num">' + brl(r.base) + '</span></div>';
+        if(r.disc) h += '<div class="total-row disc"><span>Cupom ' + st.coupon + '</span><span class="num">− ' + brl(r.disc) + '</span></div>';
+        if(r.buggy) h += '<div class="total-row"><span>Buggy · ' + r.cars + (r.cars === 1 ? " carro" : " carros") + '</span><span class="num">' + brl(r.buggy) + '</span></div>';
+        h += '<div class="total-row big"><span>Total no ' + (st.pay === "pix" ? "Pix" : "cartão") + '</span><span class="num">' + brl(r.total) + '</span></div>';
+        if(st.pay === "card") h += '<div class="total-row muted"><span>em até 4x de</span><span class="num">' + brl(r.total/4) + '</span></div>';
+        t.innerHTML = h;
+      }
+    });
+  }
+
+  function reserve(){
+    var r = calc(); var dt = st.date.split("-").reverse().join("/");
+    var lines = ["Cumbuco · " + dt, (st.type === "priv" ? "Privativo" : "Em grupo") + " · " + st.ad + " adulto(s), " + st.cr + " criança(s), " + st.id + " idoso(s)"];
+    if(r.buggy) lines.push("Buggy garantido: " + r.cars + " carro(s)");
+    if(st.coupon) lines.push("Cupom " + st.coupon + " (agente: " + COUPONS[st.coupon].agente + ")");
+    lines.push("Total: " + brl(r.total) + (st.pay === "pix" ? " no Pix" : " em até 4x no cartão"));
+    document.getElementById("summary").textContent = lines.join("\n");
+    closeSheet(); document.getElementById("modal").hidden = false; document.getElementById("closeModal").focus();
+  }
+  function chat(){ toast("No site real, abre o WhatsApp com a IA de atendimento, que passa para uma pessoa quando você quiser."); }
+  var tt; function toast(m){ var t = document.getElementById("toast"); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(function(){ t.hidden = true; }, 3200); }
+  function openSheet(){ if(window.matchMedia("(min-width: 901px)").matches){ document.getElementById("book").scrollIntoView({behavior:"smooth"}); return; } document.getElementById("sheet").hidden = false; document.getElementById("sheetBg").hidden = false; document.getElementById("closeSheet").focus(); }
+  function closeSheet(){ document.getElementById("sheet").hidden = true; document.getElementById("sheetBg").hidden = true; }
+
+  mount(document.getElementById("book"), "");
+  mount(document.getElementById("sheetBook"), "-s");
+  sync();
+
+  document.querySelectorAll("[data-open-book]").forEach(function(b){ b.addEventListener("click", openSheet); });
+  document.getElementById("closeSheet").addEventListener("click", closeSheet);
+  document.getElementById("sheetBg").addEventListener("click", closeSheet);
+  document.getElementById("closeModal").addEventListener("click", function(){ document.getElementById("modal").hidden = true; });
+  document.getElementById("chat").addEventListener("click", chat);
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ closeSheet(); document.getElementById("modal").hidden = true; } });
+  document.querySelectorAll("[data-soon]").forEach(function(a){ a.addEventListener("click", function(e){ e.preventDefault(); toast("Página deste passeio ainda não montada no protótipo."); }); });
+  document.getElementById("lang").addEventListener("click", function(){ toast("Inglês e espanhol entram na versão real (turistas da Europa cresceram 24%)."); });
+
+  var save = document.getElementById("save");
+  function paintSave(on){ save.setAttribute("aria-pressed", on); save.textContent = on ? "♥ Salvo" : "♡ Salvar"; save.classList.toggle("saved", on); }
+  try{ paintSave(localStorage.getItem("mare-salvo-cumbuco") === "1"); }catch(e){}
+  save.addEventListener("click", function(){ var on = save.getAttribute("aria-pressed") !== "true"; paintSave(on); try{ localStorage.setItem("mare-salvo-cumbuco", on ? "1" : "0"); }catch(e){} toast(on ? "Passeio salvo neste aparelho." : "Removido dos salvos."); });
+  document.getElementById("share").addEventListener("click", function(){
+    var url = location.href.split("#")[0];
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){ toast("Link copiado. É só colar no WhatsApp."); }, function(){ toast(url); }); }
+    else toast(url);
+  });
+})();
+</script>
