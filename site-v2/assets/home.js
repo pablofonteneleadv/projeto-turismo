@@ -6,7 +6,7 @@
   try { favs = JSON.parse(localStorage.getItem("site-favs") || "{}") || {}; } catch (e) { favs = {}; }
 
   U.brand(S); U.chat(S);
-  document.getElementById("heroPhoto").innerHTML = U.photo({ url: "fotos/hero-1.jpg" }, "hero", "Litoral de Fortaleza");
+  document.getElementById("heroPhoto").innerHTML = U.photo({ url: "fotos/hero-2.jpg", credit: "Foto: MTur Destinos · Domínio público" }, "hero", "Praia de Iracema e Beira Mar de Fortaleza");
   document.getElementById("heroEyebrow").textContent = S.hero_eyebrow;
   document.getElementById("heroTitle").textContent = S.hero_title;
   document.getElementById("promises").innerHTML = (S.hero_promises || []).map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("");
