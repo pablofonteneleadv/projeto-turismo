@@ -3,7 +3,7 @@
   var CFG = window.SITE_CONFIG || {};
 
   var SETTINGS = {
-    brand: "Maré", brand_sub: "Passeios · Fortaleza",
+    brand: "Maré Tur", brand_sub: "Passeios em Fortaleza",
     whatsapp: "", pix_key: "", pix_name: "", instagram: "marepasseios",
     hero_eyebrow: "Receptivo em Fortaleza · Cadastur",
     hero_title: "Passeios saindo do seu hotel em Fortaleza",
