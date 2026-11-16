@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.wrangler/
+__pycache__/
+*.log
+.DS_Store
+Thumbs.db
