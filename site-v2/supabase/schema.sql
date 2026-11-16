@@ -20,6 +20,7 @@ begin
   end if;
   return new;
 end $$;
+revoke execute on function auto_confirm_admin() from public, anon, authenticated;
 drop trigger if exists trg_auto_confirm_admin on auth.users;
 create trigger trg_auto_confirm_admin before insert on auth.users for each row execute function auto_confirm_admin();
 
