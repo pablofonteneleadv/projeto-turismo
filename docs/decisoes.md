@@ -13,6 +13,7 @@
 - [ ] Público e região
 - [ ] Modelo de receita (comissão, pacote próprio, assinatura, anúncio)
 - [ ] Stack (aproveitar o que já dominamos: site estático + Cloudflare Workers + D1/Supabase, Render)
+- [ ] Repositório privado no GitHub (`projeto-turismo`): o conector do GitHub deu 403 ao criar; o token da TENKiTER é restrito ao catálogo
 - [ ] Contas próprias: domínio, e-mail, Instagram/Meta, WhatsApp, GitHub
 
 ## Ferramentas da TENKiTER candidatas a reaproveitamento (copiar o padrão)
