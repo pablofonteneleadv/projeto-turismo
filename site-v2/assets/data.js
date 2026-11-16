@@ -8,7 +8,7 @@
     hero_eyebrow: "Receptivo em Fortaleza · Cadastur",
     hero_title: "Passeios saindo do seu hotel em Fortaleza",
     hero_promises: ["Busca no seu hotel", "Guia credenciado Cadastur", "Pix ou cartão em até 4x", "Cancelamento grátis até 24 h", "Extras com preço na página", "Troca de data se chover"],
-    pack_discount_pct: 5, deposit_per_person: 20, child_factor: 0.5,
+    pack_discount_pct: 5, deposit_pct: 20, child_factor: 1,
     rating_value: "", rating_count: "",
     cancel_policy: "Cancelamento grátis até 24 h antes, com devolução em até 2 dias úteis. Se o passeio for cancelado pela chuva, você escolhe outra data ou recebe tudo de volta.",
     footer_note: "Fortaleza, CE · Cadastur em andamento"

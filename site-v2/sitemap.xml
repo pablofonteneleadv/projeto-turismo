@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://passeios-fortaleza.onrender.com/</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=jeri-economy</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=jeri-premium</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=jeri-vip</loc></url>
   <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=3praias</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=3praias-buggy</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=3praias-por-do-sol</loc></url>
   <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=cumbuco</loc></url>
   <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=lagoinha</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=canoa</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=morro</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=aguas</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=combo-lagoinha</loc></url>
   <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=flexau</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=jeribv</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=jeri3</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=5praias</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=privcumbuco</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=privjeri</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=aeroporto</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=transjeri</loc></url>
-  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=veleiro</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=aguas</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=paracuru</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=combo-paracuru</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=beach-park</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=lagoa-encantada</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=leste-oeste-economy</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=leste-oeste-vip</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=transfer-jeri-economy</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=transfer-jeri-premium</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=transfer-jeri-vip</loc></url>
+  <url><loc>https://passeios-fortaleza.onrender.com/passeio.html?p=transfer-jeri-volta</loc></url>
 </urlset>

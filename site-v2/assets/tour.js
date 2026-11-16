@@ -19,7 +19,8 @@
   var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   var minDate = tomorrow.toISOString().slice(0, 10);
   var st = { date: (qs.get("data") && qs.get("data") >= minDate) ? qs.get("data") : minDate, kind: t.per_vehicle ? "priv" : "grupo", adults: 2, children: 0, seniors: 0, buggy: false, pay: "pix" };
-  var CHILD = Number(S.child_factor || 0.5);
+  var CHILD = S.child_factor == null ? 1 : Number(S.child_factor);
+  var DEP = Number(S.deposit_pct || 20);
 
   var photos = (t.photos || []).slice(0, 3);
   var galClass = photos.length <= 1 ? "gallery one" : photos.length === 2 ? "gallery two" : "gallery";
@@ -46,8 +47,8 @@
         '<ul class="list"><li><h3 style="font-size:1rem">À parte, com preço de hoje</h3></li>' + ((t.extras || []).length ? t.extras.map(function (e) { return '<li><span class="extra"><span>' + esc(e.name) + '</span><span class="num">' + esc(D.money(e.price)) + "</span></span></li>"; }).join("") : '<li class="muted">Nada à parte neste passeio.</li>') + "</ul>" +
       '</div><p class="note">Sem surpresa no dia: você vê o preço dos extras antes de reservar.</p></section>' +
       '<section class="block"><h2>Como pagar</h2><div class="pay">' +
-        '<div class="pay-card rec"><span class="pill">Recomendado</span><b>Pix com desconto</b><p class="muted">A vaga fica garantida assim que o Pix cai, e a confirmação chega no WhatsApp.</p></div>' +
-        '<div class="pay-card"><b>Cartão em até 4x</b><p class="muted">Mandamos o link de pagamento no seu WhatsApp. Ou pague um sinal de ' + D.brl(S.deposit_per_person) + " por pessoa e o resto no embarque.</p></div></div></section>" +
+        '<div class="pay-card rec"><span class="pill">Mais fácil</span><b>Sinal de ' + DEP + '% no Pix</b><p class="muted">Garanta a vaga pagando ' + DEP + '% agora. O restante é pago no embarque, ao guia, em dinheiro, Pix ou cartão.</p></div>' +
+        '<div class="pay-card"><b>Tudo de uma vez</b><p class="muted">Pague o total no Pix ou no cartão em até 4x. O link do cartão chega no seu WhatsApp.</p></div></div></section>' +
       '<section class="rain"><h2 style="font-size:1.2rem">Se chover ou você desistir</h2><p>' + esc(S.cancel_policy) + "</p></section>" +
       (data.reviews.length ? '<section class="block"><h2>O que dizem os clientes</h2><div class="reviews">' + data.reviews.map(function (r) { return '<article class="review">' + (r.tour ? '<span class="trip">' + esc(r.tour) + "</span>" : "") + "<p>" + esc(r.text) + "</p><footer><span>" + esc(r.name) + (r.origin ? " · " + esc(r.origin) : "") + "</span><span>" + esc(r.month) + "</span></footer></article>"; }).join("") + "</div></section>" : "") +
       '<section class="block"><h2>Perguntas frequentes</h2><div>' + data.faqs.map(function (q) { return "<details><summary>" + esc(q.question) + "</summary><p>" + esc(q.answer) + "</p></details>"; }).join("") + "</div></section>" +
@@ -61,6 +62,7 @@
     node.querySelectorAll("[id]").forEach(function (el) { var nid = el.id + suffix; node.querySelectorAll('label[for="' + el.id + '"]').forEach(function (l) { l.htmlFor = nid; }); el.id = nid; });
     target.appendChild(node);
     target.querySelector("[data-from]").textContent = D.brl(t.price_pix);
+    target.querySelectorAll("[data-dep-pct]").forEach(function (el) { el.textContent = DEP; });
     target.querySelector("[data-from2]").textContent = "no Pix · " + D.brl(t.price_card) + " em até 4x";
     target.querySelector("[data-unit]").textContent = t.per_vehicle ? "Por veículo" : "Por pessoa a partir de";
     if (!hasPriv) target.querySelector("[data-type-field]").hidden = true;
@@ -117,6 +119,7 @@
       if (r.buggy) h += '<div class="total-row"><span>Buggy · ' + r.cars + (r.cars === 1 ? " carro" : " carros") + '</span><span class="num">' + D.brl(r.buggy) + "</span></div>";
       h += '<div class="total-row big"><span>Total no ' + (st.pay === "pix" ? "Pix" : "cartão") + '</span><span class="num">' + D.brl(r.total) + "</span></div>";
       if (st.pay === "card") h += '<div class="total-row muted"><span>em até 4x de</span><span class="num">' + D.brl(r.total / 4) + "</span></div>";
+      else h += '<div class="total-row muted"><span>Sinal agora (' + DEP + '%)</span><span class="num">' + D.brl(r.total * DEP / 100) + '</span></div><div class="total-row muted"><span>No embarque</span><span class="num">' + D.brl(r.total - r.total * DEP / 100) + "</span></div>";
       box.querySelector("[data-total]").innerHTML = h;
     });
   }
@@ -152,7 +155,8 @@
     document.getElementById("doneTxt").textContent = (res.demo ? "(Demonstração: o banco ainda não está ligado.) " : "") + "Sua vaga fica garantida quando o pagamento for confirmado. A confirmação chega no seu WhatsApp.";
     var pb = document.getElementById("pixBox");
     if (st.pay === "pix" && S.pix_key) {
-      pb.innerHTML = '<span class="label">Pague ' + D.brl(r.total) + " no Pix</span><b>" + esc(S.pix_key) + "</b>" + (S.pix_name ? '<span class="muted">' + esc(S.pix_name) + "</span>" : "") + '<button class="btn btn-ghost" type="button" id="copyPix">Copiar chave Pix</button>';
+      var dep = Math.round(r.total * DEP) / 100;
+      pb.innerHTML = '<span class="label">Sinal de ' + DEP + "%: pague " + D.brl(dep) + ' no Pix</span><span class="muted">ou o total de ' + D.brl(r.total) + ". O restante (" + D.brl(r.total - dep) + ") é pago no embarque.</span><b>" + esc(S.pix_key) + "</b>" + (S.pix_name ? '<span class="muted">' + esc(S.pix_name) + "</span>" : "") + '<button class="btn btn-ghost" type="button" id="copyPix">Copiar chave Pix</button>';
       document.getElementById("copyPix").addEventListener("click", function () { var k = S.pix_key; if (navigator.clipboard) navigator.clipboard.writeText(k).then(function () { U.toast("Chave Pix copiada."); }, function () { U.toast(k); }); else U.toast(k); });
     } else pb.innerHTML = st.pay === "card" ? "<span>O link de pagamento no cartão chega no seu WhatsApp em instantes.</span>" : "<span>A chave Pix chega no seu WhatsApp em instantes.</span>";
     var sw = document.getElementById("sendWa");
