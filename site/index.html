@@ -1,0 +1,424 @@
+<title>Maré Passeios</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: página inicial mobile-first; capa ilustrada com promessa + busca, depois "como funciona", filtros, cartões de passeio, montador de pacote com barra flutuante, avaliações, agente parceiro, perguntas e chamada final */
+:root{
+  --bg:#F3F7F8; --surface:#FFFFFF; --ink:#10242E; --muted:#557079; --line:#D6E2E5;
+  --mar:#0B7A83; --mar-ink:#FFFFFF; --mar-soft:#DDF0F1; --sol:#E9A825; --sol-soft:#FCF0D2;
+  --bom:#1F8A4C; --bom-soft:#DFF3E7; --shade:rgba(16,36,46,.45);
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C171C; --surface:#13232A; --ink:#E6F0F2; --muted:#93AEB5; --line:#24393F;
+  --mar:#4EC3CB; --mar-ink:#06262A; --mar-soft:#163A3E; --sol:#F2C14E; --sol-soft:#3A3018;
+  --bom:#5BCB8A; --bom-soft:#163527; --shade:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C171C; --surface:#13232A; --ink:#E6F0F2; --muted:#93AEB5; --line:#24393F;
+  --mar:#4EC3CB; --mar-ink:#06262A; --mar-soft:#163A3E; --sol:#F2C14E; --sol-soft:#3A3018;
+  --bom:#5BCB8A; --bom-soft:#163527; --shade:rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);line-height:1.12;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.proto{background:var(--sol-soft);font-size:.82rem;text-align:center;padding:6px 16px}
+.eyebrow{font-family:var(--display);font-size:.78rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mar)}
+section.band{padding-block:44px}
+.sec-head{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.sec-head h2{font-size:1.75rem;font-weight:800}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn-sol{background:var(--sol);color:#10242E}
+.btn-mar{background:var(--mar);color:var(--mar-ink)}
+.btn-ghost{background:var(--surface);border:1px solid var(--line)}
+
+/* Topo */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:30;background:var(--surface)}
+.top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;padding-block:10px}
+.logo{display:flex;flex-direction:column;line-height:1;margin-right:auto;text-decoration:none}
+.logo b{font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--mar)}
+.logo small{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top .btn{padding:9px 14px;font-size:.92rem}
+.lang{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 10px;font-size:.85rem;font-weight:700}
+
+/* Capa */
+.hero{position:relative;overflow:hidden;color:#fff;background:#0E3B47}
+.hero svg.art{position:absolute;inset:0;width:100%;height:100%}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,30,38,.15),rgba(8,30,38,.65))}
+.hero .wrap{position:relative;z-index:1;padding-block:34px 30px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px;align-items:end}
+.hero-copy{display:flex;flex-direction:column;gap:14px}
+.chip-dark{align-self:flex-start;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);border-radius:999px;padding:5px 12px;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.hero h1{font-size:2.6rem;font-weight:800}
+.hero h1 em{font-style:normal;color:var(--sol)}
+.promises{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-weight:600}
+.promises li::before{content:"✓";color:var(--sol);font-weight:800;margin-right:8px}
+.hero-price{font-size:1rem}
+.hero-price b{font-family:var(--display);font-size:1.6rem}
+.search{background:var(--surface);color:var(--ink);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 40px -20px rgba(0,0,0,.6)}
+.search label{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.search select,.search input{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:11px 12px;font:inherit;font-size:1rem;text-transform:none;letter-spacing:0}
+.search .btn{padding:14px;font-size:1.05rem}
+.rating{display:flex;align-items:center;gap:8px;font-size:.92rem}
+.stars{color:var(--sol);letter-spacing:1px}
+
+/* Como funciona */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.step .n{font-family:var(--display);font-weight:800;font-size:.9rem;color:var(--mar);background:var(--mar-soft);border-radius:8px;padding:2px 8px;align-self:flex-start}
+.step h3{font-size:1.1rem}
+
+/* Faixa do cupom */
+.coupon-band{background:var(--bom-soft);color:var(--ink)}
+.coupon-band .wrap{padding-block:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.95rem}
+.coupon-band b{color:var(--bom)}
+
+/* Filtros e cartões */
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px}
+.filters button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:700;font-size:.92rem;display:flex;gap:8px;align-items:center}
+.filters button span{font-size:.78rem;background:var(--bg);border-radius:999px;padding:0 8px}
+.filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filters button[aria-pressed="true"] span{background:rgba(255,255,255,.18)}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.card .pic{position:relative;height:170px}
+.card .pic svg{width:100%;height:100%;display:block}
+.card .tags{position:absolute;left:10px;top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 8px;background:rgba(255,255,255,.92);color:#10242E}
+.tag.hot{background:var(--sol);color:#10242E}
+.fav{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92);color:#C2412D;font-size:1.1rem}
+.card .body{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{font-size:1.15rem}
+.card .where{display:flex;justify-content:space-between;gap:8px;font-size:.88rem;color:var(--muted)}
+.card .time{font-size:.88rem;color:var(--muted)}
+.card .price{margin-top:auto;padding-top:8px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-top:1px dashed var(--line)}
+.card .price small{display:block;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.card .price b{font-family:var(--display);font-size:1.35rem}
+.card .pix{font-size:.85rem;color:var(--bom);font-weight:700}
+.card .row{display:flex;gap:8px;margin-top:10px}
+.card .row .btn{flex:1;padding:10px;font-size:.92rem}
+.add[aria-pressed="true"]{background:var(--bom-soft);border-color:var(--bom);color:var(--bom)}
+.empty{grid-column:1 / -1;text-align:center;padding:30px;background:var(--surface);border:1px dashed var(--line);border-radius:16px}
+
+/* Pacote */
+.pack-cta{background:var(--ink);color:var(--bg);border-radius:20px;padding:22px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}
+.pack-cta h3{font-size:1.35rem}
+.pack-cta p{opacity:.85}
+.packbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -10px 30px -20px var(--shade);
+  padding:12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.packbar .in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.packbar .info{margin-right:auto;line-height:1.25;min-width:0}
+.packbar .info small{color:var(--bom);font-weight:700}
+.packbar b{font-family:var(--display);font-size:1.2rem}
+
+/* Avaliações */
+.reviews{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.review{flex:0 0 290px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.review footer{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);margin-top:auto}
+.trip{font-size:.75rem;font-weight:700;color:var(--mar);background:var(--mar-soft);border-radius:6px;padding:2px 8px;align-self:flex-start}
+
+/* Diferenciais */
+.diffs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.diff{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.diff h3{font-size:1.05rem}
+
+/* Agente */
+.agent{background:var(--sol-soft);border-radius:20px;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:center}
+.agent ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+
+/* Perguntas */
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+details+details{margin-top:8px}
+summary{font-weight:700;cursor:pointer}
+details p{margin-top:8px;color:var(--muted)}
+
+/* Instagram e WhatsApp */
+.insta{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.insta div{aspect-ratio:1;border-radius:12px;overflow:hidden;position:relative;max-width:100%}
+.insta svg{width:100%;height:100%;display:block}
+.insta span{position:absolute;left:8px;bottom:8px;font-size:.7rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.news{background:var(--mar);color:var(--mar-ink);border-radius:20px;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center}
+.news form{display:flex;gap:8px}
+.news input{flex:1;min-width:0;border:0;border-radius:10px;padding:12px;font:inherit;background:var(--surface);color:var(--ink)}
+.final{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.final h2{font-size:2rem}
+footer.site{border-top:1px solid var(--line);padding-block:24px 110px;font-size:.88rem;color:var(--muted)}
+footer.site .wrap{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+.chat{position:fixed;right:calc(16px + env(safe-area-inset-right, 0px));bottom:calc(20px + env(safe-area-inset-bottom, 0px));z-index:24;width:56px;height:56px;border-radius:50%;border:0;background:#1F8A4C;color:#fff;box-shadow:0 8px 20px -8px var(--shade);display:flex;align-items:center;justify-content:center}
+body.has-pack .chat{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(110px + env(safe-area-inset-bottom, 0px));z-index:50;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 16px;font-size:.92rem;max-width:calc(100% - 32px)}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:minmax(0,1fr)}
+  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .diffs{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insta{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:620px){
+  .hero h1{font-size:2.1rem}
+  .promises{grid-template-columns:1fr}
+  .steps,.cards,.agent,.news,.pack-cta{grid-template-columns:minmax(0,1fr)}
+  .top .btn-sol{display:none}
+  .news form{flex-direction:column}
+}
+</style>
+
+<div class="proto">Protótipo · nome, ilustrações, preços e avaliações são exemplos</div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#inicio"><b>Maré</b><small>Passeios · Fortaleza</small></a>
+    <a class="btn btn-sol" href="#passeios">Reservar passeio</a>
+    <button class="lang" type="button" id="lang" aria-label="Idioma">PT</button>
+  </div>
+</header>
+
+<div class="coupon-band" id="couponBand" hidden><div class="wrap"><b id="couponTxt"></b><span>O desconto já entra em qualquer passeio que você reservar.</span></div></div>
+
+<section class="hero" id="inicio">
+  <svg class="art" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D5D73"/><stop offset=".55" stop-color="#E59A4B"/><stop offset="1" stop-color="#F3C77A"/></linearGradient></defs>
+    <rect width="1200" height="600" fill="url(#sky)"/>
+    <circle cx="880" cy="330" r="70" fill="#FBE3A3"/>
+    <path d="M0 380 Q300 340 600 370 T1200 360 V600 H0Z" fill="#0F6E7C"/>
+    <path d="M0 450 Q250 410 520 440 T1200 430 V600 H0Z" fill="#E7C98E"/>
+    <path d="M760 445 L840 300 L840 445Z" fill="#F7F3E8"/><path d="M735 445 H900 L885 468 H750Z" fill="#7A4A22"/>
+    <path d="M140 470 l10 -170 M150 300 q-60 -14 -92 14 M150 300 q60 -30 96 0 M150 300 q-30 -46 -78 -46 M150 300 q30 -52 80 -42" stroke="#244A30" stroke-width="10" fill="none" stroke-linecap="round"/>
+  </svg>
+  <div class="wrap">
+    <div class="hero-copy">
+      <span class="chip-dark">Receptivo em Fortaleza · Cadastur</span>
+      <h1>Passeios saindo do seu hotel em <em>Fortaleza</em></h1>
+      <ul class="promises">
+        <li>Busca no seu hotel</li><li>Guia credenciado Cadastur</li>
+        <li>Pix ou cartão em até 4x</li><li>Cancelamento grátis até 24 h</li>
+        <li>Extras com preço na página</li><li>Troca de data se chover</li>
+      </ul>
+      <p class="hero-price">a partir de <b class="num">R$ 64,90</b> por pessoa no Pix</p>
+      <div class="rating"><span class="stars" aria-hidden="true">★★★★★</span><b>4,9</b><span>· 128 avaliações</span></div>
+    </div>
+    <form class="search" id="search" aria-label="Buscar passeio">
+      <label for="dest">Destino
+        <select id="dest"><option value="">Todos os destinos</option></select>
+      </label>
+      <label for="when">Data<input type="date" id="when"></label>
+      <button class="btn btn-sol" type="submit">Ver passeios</button>
+      <button class="btn btn-ghost" type="button" id="packOpen">Montar pacote com vários passeios</button>
+    </form>
+  </div>
+</section>
+
+<main>
+  <section class="band"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Como funciona</span><h2>Reservar leva 2 minutos</h2></div>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3>Escolha o passeio</h3><p class="muted">Veja roteiro, horários, o que está incluso e quanto custam os extras. Dúvidas, chama no WhatsApp a qualquer hora.</p></div>
+      <div class="step"><span class="n">2</span><h3>Pague como preferir</h3><p class="muted">Pix com desconto, cartão em até 4x ou só um sinal de R$ 20 e o resto no embarque.</p></div>
+      <div class="step"><span class="n">3</span><h3>Embarque no hotel</h3><p class="muted">O voucher chega na hora e o horário da busca chega no WhatsApp na véspera.</p></div>
+    </div>
+  </div></section>
+
+  <section class="band" id="passeios" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Passeios</span><h2 id="listTitle">Escolha seu dia de praia</h2></div>
+    <div class="filters" id="filters" role="group" aria-label="Categorias"></div>
+    <div class="cards" id="cards"></div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="pack-cta">
+      <div><h3>Vai ficar mais dias? Monte um pacote</h3><p>Escolha 2 passeios ou mais e ganhe 5% de desconto em tudo, numa reserva só.</p></div>
+      <button class="btn btn-sol" type="button" id="packCta">Montar meu pacote</button>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Por que reservar com a gente</span><h2>Sem surpresa do embarque à volta</h2></div>
+    <div class="diffs">
+      <div class="diff"><h3>Preço dos extras antes</h3><p class="muted">Buggy, jangada e almoço com valor na página. Você decide antes, não no meio da duna.</p></div>
+      <div class="diff"><h3>Resposta em minutos</h3><p class="muted">Atendimento no WhatsApp 24 horas, e uma pessoa assume quando você quiser.</p></div>
+      <div class="diff"><h3>Choveu? Troca grátis</h3><p class="muted">Passeio cancelado pela chuva vira outra data ou dinheiro de volta.</p></div>
+      <div class="diff"><h3>Frota conferida</h3><p class="muted">Só trabalhamos com veículos revisados e motoristas avaliados pelos clientes.</p></div>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Clientes</span><h2>O que dizem de nós</h2></div>
+    <div class="reviews">
+      <article class="review"><span class="trip">Jericoacoara</span><p>Voucher chegou na hora, a busca foi pontual às 2h30 e o guia explicou tudo. Valeu cada real.</p><footer><span>Renata · SP</span><span>Nov 2026</span></footer></article>
+      <article class="review"><span class="trip">Cumbuco</span><p>Já sabia o preço do buggy antes de ir, então não teve aquela negociação chata. Muito organizado.</p><footer><span>Paulo · MG</span><span>Nov 2026</span></footer></article>
+      <article class="review"><span class="trip">3 Praias</span><p>Choveu no dia marcado e trocaram a data sem cobrar nada. Atendimento rápido pelo WhatsApp.</p><footer><span>Família Lima · RJ</span><span>Out 2026</span></footer></article>
+      <article class="review"><span class="trip">Pacote 3 dias</span><p>Montei Cumbuco, Lagoinha e Canoa num pacote só e paguei menos. Recomendo.</p><footer><span>Juliana · DF</span><span>Out 2026</span></footer></article>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="agent">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span class="eyebrow">Seja parceiro</span>
+        <h2 style="font-size:1.6rem">Indique passeios e ganhe por cada venda</h2>
+        <p>Trabalha em pousada, dirige por aplicativo ou cria conteúdo de viagem? Receba um cupom com seu nome.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <ul>
+          <li>Seu cliente ganha 5% de desconto</li>
+          <li>Você ganha 8% de cada passeio realizado</li>
+          <li>Não paga nada para entrar</li>
+          <li>Acompanha suas vendas pelo celular</li>
+        </ul>
+        <button class="btn btn-mar" type="button" id="agentBtn">Quero meu cupom</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">Informações</span><h2>Tudo claro na sua reserva</h2></div>
+    <details><summary>Como funciona a reserva?</summary><p>Você escolhe o passeio, a data e quantas pessoas. Paga no Pix ou cartão e recebe o voucher no WhatsApp na hora.</p></details>
+    <details><summary>Posso cancelar ou trocar a data?</summary><p>Até 24 horas antes, cancelamento com devolução integral. Se chover e o passeio for cancelado, você escolhe outra data ou recebe tudo de volta.</p></details>
+    <details><summary>Os passeios têm seguro?</summary><p>Sim. Todos os passageiros têm seguro, e os guias são credenciados no Cadastur.</p></details>
+    <details><summary>Criança paga?</summary><p>Até 4 anos vai no colo, grátis. De 5 a 10 anos paga meia na maioria dos passeios.</p></details>
+    <details><summary>Tenho cupom de quem me indicou. Onde uso?</summary><p>Abra o link que recebeu ou digite o código na reserva. O desconto aparece na hora.</p></details>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><span class="eyebrow">@marepasseios</span><h2>Jeri, Canoa e Cumbuco no seu feed</h2></div>
+    <div class="insta" aria-label="Publicações do Instagram">
+      <div><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="#E59A4B"/><circle cx="50" cy="62" r="16" fill="#FBE3A3"/><path d="M0 70 H100 V100 H0Z" fill="#0F6E7C"/></svg><span>Pôr do sol em Jeri</span></div>
+      <div><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="#8FD0DA"/><path d="M0 60 Q50 45 100 60 V100 H0Z" fill="#2B9FB0"/></svg><span>Lagoa do Paraíso</span></div>
+      <div><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="#E7B98A"/><path d="M0 55 L40 30 L70 50 L100 28 V100 H0Z" fill="#C1673A"/></svg><span>Falésias de Canoa</span></div>
+      <div><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="#F2DDB0"/><path d="M0 60 Q30 20 60 55 T100 45 V100 H0Z" fill="#E2C083"/></svg><span>Dunas de Cumbuco</span></div>
+      <div><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="#1C8FA0"/><path d="M30 75 L60 25 L60 75Z" fill="#F7F3E8"/><path d="M22 75 H75 L70 84 H28Z" fill="#7A4A22"/></svg><span>Jangada</span></div>
+      <div><svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="100" height="100" fill="#F0C9A0"/><path d="M0 62 Q30 40 60 60 T100 55 V100 H0Z" fill="#B85A3A"/></svg><span>Praia das Fontes</span></div>
+    </div>
+  </div></section>
+
+  <section class="band" style="padding-top:0"><div class="wrap">
+    <div class="news">
+      <div style="display:flex;flex-direction:column;gap:6px"><span class="eyebrow" style="color:inherit;opacity:.85">Promoções da semana</span><h2 style="font-size:1.5rem">Receba os roteiros e descontos no seu WhatsApp</h2><p style="opacity:.85">Só o que vale a pena. Sair da lista é uma mensagem.</p></div>
+      <form id="newsForm"><input id="newsPhone" type="tel" inputmode="tel" placeholder="Seu WhatsApp com DDD" aria-label="Seu WhatsApp com DDD"><button class="btn btn-sol" type="submit">Quero receber</button></form>
+    </div>
+  </div></section>
+
+  <section class="band"><div class="wrap final">
+    <h2>Pronto para o seu dia de praia?</h2>
+    <a class="btn btn-sol" href="#passeios">Escolher meu passeio</a>
+  </div></section>
+</main>
+
+<footer class="site"><div class="wrap"><span>Maré Passeios · Fortaleza, CE · Cadastur em andamento</span><span>Atendimento 24 h no WhatsApp</span></div></footer>
+
+<div class="packbar" id="packbar" hidden><div class="in">
+  <div class="info"><span id="packCount"></span><br><small id="packSave"></small></div>
+  <b class="num" id="packTotal"></b>
+  <button class="btn btn-sol" type="button" id="packGo">Reservar pacote</button>
+</div></div>
+<button class="chat" type="button" id="chat" aria-label="Falar no WhatsApp"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Zm4.4-5.6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.4.4 0 0 0 0-.4l-.7-1.7c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg></button>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+  var CUMBUCO = "https://claude.ai/artifact/7VzUZMDLrEyTQd2vVSiNXi";
+  var T = [
+    {id:"3praias", n:"3 Praias em 1 dia", w:"Litoral Leste", c:"passeios", t:"Saída 07:00 · Volta 19:00", p:99.90, x:89.90, r:4.9, hot:true, art:["#E7B98A","#C1673A","#2B9FB0"]},
+    {id:"cumbuco", n:"Cumbuco", w:"Caucaia", c:"passeios", t:"Saída 08:00 · Volta 17:00", p:74.90, x:69.90, r:4.9, art:["#F2DDB0","#E2C083","#3FA7B5"]},
+    {id:"lagoinha", n:"Lagoinha", w:"Paraipaba", c:"passeios", t:"Saída 07:30 · Volta 16:30", p:89.90, x:84.90, r:4.8, art:["#8FD0DA","#2B9FB0","#E8D3A2"]},
+    {id:"canoa", n:"Canoa Quebrada", w:"Aracati", c:"passeios", t:"Saída 07:00 · Volta 19:00", p:129.90, x:119.90, r:4.8, art:["#E7B98A","#C1673A","#1C8FA0"]},
+    {id:"morro", n:"Morro Branco", w:"Beberibe", c:"passeios", t:"Saída 07:00 · Volta 17:00", p:89.90, x:84.90, r:4.7, art:["#F0C9A0","#B85A3A","#2B9FB0"]},
+    {id:"aguas", n:"Águas Belas", w:"Cascavel", c:"passeios", t:"Saída 08:00 · Volta 18:00", p:79.90, x:69.90, r:4.7, art:["#BFE3E8","#3FA7B5","#E8D3A2"]},
+    {id:"flexau", n:"Flecheiras e Mundaú", w:"Trairi", c:"passeios", t:"Saída 07:00 · Volta 18:30", p:189.90, x:174.90, r:4.8, art:["#9ED8C8","#2E8C7A","#E8D3A2"]},
+    {id:"jeribv", n:"Jericoacoara bate-volta", w:"Jijoca", c:"passeios", t:"Saída 02:30 · Volta 23:30", p:189.00, x:179.00, r:4.9, hot:true, art:["#E59A4B","#FBE3A3","#0F6E7C"]},
+    {id:"jeri3", n:"Jeri 3 dias com pousada", w:"Jericoacoara", c:"pacotes", t:"3 dias e 2 noites · café incluso", p:790.00, x:750.00, r:5.0, hot:true, art:["#1D5D73","#E59A4B","#E7C98E"]},
+    {id:"5praias", n:"5 praias em 3 dias", w:"Litoral Leste e Oeste", c:"pacotes", t:"Um passeio por dia", p:299.90, x:279.90, r:4.8, art:["#7FC8D8","#1C8FA0","#E8D3A2"]},
+    {id:"privcumbuco", n:"Cumbuco privativo", w:"Van só para você", c:"privativos", t:"Horário que você escolher · até 6 pessoas", p:449.00, x:420.00, r:5.0, perCar:true, art:["#F2DDB0","#E2C083","#0B7A83"]},
+    {id:"privjeri", n:"Jeri privativo", w:"4x4 só para você", c:"privativos", t:"Até 4 pessoas", p:1190.00, x:1120.00, r:5.0, perCar:true, art:["#E59A4B","#FBE3A3","#0B7A83"]},
+    {id:"aeroporto", n:"Transfer aeroporto", w:"Fortaleza", c:"transfers", t:"Na hora do seu voo", p:54.90, x:49.90, r:4.9, art:["#BFD3DB","#557079","#E8D3A2"]},
+    {id:"transjeri", n:"Transfer para Jericoacoara", w:"Fortaleza → Jeri", c:"transfers", t:"Saídas 07:00 e 11:00", p:169.90, x:159.90, r:4.8, art:["#E59A4B","#C1673A","#E7C98E"]},
+    {id:"veleiro", n:"Pôr do sol de veleiro", w:"Beira Mar", c:"nautico", t:"Saída 16:00 · 1 h 30", p:79.90, x:74.90, r:4.9, art:["#E59A4B","#FBE3A3","#1C8FA0"]}
+  ];
+  var CATS = [["todos","Todos"],["passeios","Passeios"],["pacotes","Pacotes"],["privativos","Privativos"],["transfers","Transfers"],["nautico","Náutico"]];
+  var COUPONS = {BRUNO:"Bruno", POUSADA10:"Pousada parceira"};
+  var cat = "todos", dest = "", pack = [], favs = {};
+  var brl = function(v){return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});};
+  try{ favs = JSON.parse(localStorage.getItem("mare-favs") || "{}") || {}; }catch(e){ favs = {}; }
+
+  var coupon = "";
+  try{ var q = new URLSearchParams(location.search).get("cupom"); if(q && COUPONS[q.toUpperCase()]) coupon = q.toUpperCase(); }catch(e){}
+  try{ if(!coupon){ var s = localStorage.getItem("mare-cupom"); if(s && COUPONS[s]) coupon = s; } else localStorage.setItem("mare-cupom", coupon); }catch(e){}
+  if(coupon){ document.getElementById("couponBand").hidden = false; document.getElementById("couponTxt").textContent = "Cupom " + coupon + " ativo: 5% de desconto, indicação de " + COUPONS[coupon] + "."; }
+
+  function art(a){ return '<svg viewBox="0 0 300 170" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="300" height="170" fill="'+a[0]+'"/><path d="M0 105 Q80 55 160 95 T300 80 V170 H0Z" fill="'+a[1]+'"/><path d="M0 135 Q140 115 300 130 V170 H0Z" fill="'+a[2]+'"/></svg>'; }
+
+  var f = document.getElementById("filters");
+  CATS.forEach(function(k){
+    var count = k[0] === "todos" ? T.length : T.filter(function(t){return t.c === k[0];}).length;
+    var b = document.createElement("button"); b.type = "button"; b.dataset.cat = k[0];
+    b.innerHTML = k[1] + ' <span class="num">' + count + '</span>';
+    b.addEventListener("click", function(){ cat = k[0]; dest = ""; document.getElementById("dest").value = ""; render(); });
+    f.appendChild(b);
+  });
+  var sel = document.getElementById("dest");
+  T.forEach(function(t){ var o = document.createElement("option"); o.value = t.id; o.textContent = t.n; sel.appendChild(o); });
+  var dt = new Date(); dt.setDate(dt.getDate()+1); var w = document.getElementById("when"); w.value = dt.toISOString().slice(0,10); w.min = w.value;
+
+  function render(){
+    f.querySelectorAll("button").forEach(function(b){ b.setAttribute("aria-pressed", b.dataset.cat === cat); });
+    var list = T.filter(function(t){ return (cat === "todos" || t.c === cat) && (!dest || t.id === dest); });
+    var box = document.getElementById("cards"); box.innerHTML = "";
+    if(!list.length){ box.innerHTML = '<div class="empty">Nenhum passeio nesta categoria ainda.</div>'; return; }
+    list.forEach(function(t){
+      var inPack = pack.indexOf(t.id) > -1, fav = !!favs[t.id];
+      var el = document.createElement("article"); el.className = "card";
+      el.innerHTML =
+        '<div class="pic">' + art(t.art) + '<div class="tags"><span class="tag">Busca no hotel</span>' + (t.hot ? '<span class="tag hot">Mais vendido</span>' : '') + '</div>' +
+        '<button class="fav" type="button" aria-pressed="' + fav + '" aria-label="Salvar ' + t.n + '">' + (fav ? '♥' : '♡') + '</button></div>' +
+        '<div class="body"><h3>' + t.n + '</h3>' +
+        '<div class="where"><span>📍 ' + t.w + '</span><span><span class="stars" aria-hidden="true">★</span> ' + t.r.toFixed(1).replace(".", ",") + '</span></div>' +
+        '<div class="time">' + t.t + '</div>' +
+        '<div class="price"><div><small>A partir de · ' + (t.perCar ? 'por veículo' : 'por pessoa') + '</small><b class="num">' + brl(t.p) + '</b></div><span class="pix num">' + brl(t.x) + ' no Pix</span></div>' +
+        '<div class="row"><a class="btn btn-mar" href="' + (t.id === "cumbuco" ? CUMBUCO + (coupon ? "?cupom=" + coupon : "") : "#") + '" data-go="' + t.id + '">Ver passeio</a>' +
+        '<button class="btn btn-ghost add" type="button" aria-pressed="' + inPack + '">' + (inPack ? '✓ No pacote' : '+ Pacote') + '</button></div></div>';
+      el.querySelector(".fav").addEventListener("click", function(){ favs[t.id] = !favs[t.id]; try{ localStorage.setItem("mare-favs", JSON.stringify(favs)); }catch(e){} toast(favs[t.id] ? "Salvo neste aparelho." : "Removido dos salvos."); render(); });
+      el.querySelector(".add").addEventListener("click", function(){ var i = pack.indexOf(t.id); if(i > -1) pack.splice(i,1); else pack.push(t.id); render(); paintPack(); });
+      el.querySelector("[data-go]").addEventListener("click", function(e){ if(t.id !== "cumbuco"){ e.preventDefault(); toast("No protótipo, só a página do Cumbuco está montada."); } });
+      box.appendChild(el);
+    });
+    var name = CATS.filter(function(k){return k[0] === cat;})[0][1];
+    document.getElementById("listTitle").textContent = dest ? "Seu passeio" : (cat === "todos" ? "Escolha seu dia de praia" : name);
+  }
+
+  function paintPack(){
+    var bar = document.getElementById("packbar");
+    if(!pack.length){ bar.hidden = true; document.body.classList.remove("has-pack"); return; }
+    var sum = pack.reduce(function(a,id){ return a + T.filter(function(t){return t.id === id;})[0].x; }, 0);
+    var off = pack.length >= 2 ? 0.05 : 0, cup = coupon ? 0.05 : 0;
+    var total = sum * (1 - off - cup);
+    document.getElementById("packCount").textContent = pack.length + (pack.length === 1 ? " passeio no pacote" : " passeios no pacote") + " · por pessoa no Pix";
+    document.getElementById("packSave").textContent = pack.length >= 2 ? "5% de desconto de pacote" + (coupon ? " + 5% do cupom " + coupon : "") : "Adicione mais 1 para ganhar 5%";
+    document.getElementById("packTotal").textContent = brl(total);
+    bar.hidden = false; document.body.classList.add("has-pack");
+  }
+
+  document.getElementById("search").addEventListener("submit", function(e){ e.preventDefault(); dest = sel.value; cat = "todos"; render(); document.getElementById("passeios").scrollIntoView(); });
+  function goPack(){ cat = "todos"; dest = ""; sel.value = ""; render(); document.getElementById("passeios").scrollIntoView(); toast("Toque em “+ Pacote” nos passeios que quiser."); }
+  document.getElementById("packOpen").addEventListener("click", goPack);
+  document.getElementById("packCta").addEventListener("click", goPack);
+  document.getElementById("packGo").addEventListener("click", function(){ toast("No site real, aqui você escolhe as datas de cada passeio e paga tudo de uma vez."); });
+  document.getElementById("agentBtn").addEventListener("click", function(){ toast("No site real, abre o cadastro do parceiro e o cupom sai com o seu nome."); });
+  document.getElementById("chat").addEventListener("click", function(){ toast("No site real, abre o WhatsApp com a IA de atendimento, que passa para uma pessoa quando você quiser."); });
+  document.getElementById("lang").addEventListener("click", function(){ toast("Inglês e espanhol entram na versão real."); });
+  document.getElementById("newsForm").addEventListener("submit", function(e){ e.preventDefault(); var v = document.getElementById("newsPhone").value.replace(/\D/g,""); toast(v.length >= 10 ? "Pronto! No site real, você entra na lista de promoções." : "Digite o WhatsApp com DDD."); });
+  var tt; function toast(m){ var t = document.getElementById("toast"); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(function(){ t.hidden = true; }, 3200); }
+
+  render();
+})();
+</script>
