@@ -16,7 +16,7 @@
   function brand(s) {
     document.querySelectorAll("[data-brand]").forEach(function (el) { el.textContent = s.brand; });
     document.querySelectorAll("[data-brand-sub]").forEach(function (el) { el.textContent = s.brand_sub; });
-    document.querySelectorAll("[data-footer]").forEach(function (el) { el.textContent = s.brand + " Passeios · " + s.footer_note; });
+    document.querySelectorAll("[data-footer]").forEach(function (el) { el.textContent = s.brand + " · " + s.footer_note; });
   }
   function chat(s, text) {
     var a = document.getElementById("chat"); if (!a) return;
