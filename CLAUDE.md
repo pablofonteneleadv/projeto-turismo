@@ -1,4 +1,6 @@
-# Projeto Turismo (nome provisório)
+# Maré Tur (Projeto Turismo)
+
+> **Alma do negócio:** leia `docs/alma-do-negocio.md` antes de qualquer decisão de preço, venda, atendimento ou automação (net, papel do Bruno, divisão 50/50, pós-venda do site).
 
 Projeto **novo e independente**, na área de turismo, em estágio de montagem.
 **Não é a TENKiTER Modas.** Nada daqui pertence ao catálogo, ao Cofre, à Esteira, ao RH ou aos anúncios da TENKiTER.
@@ -23,4 +25,4 @@ Começar de graça ou quase: planos grátis (Cloudflare, etc.), código aberto m
 
 ## Estado atual
 
-Montagem. Nome, público, modelo de negócio e stack ainda não definidos — ver `docs/decisoes.md`.
+Marca Maré Tur, site no ar (maretur.onrender.com). Modelo de negócio em `docs/alma-do-negocio.md`; situação e pendências em `docs/decisoes.md`.
