@@ -23,8 +23,12 @@
   var buggyExtra = (t.extras || []).filter(function (e) { return e.buggy && typeof e.price === "number"; })[0];
   var hasPriv = !t.per_vehicle && t.price_private;
   var coupon = await U.applyCouponFromUrl();
+  var source = "direto";
+  try { source = qs.get("utm_source") || qs.get("origem") || sessionStorage.getItem("site-origem") || (document.referrer && document.referrer.indexOf(location.host) < 0 ? new URL(document.referrer).hostname : "") || "direto"; sessionStorage.setItem("site-origem", source); } catch (e) {}
+  var CUT = S.cutoff_hour == null ? 20 : Number(S.cutoff_hour);
   var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   var minDate = tomorrow.toISOString().slice(0, 10);
+  var srvMin = await D.minDate(); if (srvMin) minDate = srvMin;
   var st = { date: (qs.get("data") && qs.get("data") >= minDate) ? qs.get("data") : minDate, kind: t.per_vehicle ? "priv" : "grupo", adults: 2, children: 0, seniors: 0, buggy: false, pay: "pix" };
   var CHILD = S.child_factor == null ? 1 : Number(S.child_factor);
   var DEP = Number(S.deposit_pct || 20);
@@ -78,6 +82,9 @@
     var cl = target.querySelector("[data-chat-link]"); var wl = D.waLink(S.whatsapp, "Olá! Tenho uma dúvida sobre o passeio " + t.name + ".");
     if (wl) cl.href = wl; else cl.hidden = true;
     var date = target.querySelector('[data-k="date"]'); date.value = st.date; date.min = minDate;
+    var cut = document.createElement("p"); cut.className = "note";
+    cut.textContent = "Saídas de amanhã: reservas até as " + CUT + "h de hoje (horário de Fortaleza), para a empresa organizar a busca.";
+    date.closest(".field").appendChild(cut);
     date.addEventListener("change", function () { if (date.value >= minDate) st.date = date.value; sync(); });
     target.querySelectorAll("[data-type]").forEach(function (b) { b.addEventListener("click", function () { st.kind = b.dataset.type; sync(); }); });
     target.querySelectorAll("[data-pay]").forEach(function (b) { b.addEventListener("click", function () { st.pay = b.dataset.pay; sync(); }); });
@@ -107,11 +114,23 @@
     var cars = st.buggy && buggyExtra ? Math.max(1, Math.ceil(people / 4)) : 0;
     var buggy = cars * (buggyExtra ? buggyExtra.price : 0);
     var disc = coupon ? Math.round(base * coupon.discount_pct) / 100 : 0;
-    return { base: base, cars: cars, buggy: buggy, disc: disc, total: Math.round((base - disc + buggy) * 100) / 100, people: people };
+    var total = Math.round((base - disc + buggy) * 100) / 100;
+    var dep = st.pay === "card" ? total : Math.round(total * DEP) / 100;
+    return { base: base, cars: cars, buggy: buggy, disc: disc, total: total, people: people, deposit: dep, collect: total - dep, floor: false, seats: null, err: null };
+  }
+  var live = null, seq = 0;
+  function params() { return { tour_slug: t.slug, tour_date: st.date, kind: t.per_vehicle ? "priv" : st.kind, adults: st.adults, children: st.children, seniors: st.seniors, buggy: st.buggy, pay_method: st.pay, coupon: coupon ? coupon.code : null }; }
+  function fromServer(q) { return { base: +q.base, cars: q.buggy_cars, buggy: +q.buggy, disc: +q.discount, total: +q.total, people: q.people, deposit: +q.deposit, collect: +q.collect_at_boarding, floor: !!q.floor_applied, seats: q.seats_left == null ? null : q.seats_left + q.people, err: null }; }
+  async function refresh() {
+    var my = ++seq, r = await D.quote(params());
+    if (my !== seq || r.demo) return;
+    live = r.error ? Object.assign(calc(), { err: r.error.message }) : fromServer(r.data);
+    paint();
   }
 
-  function sync() {
-    var r = calc();
+  function sync() { live = null; paint(); refresh(); }
+  function paint() {
+    var r = live || calc();
     document.querySelectorAll("#book, #sheetBook").forEach(function (box) {
       box.querySelectorAll("[data-type]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.type === st.kind); });
       box.querySelectorAll("[data-pay]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.pay === st.pay); });
@@ -122,19 +141,23 @@
       var msg = box.querySelector("[data-coupon-msg]"); msg.hidden = !coupon; if (coupon) msg.textContent = "✓ " + coupon.discount_pct + "% de desconto · indicação de " + coupon.agent_name;
       var label = t.per_vehicle || st.kind === "priv" ? "Veículo só para o seu grupo" : r.people + (r.people === 1 ? " pessoa" : " pessoas");
       var h = '<div class="total-row"><span>' + label + '</span><span class="num">' + D.brl(r.base) + "</span></div>";
-      if (r.disc) h += '<div class="total-row disc"><span>Cupom ' + esc(coupon.code) + '</span><span class="num">− ' + D.brl(r.disc) + "</span></div>";
+      if (r.disc && coupon) h += '<div class="total-row disc"><span>Cupom ' + esc(coupon.code) + (r.floor ? " (desconto máximo)" : "") + '</span><span class="num">− ' + D.brl(r.disc) + "</span></div>";
       if (r.buggy) h += '<div class="total-row"><span>Buggy · ' + r.cars + (r.cars === 1 ? " carro" : " carros") + '</span><span class="num">' + D.brl(r.buggy) + "</span></div>";
       h += '<div class="total-row big"><span>Total no ' + (st.pay === "pix" ? "Pix" : "cartão") + '</span><span class="num">' + D.brl(r.total) + "</span></div>";
       if (st.pay === "card") h += '<div class="total-row muted"><span>em até 4x de</span><span class="num">' + D.brl(r.total / 4) + "</span></div>";
-      else h += '<div class="total-row muted"><span>Sinal agora (' + DEP + '%)</span><span class="num">' + D.brl(r.total * DEP / 100) + '</span></div><div class="total-row muted"><span>No embarque</span><span class="num">' + D.brl(r.total - r.total * DEP / 100) + "</span></div>";
+      else h += '<div class="total-row muted"><span>Sinal agora</span><span class="num">' + D.brl(r.deposit) + '</span></div><div class="total-row muted"><span>No embarque</span><span class="num">' + D.brl(r.collect) + "</span></div>";
+      if (r.seats != null && r.seats <= 6) h += '<p class="note"><b>Restam ' + r.seats + (r.seats === 1 ? " vaga" : " vagas") + "</b> nesta data.</p>";
+      if (r.err) h = '<p class="warn" role="alert">' + esc(r.err) + "</p>";
       box.querySelector("[data-total]").innerHTML = h;
+      box.querySelectorAll("[data-reserve]").forEach(function (b) { b.disabled = !!r.err; });
     });
   }
 
   function fmtDate(d) { return d.split("-").reverse().join("/"); }
   var lastBooking = null;
   function openModal() {
-    var r = calc();
+    var r = live || calc();
+    if (r.err) return U.toast(r.err);
     document.getElementById("sumLine").textContent = t.name + " · " + fmtDate(st.date) + " · " + D.brl(r.total) + (st.pay === "pix" ? " no Pix" : " no cartão");
     closeSheet();
     document.getElementById("step1").hidden = false; document.getElementById("step2").hidden = true;
@@ -146,14 +169,16 @@
     e.preventDefault();
     var name = document.getElementById("cName").value.trim(), phone = document.getElementById("cPhone").value.trim(), hotel = document.getElementById("cHotel").value.trim();
     if (name.length < 2 || phone.replace(/\D/g, "").length < 10) return U.toast("Preencha nome e WhatsApp com DDD.");
-    var r = calc(), btn = document.getElementById("confirmBtn"); btn.disabled = true; btn.textContent = "Enviando…";
-    var row = { tour_slug: t.slug, tour_name: t.name, tour_date: st.date, kind: t.per_vehicle ? "priv" : st.kind, adults: st.adults, children: st.children, seniors: st.seniors,
-      buggy_cars: r.cars, coupon: coupon ? coupon.code : null, pay_method: st.pay, total: r.total, customer_name: name, phone: phone, hotel: hotel || null, status: "pendente" };
-    var res = await D.insert("bookings", row);
+    var btn = document.getElementById("confirmBtn"); btn.disabled = true; btn.textContent = "Enviando…";
+    var res = await D.book(Object.assign(params(), { customer_name: name, phone: phone, hotel: hotel, lang: (document.documentElement.lang || "pt").slice(0, 2), source: source }));
     btn.disabled = false; btn.textContent = "Enviar pedido de reserva";
-    if (res.error) return U.toast("Não deu para registrar agora. Tente de novo ou chame no WhatsApp.");
+    var r, code = "";
+    if (res.demo) r = calc();
+    else if (res.error) return U.toast(/fetch|network/i.test(res.error.message) ? "Não deu para registrar agora. Tente de novo ou chame no WhatsApp." : res.error.message);
+    else { r = fromServer(res.data); code = res.data.code; }
+    var row = { kind: t.per_vehicle ? "priv" : st.kind, code: code };
     lastBooking = row;
-    var lines = ["Olá! Acabei de reservar pelo site:", t.name + " · " + fmtDate(st.date), (row.kind === "priv" ? "Privativo" : "Em grupo") + " · " + st.adults + " adulto(s), " + st.children + " criança(s), " + st.seniors + " idoso(s)"];
+    var lines = ["Olá! Acabei de reservar pelo site" + (code ? " · " + code : "") + ":", t.name + " · " + fmtDate(st.date), (row.kind === "priv" ? "Privativo" : "Em grupo") + " · " + st.adults + " adulto(s), " + st.children + " criança(s), " + st.seniors + " idoso(s)"];
     if (r.cars) lines.push("Buggy: " + r.cars + " carro(s)");
     if (coupon) lines.push("Cupom: " + coupon.code);
     lines.push("Total: " + D.brl(r.total) + (st.pay === "pix" ? " no Pix" : " no cartão"));
@@ -162,8 +187,8 @@
     document.getElementById("doneTxt").textContent = (res.demo ? "(Demonstração: o banco ainda não está ligado.) " : "") + "Sua vaga fica garantida quando o pagamento for confirmado. A confirmação chega no seu WhatsApp.";
     var pb = document.getElementById("pixBox");
     if (st.pay === "pix" && S.pix_key) {
-      var dep = Math.round(r.total * DEP) / 100;
-      pb.innerHTML = '<span class="label">Sinal de ' + DEP + "%: pague " + D.brl(dep) + ' no Pix</span><span class="muted">ou o total de ' + D.brl(r.total) + ". O restante (" + D.brl(r.total - dep) + ") é pago no embarque.</span><b>" + esc(S.pix_key) + "</b>" + (S.pix_name ? '<span class="muted">' + esc(S.pix_name) + "</span>" : "") + '<button class="btn btn-ghost" type="button" id="copyPix">Copiar chave Pix</button>';
+      var dep = r.deposit;
+      pb.innerHTML = (code ? '<span class="label">Reserva ' + esc(code) + "</span>" : "") + '<span class="label">Sinal: pague ' + D.brl(dep) + ' no Pix</span><span class="muted">O restante (' + D.brl(r.collect) + ") é pago no embarque.</span><b>" + esc(S.pix_key) + "</b>" + (S.pix_name ? '<span class="muted">' + esc(S.pix_name) + "</span>" : "") + '<button class="btn btn-ghost" type="button" id="copyPix">Copiar chave Pix</button>';
       document.getElementById("copyPix").addEventListener("click", function () { var k = S.pix_key; if (navigator.clipboard) navigator.clipboard.writeText(k).then(function () { U.toast("Chave Pix copiada."); }, function () { U.toast(k); }); else U.toast(k); });
     } else pb.innerHTML = st.pay === "card" ? "<span>O link de pagamento no cartão chega no seu WhatsApp em instantes.</span>" : "<span>A chave Pix chega no seu WhatsApp em instantes.</span>";
     var sw = document.getElementById("sendWa");

@@ -83,8 +83,20 @@
     return c.from(table).insert(row);
   }
 
+  // Preço, reserva e vagas são calculados no servidor (o net nunca chega ao navegador)
+  async function rpc(fn, args) {
+    var c = client();
+    if (!c) return { error: { message: "offline" }, demo: true };
+    var r = await c.rpc(fn, args);
+    return r.error ? { error: { message: r.error.message || "erro" } } : { data: r.data };
+  }
+  function quote(p) { return rpc("quote_booking", { p: p }); }
+  function book(p) { return rpc("create_booking", { p: p }); }
+  async function minDate() { var r = await rpc("min_tour_date", {}); return r.data || null; }
+  async function seats(slug, date) { var r = await rpc("seats_left", { p_slug: slug, p_date: date }); return r.error ? null : r.data; }
+
   window.SiteData = {
-    load: load, checkCoupon: checkCoupon, insert: insert, client: client,
+    load: load, checkCoupon: checkCoupon, insert: insert, client: client, quote: quote, book: book, minDate: minDate, seats: seats,
     SEED: { settings: SETTINGS, tours: TOURS, reviews: REVIEWS, faqs: FAQS },
     CATS: CATS,
     brl: function (v) { return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); },
