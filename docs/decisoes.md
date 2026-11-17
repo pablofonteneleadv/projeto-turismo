@@ -4,7 +4,7 @@
 
 - Projeto independente da TENKiTER Modas, em pasta e repositório próprios (`Documents\Turismo`, fora de `Documents\Codex`), para que agentes não confundam contexto, memória ou credenciais.
 - Prefixos: variáveis `TURISMO_*`, recursos em nuvem `turismo-*`, linhas de trabalho `turismo-*`.
-- Nome do projeto: provisório ("Projeto Turismo"). Ao definir, renomear pasta, repositório e prefixos de uma vez.
+- Nome definido em 16/11/2026: **Maré Tur** (site futuro maretur.com.br). Telefone do guia Bruno: (85) 99768-7598.
 
 ## Situação em 16/11/2026 (plano de 4 semanas do relatório `reports/Venda de passeios em Fortaleza.md`)
 
