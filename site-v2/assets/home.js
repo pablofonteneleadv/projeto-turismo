@@ -40,7 +40,7 @@
   var dt = new Date(); dt.setDate(dt.getDate() + 1);
   var w = document.getElementById("when"); w.value = dt.toISOString().slice(0, 10); w.min = w.value;
 
-  function link(t) { return "passeio.html?p=" + encodeURIComponent(t.slug) + "&data=" + w.value; }
+  function link(t) { var u = U.tourUrl(t.slug); return u + (u.indexOf("?") < 0 ? "?" : "&") + "data=" + w.value; }
 
   function render() {
     f.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.cat === cat); });

@@ -3,12 +3,14 @@
   var data = await D.load();
   var S = data.settings;
   var qs = new URLSearchParams(location.search);
-  var slug = qs.get("p") || "cumbuco";
+  var slug = window.TOUR_SLUG || qs.get("p") || "cumbuco";
   var t = data.tours.filter(function (x) { return x.slug === slug; })[0];
   var page = document.getElementById("page");
   U.brand(S);
   if (!t) { page.innerHTML = '<div class="empty" style="margin-top:24px">Passeio não encontrado. <a href="./">Ver todos os passeios</a></div>'; document.getElementById("bar").hidden = true; return; }
 
+  var pageUrl = U.tourUrl(t.slug);
+  if (!window.TOUR_SLUG && pageUrl.indexOf("?") < 0 && history.replaceState) { qs.delete("p"); var rest = qs.toString(); history.replaceState(null, "", pageUrl + (rest ? "?" + rest : "") + location.hash); }
   document.title = t.name + " saindo de Fortaleza | " + S.brand;
   var md = document.querySelector('meta[name="description"]'); if (md) md.content = (t.summary || "") + " Busca no hotel, guia cadastrado no Cadastur e reserva com 20% de sinal.";
   var tr = U.tourRating(t, data.reviews), mine = U.tourReviews(t, data.reviews);
@@ -57,7 +59,7 @@
       '<section class="rain"><h2 style="font-size:1.2rem">Política de cancelamento</h2><p>' + esc(S.cancel_policy) + "</p></section>" +
       (shown.length ? '<section class="block"><h2>O que os clientes dizem</h2><div class="reviews">' + shown.map(U.review).join("") + "</div></section>" : "") +
       '<section class="block"><h2>Perguntas frequentes</h2><div>' + data.faqs.map(function (q) { return "<details><summary>" + esc(q.question) + "</summary><p>" + esc(q.answer) + "</p></details>"; }).join("") + "</div></section>" +
-      '<section class="block"><h2>Monte seu roteiro</h2><div class="similar">' + others.map(function (o) { return '<a class="sim" href="passeio.html?p=' + encodeURIComponent(o.slug) + '">' + U.photo((o.photos || [])[0], o.slug, U.alt(o, 0)) + '<div class="t"><b>' + esc(o.name) + '</b><span class="muted">a partir de ' + D.brl(o.price_pix) + "</span></div></a>"; }).join("") + "</div></section>" +
+      '<section class="block"><h2>Monte seu roteiro</h2><div class="similar">' + others.map(function (o) { return '<a class="sim" href="' + U.tourUrl(o.slug) + '">' + U.photo((o.photos || [])[0], o.slug, U.alt(o, 0)) + '<div class="t"><b>' + esc(o.name) + '</b><span class="muted">a partir de ' + D.brl(o.price_pix) + "</span></div></a>"; }).join("") + "</div></section>" +
     '</div><aside class="book" id="book" aria-label="Reserva"></aside></div>';
 
   document.getElementById("barPrice").textContent = D.brl(t.price_pix);
@@ -185,7 +187,7 @@
   paintSave();
   save.addEventListener("click", function () { favs[t.slug] = !favs[t.slug]; try { localStorage.setItem("site-favs", JSON.stringify(favs)); } catch (e) {} paintSave(); });
   document.getElementById("share").addEventListener("click", async function () {
-    var url = location.href.split("#")[0];
+    var url = new URL(U.tourUrl(t.slug), location.href).href;
     if (navigator.share) { try { await navigator.share({ title: t.name, url: url }); return; } catch (e) {} }
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { U.toast("Link copiado. É só colar no WhatsApp."); }, function () { U.toast(url); });
     else U.toast(url);

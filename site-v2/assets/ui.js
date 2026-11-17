@@ -94,5 +94,6 @@
     var n = Math.max(1, Math.min(5, Number(r.stars) || 5));
     return '<article class="review"><span class="stars" aria-label="' + n + ' de 5 estrelas">' + "★★★★★".slice(0, n) + "</span>" + (r.tour ? '<span class="trip">' + D.esc(r.tour) + "</span>" : "") + "<p>" + D.esc(r.text) + "</p><footer><span>" + D.esc(r.name) + (r.origin ? " · " + D.esc(r.origin) : "") + "</span><span>" + D.esc(r.month) + "</span></footer></article>";
   }
-  window.UI = { toast: toast, photo: photo, brand: brand, chat: chat, applyCouponFromUrl: applyCouponFromUrl, alt: alt, ratings: ratings, tourRating: tourRating, tourReviews: tourReviews, review: review };
+  function tourUrl(slug) { return (window.MT_PAGES || []).indexOf(slug) >= 0 ? "passeio-" + slug + ".html" : "passeio.html?p=" + encodeURIComponent(slug); }
+  window.UI = { tourUrl: tourUrl, toast: toast, photo: photo, brand: brand, chat: chat, applyCouponFromUrl: applyCouponFromUrl, alt: alt, ratings: ratings, tourRating: tourRating, tourReviews: tourReviews, review: review };
 })();

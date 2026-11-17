@@ -1,0 +1,2 @@
+// Gerado por scripts/atualizar-catalogo.mjs: passeios com página própria.
+window.MT_PAGES = ["jeri-economy","jeri-premium","jeri-vip","3praias","3praias-buggy","3praias-por-do-sol","cumbuco","lagoinha","combo-lagoinha","flexau","aguas","paracuru","combo-paracuru","beach-park","lagoa-encantada","leste-oeste-economy","leste-oeste-vip","transfer-jeri-economy","transfer-jeri-premium","transfer-jeri-vip","transfer-jeri-volta"];
