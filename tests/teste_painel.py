@@ -77,27 +77,56 @@ with sync_playwright() as pw:
     for part in ["MT-1001", "Ana Teste", "5585988887777", "Hotel Praia Mar", "2 adulto(s)", "128,00"]:
         check(part in msg, "mensagem à empresa contém " + part)
 
-    for name in ["Operação do dia", "Empresas e net", "Financeiro", "Configurações", "Resumo", "Preços", "Passeios", "Cupons e agentes"]:
-        p.click('button[role=tab]:has-text("%s")' % name)
+    # navegação 2.0 no celular: barra de baixo + "Mais"
+    check(p.is_visible(".bnav"), "barra de navegação embaixo no celular")
+    p.click("#moreBtn"); check(p.is_visible("#msheet"), "Mais abre todas as seções"); p.click("#mclose")
+    # reservas: busca e filtros
+    check(p.is_visible("#tq"), "reservas têm busca")
+    p.fill("#tq", "zzzz"); p.wait_for_timeout(300)
+    check("Nada encontrado" in p.inner_text("#panel"), "busca sem resultado avisa")
+    p.fill("#tq", "praia mar"); p.wait_for_timeout(300)
+    check(p.is_visible("[data-row]") and ("1 item" in p.inner_text("#pcount") or "1 de" in p.inner_text("#pcount")), "busca por hotel acha a reserva")
+    p.click("#tclear")
+    def go(key):
+        p.evaluate("k => document.querySelector('.side [data-tab=\"'+k+'\"]').click()", key)
         p.wait_for_function("!document.querySelector('#panel').innerText.includes('Carregando')")
-        txt = p.inner_text("#panel").replace("\xa0", " ")
-        check("Erro ao carregar" not in txt, "aba " + name + " abre sem erro")
-        if name == "Operação do dia":
+        return p.inner_text("#panel").replace(" ", " ")
+    for key in ["operacao", "empresas", "financeiro", "config", "inicio", "precos", "passeios", "cupons", "avaliacoes", "perguntas", "contatos", "parceiros"]:
+        txt = go(key)
+        check("Erro ao carregar" not in txt and "Não foi possível carregar" not in txt, "seção " + key + " abre sem erro")
+        if key == "operacao":
             p.click('button[data-day="%s"]' % tmr); p.wait_for_timeout(1500)
-            txt = p.inner_text("#panel").replace("\xa0", " ")
+            txt = p.inner_text("#panel").replace(" ", " ")
             check("Enseada Teste" in txt and "Receber no embarque: R$ 128,00" in txt, "operação agrupa por empresa com valor a receber")
             check(p.query_selector("[data-sendall]") is not None, "botão de lista do dia para a empresa")
             check("Lembrete ao cliente" in txt, "botão de lembrete ao cliente")
-        if name == "Empresas e net":
-            check("mínimo R$ 45,00 Pix" in txt, "mínimo do Cumbuco = 30 + 5 + 10 = R$ 45")
-        if name == "Financeiro":
+        if key == "empresas":
+            p.click("#tclear")
+            check("mínimo R$ 45,00 Pix" in p.inner_text("#panel").replace(" ", " "), "mínimo do Cumbuco = 30 + 5 + 10 = R$ 45")
+            p.select_option('[data-fk="net"]', "sem"); p.wait_for_timeout(200)
+            vis = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => e.dataset.net)")
+            check(vis and all(v == "sem" for v in vis), "filtro 'sem net' mostra só passeios sem net")
+            p.click("#tclear")
+        if key == "financeiro":
             p.fill("#finM", month); p.dispatch_event("#finM", "change")
             p.wait_for_function("!document.querySelector('#panel').innerText.includes('Carregando')")
-            txt = p.inner_text("#panel").replace("\xa0", " ")
+            txt = p.inner_text("#panel").replace(" ", " ")
             check("R$ 90,00" in txt and "R$ 45,00" in txt, "lucro R$ 90 e parte do sócio R$ 45")
             check("a receber R$ 68,00" in txt, "acerto: empresa devolve R$ 68")
-        if name == "Configurações":
+        if key == "config":
             check("parte do sócio no lucro" in txt.lower() and "mandar aviso de teste" in txt.lower(), "regras do negócio configuráveis")
+        if key == "passeios":
+            p.click("#tclear"); p.fill("#tq", "jeri"); p.wait_for_timeout(300)
+            names = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => e.dataset.name)")
+            check(len(names) >= 3 and all("jeri" in n.lower() for n in names), "busca 'jeri' filtra passeios (%d)" % len(names))
+            p.fill("#tq", ""); p.wait_for_timeout(300)
+            p.select_option("#tsort", "name_d"); p.wait_for_timeout(200)
+            names = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => e.dataset.name)")
+            check(names == sorted(names, key=lambda x: x.lower(), reverse=True) or names[0].lower() >= names[-1].lower(), "ordenar por nome Z–A")
+            p.select_option("#tsort", "price"); p.wait_for_timeout(200)
+            pr = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => +e.dataset.price)")
+            check(pr == sorted(pr), "ordenar por menor preço")
+            p.select_option("#tsort", "sort")
     check(not errs, "sem erro de JavaScript: " + "; ".join(errs[:3]))
     b.close()
 

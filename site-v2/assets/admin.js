@@ -44,19 +44,110 @@
   }
   document.getElementById("logout").addEventListener("click", async function () { await sb.auth.signOut(); loginView(); });
 
-  var TABS = [["inicio", "Resumo"], ["operacao", "Operação do dia"], ["reservas", "Reservas"], ["empresas", "Empresas e net"], ["financeiro", "Financeiro"], ["precos", "Preços"], ["passeios", "Passeios"], ["cupons", "Cupons e agentes"], ["parceiros", "Parceiros"], ["contatos", "Contatos"], ["avaliacoes", "Avaliações"], ["perguntas", "Perguntas"], ["config", "Configurações"]];
+  var GROUPS = [
+    ["Vendas", [["inicio", "Resumo", "◎"], ["operacao", "Operação do dia", "☀"], ["reservas", "Reservas", "▤"], ["financeiro", "Financeiro", "$"]]],
+    ["Catálogo", [["passeios", "Passeios", "⛱"], ["precos", "Preços", "R$"], ["empresas", "Empresas e net", "⚓"]]],
+    ["Divulgação", [["cupons", "Cupons e agentes", "%"], ["avaliacoes", "Avaliações", "★"], ["perguntas", "Perguntas", "?"], ["contatos", "Contatos", "☎"], ["parceiros", "Parceiros", "♟"]]],
+    ["Sistema", [["config", "Configurações", "⚙"]]]
+  ];
+  var TABS = []; GROUPS.forEach(function (g) { g[1].forEach(function (t) { TABS.push(t); }); });
+  var BOTTOM = ["operacao", "reservas", "passeios", "financeiro"];
+  function tabInfo(k) { return TABS.filter(function (t) { return t[0] === k; })[0] || TABS[0]; }
 
   function shell(inner) {
-    app.innerHTML = '<div class="adm"><nav class="tabs" role="tablist">' + TABS.map(function (t) { return '<button type="button" role="tab" data-tab="' + t[0] + '" aria-selected="' + (t[0] === tab) + '">' + t[1] + "</button>"; }).join("") + '</nav><section class="panel" id="panel">' + inner + "</section></div>";
-    app.querySelectorAll("[data-tab]").forEach(function (b) { b.addEventListener("click", function () { tab = b.dataset.tab; render(); }); });
+    var side = GROUPS.map(function (g) { return '<div class="nav-group"><small>' + g[0] + "</small>" + g[1].map(function (t) { return '<button type="button" data-tab="' + t[0] + '" aria-current="' + (t[0] === tab ? "page" : "false") + '"><span class="ico" aria-hidden="true">' + t[2] + "</span>" + t[1] + "</button>"; }).join("") + "</div>"; }).join("");
+    var bottom = BOTTOM.map(function (k) { var t = tabInfo(k); return '<button type="button" data-tab="' + k + '" aria-current="' + (k === tab ? "page" : "false") + '"><span class="ico" aria-hidden="true">' + t[2] + "</span>" + t[1].split(" ")[0] + "</button>"; }).join("") +
+      '<button type="button" id="moreBtn" aria-expanded="false" aria-current="' + (BOTTOM.indexOf(tab) < 0 ? "page" : "false") + '"><span class="ico" aria-hidden="true">☰</span>Mais</button>';
+    app.innerHTML = '<div class="adm2"><aside class="side" aria-label="Seções">' + side + '</aside><div class="main"><div class="ptitle"><h2>' + tabInfo(tab)[1] + '</h2><span class="muted small" id="pcount"></span></div><div id="tools"></div><section class="panel" id="panel">' + inner + "</section></div></div>" +
+      '<nav class="bnav" aria-label="Seções principais">' + bottom + "</nav>" +
+      '<div class="msheet" id="msheet" hidden><div class="msheet-in" role="dialog" aria-label="Todas as seções">' + side + '<button class="btn btn-ghost" type="button" id="mclose">Fechar</button></div></div>';
+    app.querySelectorAll("[data-tab]").forEach(function (b) { b.addEventListener("click", function () { tab = b.dataset.tab; cache.editTour = undefined; window.scrollTo(0, 0); render(); }); });
+    var mb = document.getElementById("moreBtn"), ms = document.getElementById("msheet");
+    mb.addEventListener("click", function () { ms.hidden = false; mb.setAttribute("aria-expanded", "true"); });
+    document.getElementById("mclose").addEventListener("click", function () { ms.hidden = true; mb.setAttribute("aria-expanded", "false"); });
+    ms.addEventListener("click", function (e) { if (e.target === ms) { ms.hidden = true; } });
   }
+
+  // ---------- Busca, filtros e ordenação (gestor 2.0) ----------
+  var TODAY = function () { return new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10); };
+  function addDays(d, n) { return new Date(new Date(d + "T12:00:00Z").getTime() + n * 864e5).toISOString().slice(0, 10); }
+  var SORT_NAME = [["name", "Nome A–Z", "name", "s", 1], ["name_d", "Nome Z–A", "name", "s", -1]];
+  var STATUS_OPTS = [["", "Todos os status"], ["_open", "Em aberto"]].concat(STATUS.map(function (k) { return [k, STATUS_TXT[k]]; }));
+  var TOOLS = {
+    reservas: { search: "Buscar nome, telefone, código, hotel…", filters: [{ k: "status", label: "Status", opts: STATUS_OPTS, def: "_open" }, { k: "date", label: "Período", type: "period", opts: [["", "Qualquer data"], ["next", "Próximos"], ["today", "Hoje"], ["tomorrow", "Amanhã"], ["week", "Próximos 7 dias"], ["past", "Já passaram"]] }, { k: "tour", label: "Passeio", dyn: true }, { k: "sup", label: "Empresa", dyn: true }],
+      sorts: [["date", "Data do passeio ↑", "date", "s", 1], ["date_d", "Data do passeio ↓", "date", "s", -1], ["created_d", "Mais recentes", "created", "s", -1], ["value_d", "Maior valor", "value", "n", -1]].concat(SORT_NAME) },
+    passeios: { search: "Buscar passeio…", filters: [{ k: "status", label: "Situação", opts: [["", "Todos"], ["on", "No ar"], ["off", "Ocultos"]] }, { k: "cat", label: "Categoria", opts: [["", "Todas"], ["passeios", "Passeios"], ["pacotes", "Pacotes"], ["transfers", "Transfers"]] }],
+      sorts: [["sort", "Ordem do site", "sort", "n", 1]].concat(SORT_NAME, [["price", "Menor preço", "price", "n", 1], ["price_d", "Maior preço", "price", "n", -1]]) },
+    precos: { search: "Buscar passeio…", filters: [{ k: "status", label: "Situação", opts: [["", "Todos"], ["on", "No ar"], ["off", "Ocultos"]], def: "on" }, { k: "cat", label: "Categoria", opts: [["", "Todas"], ["passeios", "Passeios"], ["pacotes", "Pacotes"], ["transfers", "Transfers"]] }],
+      sorts: [["sort", "Ordem do site", "sort", "n", 1]].concat(SORT_NAME, [["price", "Menor preço", "price", "n", 1], ["price_d", "Maior preço", "price", "n", -1]]) },
+    empresas: { search: "Buscar passeio…", filters: [{ k: "net", label: "Net", opts: [["", "Todos"], ["sem", "Sem net"], ["com", "Com net"]] }, { k: "status", label: "Situação", opts: [["", "Todos"], ["on", "No ar"], ["off", "Ocultos"]], def: "on" }],
+      sorts: [["sort", "Ordem do site", "sort", "n", 1]].concat(SORT_NAME, [["margin", "Menor sobra", "margin", "n", 1], ["margin_d", "Maior sobra", "margin", "n", -1]]) },
+    cupons: { search: "Buscar código ou agente…", filters: [{ k: "status", label: "Situação", opts: [["", "Todos"], ["on", "Ativos"], ["off", "Pausados"]] }],
+      sorts: SORT_NAME.concat([["value_d", "Mais vendas", "value", "n", -1]]) },
+    avaliacoes: { search: "Buscar avaliação…", filters: [{ k: "status", label: "Situação", opts: [["", "Todas"], ["on", "Publicadas"], ["off", "Escondidas"]] }], sorts: [["sort", "Ordem", "sort", "n", 1]].concat(SORT_NAME) },
+    perguntas: { search: "Buscar pergunta…", filters: [{ k: "status", label: "Situação", opts: [["", "Todas"], ["on", "Publicadas"], ["off", "Escondidas"]] }], sorts: [["sort", "Ordem", "sort", "n", 1]].concat(SORT_NAME) },
+    contatos: { search: "Buscar telefone…", filters: [], sorts: [["created_d", "Mais recentes", "created", "s", -1], ["created", "Mais antigos", "created", "s", 1]] },
+    parceiros: { search: "Buscar nome ou telefone…", filters: [{ k: "status", label: "Situação", opts: [["", "Todos"], ["novo", "Novos"], ["atendido", "Atendidos"]] }], sorts: [["created_d", "Mais recentes", "created", "s", -1]].concat(SORT_NAME) }
+  };
+  function toolState(k) { cache.tools = cache.tools || {}; if (!cache.tools[k]) { var saved = null; try { saved = JSON.parse(localStorage.getItem("adm-tools-" + k) || "null"); } catch (e) {} var c = TOOLS[k], d = { q: "", sort: c.sorts[0][0], f: {} }; c.filters.forEach(function (fl) { d.f[fl.k] = fl.def || ""; }); cache.tools[k] = Object.assign(d, saved || {}, { q: "" }); } return cache.tools[k]; }
+  function saveTools(k) { try { var s0 = Object.assign({}, cache.tools[k], { q: "" }); localStorage.setItem("adm-tools-" + k, JSON.stringify(s0)); } catch (e) {} }
+  function mountTools(p) {
+    var box = document.getElementById("tools"), c = TOOLS[tab], rows = [].slice.call(p.querySelectorAll("[data-row]"));
+    var cnt = document.getElementById("pcount");
+    if (!c || !rows.length) { box.innerHTML = ""; if (cnt) cnt.textContent = rows.length ? rows.length + " itens" : ""; return; }
+    var st = toolState(tab);
+    function opts(fl) {
+      if (!fl.dyn) return fl.opts.map(function (o) { return o[0] === "" ? ["", fl.label + ": " + o[1].toLowerCase()] : o; });
+      var seen = {}, o = [["", fl.label + ": todos"]];
+      rows.forEach(function (r) { var v = r.dataset[fl.k], l = r.dataset[fl.k + "Label"] || v; if (v && !seen[v]) { seen[v] = 1; o.push([v, l]); } });
+      return o.slice(0, 1).concat(o.slice(1).sort(function (a, b) { return a[1].localeCompare(b[1], "pt-BR"); }));
+    }
+    box.innerHTML = '<div class="tools"><input type="search" id="tq" placeholder="' + esc(c.search) + '" value="' + esc(st.q) + '" aria-label="Buscar">' +
+      c.filters.map(function (fl) { return '<select data-fk="' + fl.k + '" aria-label="' + esc(fl.label) + '">' + opts(fl).map(function (o) { return '<option value="' + esc(o[0]) + '"' + (st.f[fl.k] === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select>"; }).join("") +
+      '<select id="tsort" aria-label="Ordenar">' + c.sorts.map(function (o) { return '<option value="' + o[0] + '"' + (st.sort === o[0] ? " selected" : "") + ">↕ " + esc(o[1]) + "</option>"; }).join("") + "</select>" +
+      '<button class="btn btn-ghost" type="button" id="tclear">Limpar</button></div>';
+    function apply() {
+      var q = st.q.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""), t0 = TODAY(), shown = 0;
+      var so = c.sorts.filter(function (o) { return o[0] === st.sort; })[0] || c.sorts[0];
+      rows.forEach(function (r) {
+        var ok = !q || (r.dataset.search || r.textContent).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").indexOf(q) > -1;
+        c.filters.forEach(function (fl) {
+          var v = st.f[fl.k]; if (!ok || !v) return; var d = r.dataset[fl.k] || "";
+          if (fl.type === "period") ok = v === "next" ? d >= t0 : v === "today" ? d === t0 : v === "tomorrow" ? d === addDays(t0, 1) : v === "week" ? d >= t0 && d <= addDays(t0, 7) : v === "past" ? d < t0 : true;
+          else if (v === "_open") ok = ["cancelado", "realizado"].indexOf(d) < 0;
+          else ok = d === v;
+        });
+        r.hidden = !ok; if (ok) shown++;
+      });
+      var groups = [];
+      rows.forEach(function (r) { if (groups.indexOf(r.parentNode) < 0) groups.push(r.parentNode); });
+      groups.forEach(function (g) {
+        var mine = rows.filter(function (r) { return r.parentNode === g; }), last = null;
+        [].forEach.call(g.children, function (ch) { if (mine.indexOf(ch) > -1) last = ch; });
+        var anchor = last.nextSibling;
+        mine.sort(function (a, b) { var x = a.dataset[so[2]] || "", y = b.dataset[so[2]] || ""; if (so[3] === "n") { x = Number(x) || 0; y = Number(y) || 0; return (x - y) * so[4]; } return x.localeCompare(y, "pt-BR") * so[4]; });
+        mine.forEach(function (r) { g.insertBefore(r, anchor); });
+      });
+      if (cnt) cnt.textContent = shown === rows.length ? rows.length + (rows.length === 1 ? " item" : " itens") : shown + " de " + rows.length;
+      var em = p.querySelector(".empty-filter");
+      if (!shown && !em) { em = document.createElement("div"); em.className = "empty empty-filter"; em.textContent = "Nada encontrado com esses filtros."; p.appendChild(em); }
+      if (shown && em) em.remove();
+    }
+    var tq = document.getElementById("tq"), tm;
+    tq.addEventListener("input", function () { clearTimeout(tm); tm = setTimeout(function () { st.q = tq.value; apply(); }, 120); });
+    box.querySelectorAll("[data-fk]").forEach(function (sel) { sel.addEventListener("change", function () { st.f[sel.dataset.fk] = sel.value; saveTools(tab); apply(); }); });
+    document.getElementById("tsort").addEventListener("change", function (e) { st.sort = e.target.value; saveTools(tab); apply(); });
+    document.getElementById("tclear").addEventListener("click", function () { st.q = ""; tq.value = ""; c.filters.forEach(function (fl) { st.f[fl.k] = ""; }); box.querySelectorAll("[data-fk]").forEach(function (x) { x.value = ""; }); saveTools(tab); apply(); });
+    apply();
+  }
+
   function fail(r) { if (r && r.error) { U.toast("Erro: " + r.error.message); return true; } return false; }
   function ddmm(d) { return d ? String(d).slice(0, 10).split("-").reverse().join("/") : ""; }
 
   async function render() {
-    shell('<div class="empty">Carregando…</div>');
+    shell('<div class="empty">Carregando…</div>'); try { localStorage.setItem("adm-tab", tab); } catch (e) {}
     var p = document.getElementById("panel");
-    try { await VIEWS[tab](p); } catch (e) { p.innerHTML = '<div class="warn">Erro ao carregar: ' + esc(e.message || e) + "</div>"; }
+    try { await VIEWS[tab](p); if (p.innerHTML.indexOf("Carregando…") > -1 && p.children.length === 1) p.innerHTML = '<div class="warn">Não foi possível carregar agora. Confira a internet e toque na seção de novo.</div>'; mountTools(p); } catch (e) { p.innerHTML = '<div class="warn">Erro ao carregar: ' + esc(e.message || e) + "</div>"; }
   }
 
   var VIEWS = {};
@@ -92,15 +183,15 @@
   };
 
   VIEWS.reservas = async function (p) {
-    var filt = cache.resFilter || "ativas";
     var r = await sb.from("bookings").select("*").order("tour_date", { ascending: true }).limit(1000);
     if (fail(r)) return;
     var LD = await D.load(), S = LD.settings;
     var ex = await Promise.all([sb.from("suppliers").select("*").order("name"), sb.from("tour_rates").select("tour_slug,supplier_id,active"), sb.from("tours").select("slug,name,price_pix,active,category,featured,sort")]);
     var sups = ex[0].data || [], rts = ex[1].data || [], allTours = ex[2].data || [];
     var q = (cache.resCode || "").toUpperCase();
-    var list = r.data.filter(function (x) { if (q) return (x.code || "").toUpperCase() === q || String(x.id) === q.replace(/\D/g, ""); return filt === "todas" ? true : filt === "ativas" ? ["cancelado", "realizado"].indexOf(x.status) < 0 : x.status === filt; });
-    p.innerHTML = '<div class="row"><label class="label" for="rf">Mostrar</label><select id="rf" style="width:auto">' + ["ativas", "todas"].concat(STATUS).map(function (s) { return '<option value="' + s + '"' + (s === filt ? " selected" : "") + ">" + (STATUS_TXT[s] || (s === "ativas" ? "Em aberto" : "Todas")) + "</option>"; }).join("") + "</select><input id=\"rcode\" placeholder=\"Código (MT-1001)\" value=\"" + esc(q) + "\" style=\"width:150px\"><span class=\"muted small\">" + list.length + " reservas</span></div>" +
+    var list = r.data;
+    if (q) { var stq = toolState("reservas"); stq.q = q; stq.f.status = ""; stq.f.date = ""; cache.resCode = ""; }
+    p.innerHTML =
       (list.map(function (x) {
         var people = x.adults + " ad., " + x.children + " cri., " + x.seniors + " ido.";
         var wa = D.waLink(x.phone, "Olá, " + x.customer_name.split(" ")[0] + "! Sobre sua reserva de " + x.tour_name + " em " + ddmm(x.tour_date) + ":");
@@ -109,7 +200,7 @@
         var opts = sups.filter(function (z) { return rts.some(function (rt) { return rt.tour_slug === x.tour_slug && rt.supplier_id === z.id && rt.active; }); });
         var fin = x.net_total == null ? '<p class="small" style="color:var(--ruim)">Sem net: escolha a empresa (o net precisa estar cadastrado em Empresas e net).</p>' :
           '<p class="small muted">Net ' + D.brl(x.net_total) + " · sinal " + D.brl(x.deposit) + " · receber no embarque " + D.brl(x.collect_at_boarding) + " · acerto " + (Number(x.supplier_settlement) >= 0 ? "empresa devolve " : "pagar à empresa ") + D.brl(Math.abs(x.supplier_settlement)) + " · <b>lucro " + D.brl(x.profit) + "</b>" + (x.floor_applied ? " · desconto limitado pelo mínimo" : "") + (x.source ? " · origem " + esc(x.source) : "") + "</p>";
-        return '<div class="item"><div class="item-head"><div><h3>' + esc(x.tour_name) + " · " + ddmm(x.tour_date) + '</h3><p class="small muted">' + esc(x.code || "#" + x.id) + " · feita em " + ddmm(x.created_at) + (x.lang && x.lang !== "pt" ? " · idioma " + esc(x.lang.toUpperCase()) : "") + "</p></div><span class=\"st st-" + x.status + '">' + STATUS_TXT[x.status] + "</span></div>" +
+        return '<div class="item" data-row data-name="' + esc(x.customer_name) + '" data-search="' + esc([x.code, x.customer_name, x.phone, x.hotel, x.tour_name, x.coupon, sup ? sup.name : ""].join(" ")) + '" data-status="' + x.status + '" data-date="' + x.tour_date + '" data-created="' + esc(x.created_at) + '" data-value="' + x.total + '" data-tour="' + esc(x.tour_slug) + '" data-tour-label="' + esc(x.tour_name) + '" data-sup="' + (x.supplier_id || "") + '" data-sup-label="' + esc(sup ? sup.name : "") + '"><div class="item-head"><div><h3>' + esc(x.tour_name) + " · " + ddmm(x.tour_date) + '</h3><p class="small muted">' + esc(x.code || "#" + x.id) + " · feita em " + ddmm(x.created_at) + (x.lang && x.lang !== "pt" ? " · idioma " + esc(x.lang.toUpperCase()) : "") + "</p></div><span class=\"st st-" + x.status + '">' + STATUS_TXT[x.status] + "</span></div>" +
           '<p class="small"><b>' + esc(x.customer_name) + "</b> · " + esc(x.phone) + (x.hotel ? " · Busca: " + esc(x.hotel) : "") + "</p>" +
           '<p class="small">' + (x.kind === "priv" ? "Privativo" : "Em grupo") + " · " + people + (x.buggy_cars ? " · Buggy: " + x.buggy_cars : "") + (x.coupon ? " · Cupom " + esc(x.coupon) : "") + " · <b>" + D.brl(x.total) + "</b> " + (x.pay_method === "pix" ? "Pix" : "cartão") + "</p>" +
           fin + '<div class="row small"><label for="sup' + x.id + '">Empresa</label><select id="sup' + x.id + '" data-sup="' + x.id + '" style="width:auto"><option value="">' + (opts.length ? "Escolher…" : "Nenhuma com net") + "</option>" + opts.map(function (z) { return '<option value="' + z.id + '"' + (z.id === x.supplier_id ? " selected" : "") + ">" + esc(z.name) + "</option>"; }).join("") + "</select>" +
@@ -120,8 +211,6 @@
           (wa ? '<a class="btn btn-ghost" href="' + wa + '" target="_blank" rel="noopener">WhatsApp do cliente</a>' : "") +
           '<button class="btn btn-ghost" type="button" data-note="' + x.id + '">Anotação</button></div>' + (x.notes ? '<p class="small muted">📝 ' + esc(x.notes) + "</p>" : "") + "</div>";
       }).join("") || '<div class="empty">Nenhuma reserva aqui.</div>');
-    document.getElementById("rf").addEventListener("change", function (e) { cache.resFilter = e.target.value; cache.resCode = ""; render(); });
-    document.getElementById("rcode").addEventListener("change", function (e) { cache.resCode = e.target.value.trim(); render(); });
     p.querySelectorAll("[data-sup]").forEach(function (sl) { sl.addEventListener("change", async function () { if (!sl.value) return; var u = await sb.rpc("assign_supplier", { p_booking: Number(sl.dataset.sup), p_supplier: Number(sl.value) }); if (!fail(u)) { U.toast("Empresa definida e acerto recalculado."); render(); } }); });
     p.querySelectorAll("[data-sent]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.sent, { sent_to_supplier_at: new Date().toISOString() }).then(function () { setTimeout(render, 400); }); }); });
     p.querySelectorAll("[data-review]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.review, { review_asked_at: new Date().toISOString() }); }); });
@@ -137,12 +226,12 @@
   };
 
   VIEWS.precos = async function (p) {
-    var r = await sb.from("tours").select("slug,name,price_card,price_pix,price_private,per_vehicle,active,extras").order("sort");
+    var r = await sb.from("tours").select("slug,name,price_card,price_pix,price_private,per_vehicle,active,extras,category,sort").order("sort");
     if (fail(r)) return;
     p.innerHTML = '<p class="note">Revise e toque em Salvar tudo. Pix normalmente fica de 5% a 10% abaixo do cartão. O privativo é o preço do veículo inteiro.</p>' +
       r.data.map(function (t) {
         var bug = (t.extras || []).filter(function (e) { return e.buggy; })[0];
-        return '<div class="item" data-slug="' + esc(t.slug) + '"><div class="item-head"><h3>' + esc(t.name) + "</h3>" + (t.active ? "" : '<span class="st st-cancelado">Oculto</span>') + '</div><div class="formgrid">' +
+        return '<div class="item" data-row data-slug="' + esc(t.slug) + '" data-name="' + esc(t.name) + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '"><div class="item-head"><h3>' + esc(t.name) + "</h3>" + (t.active ? "" : '<span class="st st-cancelado">Oculto</span>') + '</div><div class="formgrid">' +
           f("pc_" + t.slug, "Cartão (R$)" + (t.per_vehicle ? " por veículo" : " por pessoa"), t.price_card, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
           f("pp_" + t.slug, "Pix (R$)", t.price_pix, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
           (t.per_vehicle ? "" : f("pv_" + t.slug, "Privativo por veículo (vazio = não oferece)", t.price_private == null ? "" : t.price_private, "", 'type="number" step="0.01" min="0" inputmode="decimal"')) +
@@ -150,16 +239,18 @@
           "</div></div>";
       }).join("") + '<div class="row" style="position:sticky;bottom:0;background:var(--bg);padding-block:10px"><button class="btn btn-mar" type="button" id="saveAll" style="flex:1">Salvar tudo</button></div>';
     document.getElementById("saveAll").addEventListener("click", async function () {
-      var btn = this; btn.disabled = true; btn.textContent = "Salvando…"; var errs = 0;
+      var btn = this; btn.disabled = true; btn.textContent = "Salvando…"; var errs = 0, saved = 0, msgs = [];
       for (var i = 0; i < r.data.length; i++) {
         var t = r.data[i], v = function (id) { var el = document.getElementById(id); return el ? el.value.trim() : null; };
         var row = { price_card: Number(v("pc_" + t.slug)) || 0, price_pix: Number(v("pp_" + t.slug)) || 0, updated_at: new Date().toISOString() };
         if (!t.per_vehicle) row.price_private = v("pv_" + t.slug) === "" ? null : Number(v("pv_" + t.slug));
         if (v("pb_" + t.slug) !== null) row.extras = (t.extras || []).map(function (e) { return e.buggy ? Object.assign({}, e, { price: Number(v("pb_" + t.slug)) || 0 }) : e; });
-        var u = await sb.from("tours").update(row).eq("slug", t.slug); if (u.error) errs++;
+        var changed = Number(row.price_card) !== Number(t.price_card) || Number(row.price_pix) !== Number(t.price_pix) || ("price_private" in row && String(row.price_private) !== String(t.price_private)) || (row.extras && JSON.stringify(row.extras) !== JSON.stringify(t.extras));
+        if (!changed) continue;
+        var u = await sb.from("tours").update(row).eq("slug", t.slug); if (u.error) { errs++; msgs.push(u.error.message); } else { Object.assign(t, row); saved++; }
       }
       btn.disabled = false; btn.textContent = "Salvar tudo";
-      U.toast(errs ? "Alguns preços não salvaram (" + errs + "). Tente de novo." : "Preços salvos. O site já mostra os novos valores.");
+      U.toast(errs ? msgs[0] + (errs > 1 ? " (+" + (errs - 1) + ")" : "") : saved ? saved + " preço(s) salvo(s). O site já mostra os novos valores." : "Nada mudou.");
     });
   };
 
@@ -167,9 +258,9 @@
     var r = await sb.from("tours").select("*").order("sort");
     if (fail(r)) return;
     if (cache.editTour !== undefined) return tourForm(p, cache.editTour ? r.data.filter(function (x) { return x.slug === cache.editTour; })[0] : null);
-    p.innerHTML = '<div class="row"><button class="btn btn-mar" type="button" id="newTour">+ Novo passeio</button><span class="muted small">' + r.data.length + " passeios</span></div>" +
+    p.innerHTML = '<div class="row"><button class="btn btn-mar" type="button" id="newTour">+ Novo passeio</button></div>' +
       r.data.map(function (t) {
-        return '<div class="item"><div class="item-head"><div style="display:flex;gap:12px;align-items:center">' + ((t.photos || [])[0] ? '<img src="' + esc(t.photos[0].url) + '" alt="" style="width:72px;height:52px;object-fit:cover;border-radius:8px">' : "") + "<div><h3>" + esc(t.name) + '</h3><p class="small muted">' + esc(t.category) + " · " + D.brl(t.price_pix) + " no Pix · " + D.brl(t.price_card) + " cartão</p></div></div>" +
+        return '<div class="item trow" data-row data-name="' + esc(t.name) + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '"><div class="item-head"><div style="display:flex;gap:12px;align-items:center">' + ((t.photos || [])[0] ? '<img class="thumb" src="' + esc(t.photos[0].url) + '" alt="" loading="lazy">' : '<span class="thumb"></span>') + "<div><h3>" + esc(t.name) + '</h3><p class="small muted">' + esc(t.category) + " · " + D.brl(t.price_pix) + " no Pix · " + D.brl(t.price_card) + " cartão</p></div></div>" +
           '<span class="st ' + (t.active ? "st-pago" : "st-cancelado") + '">' + (t.active ? "No ar" : "Oculto") + "</span></div>" +
           '<div class="row"><button class="btn btn-ghost" type="button" data-edit="' + esc(t.slug) + '">Editar</button><button class="btn btn-ghost" type="button" data-toggle="' + esc(t.slug) + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver</a></div></div>';
       }).join("");
@@ -262,7 +353,7 @@
       r.data.map(function (c) {
         var s = stats[c.code.toUpperCase()] || { n: 0, v: 0 };
         var link = site + "?cupom=" + encodeURIComponent(c.code);
-        return '<div class="item"><div class="item-head"><div><h3>' + esc(c.code) + " · " + esc(c.agent_name) + '</h3><p class="small muted">Cliente ganha ' + c.discount_pct + "% · agente ganha " + c.commission_pct + "%" + (c.leader ? " · líder " + esc(c.leader) + " ganha " + c.leader_pct + "%" : "") + '</p></div><span class="st ' + (c.active ? "st-pago" : "st-cancelado") + '">' + (c.active ? "Ativo" : "Pausado") + "</span></div>" +
+        return '<div class="item" data-row data-name="' + esc(c.code) + '" data-search="' + esc(c.code + " " + c.agent_name + " " + (c.leader || "")) + '" data-status="' + (c.active ? "on" : "off") + '" data-value="' + s.v + '"><div class="item-head"><div><h3>' + esc(c.code) + " · " + esc(c.agent_name) + '</h3><p class="small muted">Cliente ganha ' + c.discount_pct + "% · agente ganha " + c.commission_pct + "%" + (c.leader ? " · líder " + esc(c.leader) + " ganha " + c.leader_pct + "%" : "") + '</p></div><span class="st ' + (c.active ? "st-pago" : "st-cancelado") + '">' + (c.active ? "Ativo" : "Pausado") + "</span></div>" +
           '<p class="small"><b>' + s.n + "</b> vendas · " + D.brl(s.v) + " vendido · comissão do agente <b>" + D.brl(s.v * c.commission_pct / 100) + "</b>" + (c.leader ? " · do líder <b>" + D.brl(s.v * c.leader_pct / 100) + "</b>" : "") + "</p>" +
           '<div class="row"><button class="btn btn-ghost" type="button" data-copy="' + esc(link) + '">Copiar link do agente</button><button class="btn btn-ghost" type="button" data-ctoggle="' + esc(c.code) + '">' + (c.active ? "Pausar" : "Ativar") + '</button><button class="btn btn-danger" type="button" data-cdel="' + esc(c.code) + '">Excluir</button></div></div>';
       }).join("");
@@ -284,7 +375,7 @@
     if (fail(r)) return;
     p.innerHTML = r.data.map(function (x) {
       var wa = D.waLink(x.phone, "Olá, " + x.name.split(" ")[0] + "! Recebemos seu pedido para ser parceiro.");
-      return '<div class="item"><div class="item-head"><div><h3>' + esc(x.name) + '</h3><p class="small muted">' + esc(x.role) + " · " + esc(x.phone) + " · " + ddmm(x.created_at) + "</p></div><span class=\"st " + (x.status === "novo" ? "st-pendente" : "st-pago") + '">' + esc(x.status) + "</span></div>" +
+      return '<div class="item" data-row data-name="' + esc(x.name) + '" data-status="' + esc(x.status) + '" data-created="' + esc(x.created_at) + '"><div class="item-head"><div><h3>' + esc(x.name) + '</h3><p class="small muted">' + esc(x.role) + " · " + esc(x.phone) + " · " + ddmm(x.created_at) + "</p></div><span class=\"st " + (x.status === "novo" ? "st-pendente" : "st-pago") + '">' + esc(x.status) + "</span></div>" +
         '<div class="row">' + (wa ? '<a class="btn btn-ghost" href="' + wa + '" target="_blank" rel="noopener">Chamar no WhatsApp</a>' : "") + '<button class="btn btn-ghost" type="button" data-done="' + x.id + '">Marcar como atendido</button></div></div>';
     }).join("") || '<div class="empty">Nenhum pedido de parceria ainda.</div>';
     p.querySelectorAll("[data-done]").forEach(function (b) { b.addEventListener("click", async function () { var u = await sb.from("partner_requests").update({ status: "atendido" }).eq("id", b.dataset.done); if (!fail(u)) render(); }); });
@@ -294,7 +385,7 @@
     var r = await sb.from("leads").select("*").order("created_at", { ascending: false });
     if (fail(r)) return;
     p.innerHTML = '<div class="row"><button class="btn btn-ghost" type="button" id="copyAll">Copiar todos os números</button><span class="muted small">' + r.data.length + " contatos da lista de promoções</span></div>" +
-      r.data.map(function (x) { return '<div class="item small"><div class="row"><b>' + esc(x.phone) + '</b><span class="muted">' + ddmm(x.created_at) + "</span></div></div>"; }).join("");
+      r.data.map(function (x) { return '<div class="item small" data-row data-created="' + esc(x.created_at) + '"><div class="row"><b>' + esc(x.phone) + '</b><span class="muted">' + ddmm(x.created_at) + "</span></div></div>"; }).join("");
     document.getElementById("copyAll").addEventListener("click", function () { var t = r.data.map(function (x) { return x.phone; }).join("\n"); if (navigator.clipboard) navigator.clipboard.writeText(t).then(function () { U.toast("Números copiados."); }); });
   };
 
@@ -304,7 +395,7 @@
       if (fail(r)) return;
       p.innerHTML = '<div class="item"><h3>Adicionar ' + title + '</h3><form id="nf" class="formgrid">' + fields.map(function (x) { return x[2] === "ta" ? ta("n_" + x[0], x[1], "") : f("n_" + x[0], x[1], ""); }).join("") + '<div class="row full"><button class="btn btn-mar" type="submit">Adicionar</button></div></form></div>' +
         r.data.map(function (x) {
-          return '<div class="item" data-id="' + x.id + '"><div class="formgrid">' + fields.map(function (fl) { return fl[2] === "ta" ? ta("e" + x.id + "_" + fl[0], fl[1], x[fl[0]]) : f("e" + x.id + "_" + fl[0], fl[1], x[fl[0]]); }).join("") +
+          return '<div class="item" data-row data-id="' + x.id + '" data-name="' + esc(x[fields[0][0]]) + '" data-sort="' + x.sort + '" data-status="' + (x.published ? "on" : "off") + '" data-search="' + esc(fields.map(function (fl) { return x[fl[0]]; }).join(" ")) + '"><div class="formgrid">' + fields.map(function (fl) { return fl[2] === "ta" ? ta("e" + x.id + "_" + fl[0], fl[1], x[fl[0]]) : f("e" + x.id + "_" + fl[0], fl[1], x[fl[0]]); }).join("") +
             f("e" + x.id + "_sort", "Ordem", x.sort, "", 'type="number"') + '<label class="check"><input type="checkbox" id="e' + x.id + '_published"' + (x.published ? " checked" : "") + "> Publicado</label></div>" +
             '<div class="row"><button class="btn btn-mar" type="button" data-save="' + x.id + '">Salvar</button><button class="btn btn-danger" type="button" data-del="' + x.id + '">Excluir</button></div></div>';
         }).join("");
@@ -400,13 +491,13 @@
       }).join("") +
       '<form id="sNew" class="row"><input id="sNewName" placeholder="Nome da nova empresa (ex.: Enseada Turismo)" style="flex:1;min-width:200px"><input id="sNewWa" placeholder="WhatsApp 5585..." inputmode="tel" style="width:170px"><button class="btn btn-ghost" type="submit">Adicionar empresa</button></form></div>' +
       '<div class="item"><h3>Net por passeio</h3><p class="small muted">Mínimo = net + anúncio (' + D.brl(AD) + ') + margem mínima (' + D.brl(MM) + ') por pessoa. O site nunca vende abaixo disso: cupom e desconto param no mínimo. A empresa preferida recebe as reservas novas.</p>' +
-      '<div class="row"><label class="label" for="netFilter">Passeio</label><select id="netFilter" style="width:auto"><option value="">Todos</option>' + tours.map(function (t) { return '<option value="' + esc(t.slug) + '"' + (t.slug === only ? " selected" : "") + ">" + esc(t.name) + "</option>"; }).join("") + "</select></div>" +
+
       tours.filter(function (t) { return !only || t.slug === only; }).map(function (t) {
         var tr = rates.filter(function (r) { return r.tour_slug === t.slug; });
         var pref = tr.filter(function (r) { return r.preferred && r.active; })[0] || tr.filter(function (r) { return r.active; }).sort(function (a, b) { return a.net_adult - b.net_adult; })[0];
         var floor = pref ? Math.ceil(Number(pref.net_adult) + AD + MM) : null, floorCard = pref ? Math.ceil((Number(pref.net_adult) + AD + MM) / (1 - FEE / 100)) : null;
         var margin = pref ? Number(t.price_pix) - Number(pref.net_adult) - AD : null;
-        return '<div class="item" style="background:var(--bg)"><div class="item-head"><div><h3>' + esc(t.name) + (t.active ? "" : " (oculto)") + '</h3><p class="small muted">Site: ' + D.brl(t.price_pix) + " Pix · " + D.brl(t.price_card) + " cartão" +
+        return '<div class="item sub" data-row data-name="' + esc(t.name) + '" data-net="' + (pref ? "com" : "sem") + '" data-status="' + (t.active ? "on" : "off") + '" data-sort="' + t.sort + '" data-margin="' + (margin == null ? -1 : margin) + '"><div class="item-head"><div><h3>' + esc(t.name) + (t.active ? "" : " (oculto)") + '</h3><p class="small muted">Site: ' + D.brl(t.price_pix) + " Pix · " + D.brl(t.price_card) + " cartão" +
           (pref ? " · <b>mínimo " + D.brl(floor) + " Pix / " + D.brl(floorCard) + " cartão</b> · sobra por pessoa " + D.brl(margin) + " (cada sócio " + D.brl(margin * Number(B.partner_split_pct || 50) / 100) + ")" : ' · <b style="color:var(--ruim)">sem net: o site vende sem trava de mínimo</b>') + "</p></div>" +
           '<div class="field" style="width:150px"><label class="label" for="cap_' + esc(t.slug) + '">Vagas por dia</label><input id="cap_' + esc(t.slug) + '" type="number" min="0" placeholder="sem limite" value="' + (t.capacity_per_day == null ? "" : t.capacity_per_day) + '" data-cap="' + esc(t.slug) + '"></div></div>' +
           tr.map(function (r) {
@@ -422,7 +513,6 @@
           (sups.length ? '<div class="row small"><select data-newsup="' + esc(t.slug) + '" style="width:auto">' + sups.filter(function (s) { return !tr.some(function (r) { return r.supplier_id === s.id; }); }).map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + "</option>"; }).join("") + '</select><input type="number" step="0.01" min="0" placeholder="Net adulto (R$)" data-newnet="' + esc(t.slug) + '" style="width:150px"><button class="btn btn-ghost" type="button" data-radd="' + esc(t.slug) + '">Adicionar net</button></div>' : '<p class="small muted">Cadastre uma empresa acima para lançar o net.</p>') + "</div>";
       }).join("") + "</div>";
 
-    document.getElementById("netFilter").addEventListener("change", function (e) { cache.netTour = e.target.value; render(); });
     document.getElementById("sNew").addEventListener("submit", async function (e) { e.preventDefault(); var n = document.getElementById("sNewName").value.trim(); if (!n) return U.toast("Digite o nome da empresa."); var i = await sb.from("suppliers").insert({ name: n, whatsapp: document.getElementById("sNewWa").value.replace(/\D/g, "") }); if (!fail(i)) { U.toast("Empresa adicionada."); render(); } });
     p.querySelectorAll("[data-ssave]").forEach(function (b) { b.addEventListener("click", async function () {
       var id = b.dataset.ssave, g = function (k) { return document.getElementById("su" + id + "_" + k); };
@@ -511,7 +601,8 @@
     document.getElementById("ntest").addEventListener("click", async function () { var u = await sb.rpc("admin_notify_test"); if (!fail(u)) U.toast("Aviso de teste enviado ao canal."); });
     async function paintAdmins() {
       var a = await sb.from("admin_emails").select("*"); if (fail(a)) return;
-      document.getElementById("admins").innerHTML = a.data.map(function (x) { return '<div class="row small"><b>' + esc(x.email) + '</b><button class="btn btn-ghost" type="button" data-adel="' + esc(x.email) + '">Remover</button></div>'; }).join("");
+      var adm = document.getElementById("admins"); if (!adm) return;
+      adm.innerHTML = a.data.map(function (x) { return '<div class="row small"><b>' + esc(x.email) + '</b><button class="btn btn-ghost" type="button" data-adel="' + esc(x.email) + '">Remover</button></div>'; }).join("");
       document.querySelectorAll("[data-adel]").forEach(function (b) { b.addEventListener("click", async function () { if (a.data.length <= 1) return U.toast("Precisa ficar pelo menos um administrador."); var u = await sb.from("admin_emails").delete().eq("email", b.dataset.adel); if (!fail(u)) paintAdmins(); }); });
     }
     paintAdmins();
@@ -520,6 +611,7 @@
 
   var hm = (location.hash || "").match(/^#(MT-\d+)$/i);
   if (hm) { tab = "reservas"; cache.resCode = hm[1].toUpperCase(); }
+  else { try { var lt = localStorage.getItem("adm-tab"); if (lt && VIEWS[lt]) tab = lt; } catch (e) {} }
   var st = await D.load(); U.brand(st.settings);
   sb.auth.onAuthStateChange(function () {});
   boot();
