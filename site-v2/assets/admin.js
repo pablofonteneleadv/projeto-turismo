@@ -46,13 +46,13 @@
 
   var GROUPS = [
     ["Vendas", [["inicio", "Resumo", "◎"], ["operacao", "Operação do dia", "☀"], ["reservas", "Reservas", "▤"], ["financeiro", "Financeiro", "$"]]],
-    ["Catálogo", [["passeios", "Passeios", "⛱"], ["precos", "Preços", "R$"], ["empresas", "Empresas e net", "⚓"]]],
+    ["Catálogo", [["passeios", "Passeios e preços", "⛱"], ["empresas", "Empresas e net", "⚓"]]],
     ["Divulgação", [["cupons", "Cupons e agentes", "%"], ["avaliacoes", "Avaliações", "★"], ["perguntas", "Perguntas", "?"], ["contatos", "Contatos", "☎"], ["parceiros", "Parceiros", "♟"]]],
     ["Sistema", [["config", "Configurações", "⚙"]]]
   ];
   var TABS = []; GROUPS.forEach(function (g) { g[1].forEach(function (t) { TABS.push(t); }); });
   var BOTTOM = ["operacao", "reservas", "passeios", "financeiro"];
-  function tabInfo(k) { return TABS.filter(function (t) { return t[0] === k; })[0] || TABS[0]; }
+  function tabInfo(k) { if (k === "precos") return ["precos", "Tabela de preços", "R$"]; return TABS.filter(function (t) { return t[0] === k; })[0] || TABS[0]; }
 
   function shell(inner) {
     var side = GROUPS.map(function (g) { return '<div class="nav-group"><small>' + g[0] + "</small>" + g[1].map(function (t) { return '<button type="button" data-tab="' + t[0] + '" aria-current="' + (t[0] === tab ? "page" : "false") + '"><span class="ico" aria-hidden="true">' + t[2] + "</span>" + t[1] + "</button>"; }).join("") + "</div>"; }).join("");
@@ -226,9 +226,11 @@
   };
 
   VIEWS.precos = async function (p) {
+    var back = document.createElement("div");
     var r = await sb.from("tours").select("slug,name,price_card,price_pix,price_private,per_vehicle,active,extras,category,sort").order("sort");
     if (fail(r)) return;
-    p.innerHTML = '<p class="note">Revise e toque em Salvar tudo. Pix normalmente fica de 5% a 10% abaixo do cartão. O privativo é o preço do veículo inteiro.</p>' +
+    void back;
+    p.innerHTML = '<div class="row"><button class="btn btn-ghost" type="button" id="backTours">← Voltar para Passeios</button></div><p class="note">Revise e toque em Salvar tudo. Pix normalmente fica de 5% a 10% abaixo do cartão. O privativo é o preço do veículo inteiro.</p>' +
       r.data.map(function (t) {
         var bug = (t.extras || []).filter(function (e) { return e.buggy; })[0];
         return '<div class="item" data-row data-slug="' + esc(t.slug) + '" data-name="' + esc(t.name) + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '"><div class="item-head"><h3>' + esc(t.name) + "</h3>" + (t.active ? "" : '<span class="st st-cancelado">Oculto</span>') + '</div><div class="formgrid">' +
@@ -238,6 +240,7 @@
           (bug ? f("pb_" + t.slug, "Buggy por carro (R$)", bug.price, "", 'type="number" step="0.01" min="0" inputmode="decimal"') : "") +
           "</div></div>";
       }).join("") + '<div class="row" style="position:sticky;bottom:0;background:var(--bg);padding-block:10px"><button class="btn btn-mar" type="button" id="saveAll" style="flex:1">Salvar tudo</button></div>';
+    document.getElementById("backTours").addEventListener("click", function () { tab = "passeios"; render(); });
     document.getElementById("saveAll").addEventListener("click", async function () {
       var btn = this; btn.disabled = true; btn.textContent = "Salvando…"; var errs = 0, saved = 0, msgs = [];
       for (var i = 0; i < r.data.length; i++) {
@@ -258,13 +261,44 @@
     var r = await sb.from("tours").select("*").order("sort");
     if (fail(r)) return;
     if (cache.editTour !== undefined) return tourForm(p, cache.editTour ? r.data.filter(function (x) { return x.slug === cache.editTour; })[0] : null);
-    p.innerHTML = '<div class="row"><button class="btn btn-mar" type="button" id="newTour">+ Novo passeio</button></div>' +
+    var rx = await Promise.all([sb.from("tour_rates").select("tour_slug,net_adult,preferred,active"), bizData()]);
+    var RATES = rx[0].data || [], BZ = rx[1] || {}, AD = Number(BZ.ad_cost_per_pax || 0), MM = Number(BZ.min_margin_per_pax || 0), FEE = Number(BZ.card_fee_pct || 0);
+    function floorOf(slug) { var tr = RATES.filter(function (r) { return r.tour_slug === slug && r.active; }); var pr = tr.filter(function (r) { return r.preferred; })[0] || tr.sort(function (a, b) { return a.net_adult - b.net_adult; })[0]; return pr ? { net: Number(pr.net_adult), pix: Math.ceil(Number(pr.net_adult) + AD + MM), card: Math.ceil((Number(pr.net_adult) + AD + MM) / (1 - FEE / 100)) } : null; }
+    p.innerHTML = '<div class="row"><button class="btn btn-mar" type="button" id="newTour">+ Novo passeio</button><button class="btn btn-ghost" type="button" id="allPrices">Tabela com todos os preços</button></div>' +
       r.data.map(function (t) {
         return '<div class="item trow" data-row data-name="' + esc(t.name) + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '"><div class="item-head"><div style="display:flex;gap:12px;align-items:center">' + ((t.photos || [])[0] ? '<img class="thumb" src="' + esc(t.photos[0].url) + '" alt="" loading="lazy">' : '<span class="thumb"></span>') + "<div><h3>" + esc(t.name) + '</h3><p class="small muted">' + esc(t.category) + " · " + D.brl(t.price_pix) + " no Pix · " + D.brl(t.price_card) + " cartão</p></div></div>" +
           '<span class="st ' + (t.active ? "st-pago" : "st-cancelado") + '">' + (t.active ? "No ar" : "Oculto") + "</span></div>" +
-          '<div class="row"><button class="btn btn-ghost" type="button" data-edit="' + esc(t.slug) + '">Editar</button><button class="btn btn-ghost" type="button" data-toggle="' + esc(t.slug) + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver</a></div></div>';
+          (function () { var fl = floorOf(t.slug); return fl ? '<p class="small muted">Net ' + D.brl(fl.net) + " · mínimo " + D.brl(fl.pix) + " Pix / " + D.brl(fl.card) + " cartão · sobra por pessoa " + D.brl(Number(t.price_pix) - fl.net - AD) + "</p>" : '<p class="small muted">Sem net cadastrado (Empresas e net)</p>'; })() +
+          '<div class="row"><button class="btn btn-mar" type="button" data-prices="' + esc(t.slug) + '">Preços</button><button class="btn btn-ghost" type="button" data-edit="' + esc(t.slug) + '">Editar</button><button class="btn btn-ghost" type="button" data-toggle="' + esc(t.slug) + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver</a></div></div>';
       }).join("");
     document.getElementById("newTour").addEventListener("click", function () { cache.editTour = null; render(); });
+    document.getElementById("allPrices").addEventListener("click", function () { tab = "precos"; render(); });
+    p.querySelectorAll("[data-prices]").forEach(function (b) { b.addEventListener("click", function () {
+      var card = b.closest(".item"), open = card.querySelector(".pedit");
+      if (open) { open.remove(); b.setAttribute("aria-expanded", "false"); return; }
+      var t = r.data.filter(function (x) { return x.slug === b.dataset.prices; })[0], fl = floorOf(t.slug), id = "pe_" + t.slug.replace(/\W/g, "_");
+      var bug = (t.extras || []).filter(function (e) { return e.buggy; })[0];
+      var box = document.createElement("div"); box.className = "pedit";
+      box.innerHTML = '<div class="formgrid">' +
+        f(id + "_pix", "Pix (R$)" + (t.per_vehicle ? " por veículo" : " por pessoa"), t.price_pix, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
+        f(id + "_card", "Cartão (R$)", t.price_card, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
+        (t.per_vehicle ? "" : f(id + "_priv", "Privativo por veículo (vazio = não oferece)", t.price_private == null ? "" : t.price_private, "", 'type="number" step="0.01" min="0" inputmode="decimal"')) +
+        (bug ? f(id + "_bug", "Buggy por carro (R$)", bug.price, "", 'type="number" step="0.01" min="0" inputmode="decimal"') : "") + "</div>" +
+        '<p class="small muted" data-hint>' + (fl ? "Não aceita abaixo de " + D.brl(fl.pix) + " no Pix e " + D.brl(fl.card) + " no cartão." : "Sem net: não há trava de mínimo para este passeio.") + "</p>" +
+        '<div class="row"><button class="btn btn-ghost" type="button" data-card5>Cartão = Pix + ' + (FEE || 5) + '%</button><button class="btn btn-mar" type="button" data-psave>Salvar preços</button><button class="btn btn-ghost" type="button" data-pcancel>Fechar</button></div>';
+      card.appendChild(box); b.setAttribute("aria-expanded", "true");
+      var g = function (k) { var el = document.getElementById(id + "_" + k); return el ? el.value.trim() : null; };
+      box.querySelector("[data-card5]").addEventListener("click", function () { var v = Number(g("pix")); if (v) document.getElementById(id + "_card").value = Math.round(v * (1 + (FEE || 5) / 100)); });
+      box.querySelector("[data-pcancel]").addEventListener("click", function () { box.remove(); b.setAttribute("aria-expanded", "false"); });
+      box.querySelector("[data-psave]").addEventListener("click", async function () {
+        var row = { price_pix: Number(g("pix")) || 0, price_card: Number(g("card")) || 0, updated_at: new Date().toISOString() };
+        if (!row.price_pix || !row.price_card) return U.toast("Preencha Pix e cartão.");
+        if (fl && (row.price_pix < fl.pix || row.price_card < fl.card)) return U.toast("Abaixo do mínimo: " + D.brl(fl.pix) + " no Pix e " + D.brl(fl.card) + " no cartão.");
+        if (!t.per_vehicle) row.price_private = g("priv") === "" ? null : Number(g("priv"));
+        if (bug) row.extras = (t.extras || []).map(function (e) { return e.buggy ? Object.assign({}, e, { price: Number(g("bug")) || 0 }) : e; });
+        var u = await sb.from("tours").update(row).eq("slug", t.slug); if (!fail(u)) { U.toast("Preços de " + t.name + " salvos. O site já mostra."); render(); }
+      });
+    }); });
     p.querySelectorAll("[data-edit]").forEach(function (b) { b.addEventListener("click", function () { cache.editTour = b.dataset.edit; render(); }); });
     p.querySelectorAll("[data-toggle]").forEach(function (b) { b.addEventListener("click", async function () { var t = r.data.filter(function (x) { return x.slug === b.dataset.toggle; })[0]; var u = await sb.from("tours").update({ active: !t.active }).eq("slug", t.slug); if (!fail(u)) render(); }); });
   };

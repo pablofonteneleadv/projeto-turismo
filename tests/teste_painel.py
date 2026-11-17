@@ -91,7 +91,7 @@ with sync_playwright() as pw:
         p.evaluate("k => document.querySelector('.side [data-tab=\"'+k+'\"]').click()", key)
         p.wait_for_function("!document.querySelector('#panel').innerText.includes('Carregando')")
         return p.inner_text("#panel").replace(" ", " ")
-    for key in ["operacao", "empresas", "financeiro", "config", "inicio", "precos", "passeios", "cupons", "avaliacoes", "perguntas", "contatos", "parceiros"]:
+    for key in ["operacao", "empresas", "financeiro", "config", "inicio", "passeios", "cupons", "avaliacoes", "perguntas", "contatos", "parceiros"]:
         txt = go(key)
         check("Erro ao carregar" not in txt and "Não foi possível carregar" not in txt, "seção " + key + " abre sem erro")
         if key == "operacao":
@@ -127,6 +127,16 @@ with sync_playwright() as pw:
             pr = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => +e.dataset.price)")
             check(pr == sorted(pr), "ordenar por menor preço")
             p.select_option("#tsort", "sort")
+            p.click("#tclear"); p.fill("#tq", "cumbuco"); p.wait_for_timeout(300)
+            p.click('[data-prices="cumbuco"]')
+            check(p.is_visible(".pedit"), "botão Preços abre os preços dentro do card")
+            check("R$ 45,00" in p.inner_text(".pedit").replace(" ", " "), "card mostra o mínimo pelo net")
+            p.fill(".pedit input[id$='_pix']", "40"); p.click("[data-psave]"); p.wait_for_timeout(500)
+            check(p.is_visible(".pedit"), "preço abaixo do mínimo é recusado no painel")
+            p.click("[data-pcancel]")
+            p.click("#allPrices"); p.wait_for_function("!document.querySelector('#panel').innerText.includes('Carregando')")
+            check(p.is_visible("#saveAll") and p.is_visible("#backTours"), "tabela com todos os preços continua disponível")
+            p.click("#backTours"); p.wait_for_function("!document.querySelector('#panel').innerText.includes('Carregando')")
     check(not errs, "sem erro de JavaScript: " + "; ".join(errs[:3]))
     b.close()
 
