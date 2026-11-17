@@ -21,14 +21,14 @@ p,li{margin:6px 0}ul,ol{padding-left:22px}
 strong{color:var(--ink)}
 a{color:var(--mar);word-break:break-word}
 blockquote{margin:10px 0;padding:10px 14px;background:var(--sol-soft);border-left:4px solid var(--sol);border-radius:10px}
-.tbl{overflow-x:auto;margin:10px -4px;-webkit-overflow-scrolling:touch}
+.tbl{overflow-x:auto;max-width:100%;margin:10px 0;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;min-width:100%;font-size:.9rem}
 th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-th{background:var(--mar-soft);position:sticky;top:0}
+th{background:var(--mar-soft)}
 tr:nth-child(even) td{background:rgba(14,124,134,.04)}
 pre{white-space:pre-wrap;word-break:break-word;background:var(--mar-soft);padding:12px;border-radius:10px;overflow-x:auto}
 pre code{background:none;padding:0}
-body{overflow-x:hidden}
+html,body{overflow-x:hidden;max-width:100%}
 code{background:var(--mar-soft);padding:1px 6px;border-radius:6px;font-size:.88em}
 .first{background:var(--mar-soft);border:0}
 footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px}
