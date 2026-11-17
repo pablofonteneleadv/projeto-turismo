@@ -246,3 +246,10 @@ a.rating{color:inherit;text-decoration:none}
 .rating[hidden]{display:none}
 
 .warn{background:var(--sol-soft);border-radius:12px;padding:12px 14px;font-size:.92rem}
+
+/* Seletor de idioma PT | ES */
+.lang-sw{display:flex;align-items:center;gap:2px;font-size:.78rem;color:var(--muted)}
+.lang-sw button{background:none;border:0;padding:6px 6px;min-height:36px;font:inherit;font-weight:700;letter-spacing:.06em;color:var(--muted);cursor:pointer;border-radius:6px}
+.lang-sw button[aria-pressed="true"]{color:var(--mar);text-decoration:underline;text-underline-offset:4px}
+.lang-sw button:focus-visible{outline:2px solid var(--mar);outline-offset:1px}
+.hero-note{font-size:.9rem;opacity:.9;margin:-6px 0 0}

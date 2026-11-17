@@ -1,0 +1,521 @@
+<title>Pesquisa Maré Tur</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: abas fixas no topo (Comece aqui · Concorrentes · Empresas para net · Anúncios), conteúdo em blocos de leitura de celular */
+:root{
+  --bg:#F3F7F7; --surface:#FFFFFF; --ink:#13303A; --muted:#55707B; --line:#D8E5E8;
+  --mar:#0B7480; --mar-soft:#DCF0F1; --sol:#C98A12; --sol-soft:#FFF3D6;
+  --bom:#1E7B4C; --bom-soft:#DDF3E6; --ruim:#B23B2E; --ruim-soft:#FBE4E1;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"Source Sans 3",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D1A1F;--surface:#14252B;--ink:#E4EFF1;--muted:#9AB2BA;--line:#24383F;
+  --mar:#4EC2CC;--mar-soft:#163A40;--sol:#E8B54A;--sol-soft:#3A2F16;
+  --bom:#5BC98E;--bom-soft:#183A29;--ruim:#F08A7D;--ruim-soft:#3E1F1B;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1A1F;--surface:#14252B;--ink:#E4EFF1;--muted:#9AB2BA;--line:#24383F;
+  --mar:#4EC2CC;--mar-soft:#163A40;--sol:#E8B54A;--sol-soft:#3A2F16;
+  --bom:#5BC98E;--bom-soft:#183A29;--ruim:#F08A7D;--ruim-soft:#3E1F1B;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:17px/1.6 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header.top{padding-top:22px;display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--mar)}
+h1{font-family:var(--display);font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:1.35rem;line-height:1.2;margin:4px 0 2px;text-wrap:balance}
+h3{font-size:1.08rem;margin:0}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+nav.tabs a{flex:none;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:9px 15px;font-weight:700;font-size:.92rem}
+nav.tabs a[aria-current="page"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.view{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.hi{background:var(--mar-soft);border-color:transparent}
+.card.warn{background:var(--sol-soft);border-color:transparent}
+ul,ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+a{color:var(--mar);word-break:break-word}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:3px 10px;background:var(--mar-soft);color:var(--mar)}
+.chip.sim{background:var(--bom-soft);color:var(--bom)}
+.chip.risco{background:var(--ruim-soft);color:var(--ruim)}
+.chip.neutro{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{padding:9px 11px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;white-space:nowrap}
+td.wrap,th.wrap{white-space:normal;min-width:180px}
+th{background:var(--mar-soft);font-weight:700}
+tr:last-child td{border-bottom:0}
+td.us{font-weight:700;color:var(--mar)}
+.steps{counter-reset:s;list-style:none;padding:0;gap:10px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--mar);color:var(--surface);display:grid;place-items:center;font-weight:700}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.93rem}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;word-break:break-word}
+details{border-top:1px solid var(--line);padding-top:10px}
+details summary{cursor:pointer;font-weight:700;color:var(--mar)}
+details[open] summary{margin-bottom:8px}
+.msg{background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:12px 14px;white-space:pre-wrap;font-size:.95rem}
+.btn{align-self:flex-start;border:1px solid var(--mar);background:var(--surface);color:var(--mar);border-radius:999px;padding:8px 16px;font:700 .9rem var(--body);cursor:pointer}
+.btn:focus-visible,nav.tabs a:focus-visible{outline:3px solid var(--sol);outline-offset:2px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.idea{display:grid;grid-template-columns:34px 1fr;gap:10px}
+.idea .n{font-family:var(--display);font-size:1.3rem;color:var(--mar)}
+.big{font-family:var(--display);font-size:1.9rem;line-height:1;color:var(--mar)}
+@media (max-width:640px){.grid2{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:no-preference){.view{animation:in .2s ease-out}@keyframes in{from{opacity:.4}to{opacity:1}}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <span class="eyebrow">Maré Tur · pesquisa de 17/11/2026</span>
+  <h1>O que os concorrentes fazem e com quem pedir net</h1>
+  <p class="lede">Três pesquisas num lugar só: concorrentes, empresas para pedir tarifa net e anúncios na Meta. Comece pela primeira aba, que resume o que fazer.</p>
+</header>
+
+<nav class="tabs" aria-label="Partes da pesquisa">
+  <a href="#comece">Comece aqui</a>
+  <a href="#concorrentes">Concorrentes</a>
+  <a href="#empresas">Empresas para net</a>
+  <a href="#anuncios">Anúncios na Meta</a>
+</nav>
+
+<!-- ============ COMECE AQUI ============ -->
+<section class="view" id="v-comece">
+  <div class="card hi">
+    <h2>Em uma frase</h2>
+    <p>Nos passeios curtos a Maré Tur não ganha no preço; ganha no que os outros não fazem: preço fechado na tela, reserva com sinal, regra de chuva escrita, resposta rápida e atendimento em espanhol. Para ter margem, o passo mais importante agora é juntar nets de várias empresas.</p>
+  </div>
+
+  <div class="card">
+    <h2>O que fazer esta semana</h2>
+    <ol class="steps">
+      <li><div><b>Pedir o net à Sim7.</b> É a única que publica programa para agentes. WhatsApp de parceiros: <b>(85) 99186-8652</b>. Mensagem pronta na aba Empresas para net.</div></li>
+      <li><div><b>Mandar a mesma mensagem às outras 7 da lista prioritária</b> (ForYou, VM Turismo, Passeios Fortaleza, Coco Verde, PFTUR, Vitorino, Girafatur) e anotar as respostas.</div></li>
+      <li><div><b>Cadastrar cada net no painel</b> (Empresas e net). A partir daí o site trava o preço mínimo e manda a reserva para a empresa mais barata.</div></li>
+      <li><div><b>Publicar a regra de chuva e cancelamento</b> de forma simples e justa. Quase nenhum concorrente local mostra isso.</div></li>
+      <li><div><b>Começar a rede de indicadores:</b> 20 pousadas e anfitriões de Airbnb em Meireles, Iracema, Mucuripe e Praia do Futuro, cada um com cupom próprio.</div></li>
+      <li><div><b>Testar anúncio em espanhol</b> para Argentina (R$ 10 a 15 por dia). Hoje não há nenhum concorrente anunciando lá.</div></li>
+    </ol>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <span class="eyebrow">Preço</span>
+      <h3>Passeios curtos: R$ 20 a 30 acima</h3>
+      <p class="small">Girafatur e Sim7 cobram menos em Cumbuco, Lagoinha, Águas Belas e 3 Praias. Baixar preço ali só vale se o net permitir.</p>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Jericoacoara</span>
+      <h3>R$ 250 é competitivo</h3>
+      <p class="small">Abaixo da Canoa Brasil (R$ 280) e da Prime Ceará (R$ 300). Acima da Sim7 (R$ 199,80) e da Girafatur (R$ 150). O Premium e o Blue Day com entradas inclusas são o argumento.</p>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Atendimento</span>
+      <h3>Os grandes respondem mal</h3>
+      <p class="small">No Reclame Aqui, a Sim7 demora em média 19 dias para responder; Canoa Brasil e Girafatur têm 0% de respostas. Responder em minutos já é diferencial.</p>
+    </div>
+    <div class="card">
+      <span class="eyebrow">Espanhol</span>
+      <h3>Espaço vazio</h3>
+      <p class="small">Zero anúncios em espanhol na Argentina. Guia em espanhol só na Civitatis, em dois passeios. O site da Maré Tur em espanhol está pronto para publicar.</p>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h3>Duas informações que não batem</h3>
+    <ul class="small">
+      <li><b>Canoa Brasil:</b> a pesquisa de concorrentes leu o site canoabrasil.com.br com preços; a de empresas não achou página nenhuma. Vale perguntar ao Bruno qual é a empresa certa.</li>
+      <li><b>Enseada:</b> o endereço enseadaturismo.com.br não existe, mas aparece outro, enseada.tur.br, que não abriu na pesquisa. O Instagram encontrado tem só 152 seguidores e pode ser outra conta. Quem sabe é o Bruno.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ CONCORRENTES ============ -->
+<section class="view" id="v-concorrentes" hidden>
+  <div class="card hi">
+    <h2>Resumo dos concorrentes</h2>
+    <ul>
+      <li><b>Passeios curtos:</b> Girafatur e Sim7 são R$ 20 a 30 mais baratas. Competir só no preço tira margem sem trazer vantagem.</li>
+      <li><b>Jeri:</b> a Maré Tur está no meio da faixa. O que diferencia é reserva online com pagamento, regra clara e entradas inclusas.</li>
+      <li><b>Instagram:</b> Planetatur (132 mil seguidores), Sim7 (100 mil) e Prime Ceará (76,9 mil) dominam. Nenhum mostrou reserva com pagamento online nem regra de chuva.</li>
+      <li><b>Plataformas</b> (Civitatis, Nomades, Viator, GetYourGuide) vendem barato, com nota média. Marcam o preço que o turista que pesquisa sozinho espera pagar.</li>
+      <li><b>Melhor oportunidade barata:</b> hotéis, pousadas e anfitriões de Airbnb, e o público que fala espanhol.</li>
+    </ul>
+    <p class="small muted">Cada fato abaixo veio de um site citado. “Não confirmado” quer dizer que a pesquisa tentou e não conseguiu checar. Preços dos concorrentes são “a partir de”, e o que está incluso muda de um para outro.</p>
+  </div>
+
+  <h2>Preço por pessoa, lado a lado</h2>
+  <p class="small muted">Maré Tur = preço no Pix do site. “—” = a empresa não publica.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Passeio</th><th>Maré Tur</th><th>Canoa Brasil</th><th>Girafatur</th><th>Sim7</th><th>Prime Ceará</th><th>Civitatis</th><th>Nomades</th></tr></thead>
+    <tbody>
+      <tr><td>Cumbuco</td><td class="us">80</td><td>80</td><td>54,90</td><td>—</td><td>—</td><td>53,33</td><td>52</td></tr>
+      <tr><td>Lagoinha</td><td class="us">100</td><td>120</td><td>79,90</td><td>85</td><td>—</td><td>80</td><td>—</td></tr>
+      <tr><td>Águas Belas</td><td class="us">80</td><td>100</td><td>74,90</td><td>75</td><td>75</td><td>—</td><td>—</td></tr>
+      <tr><td>Paracuru</td><td class="us">110</td><td>99,90</td><td>84,90</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>3 Praias (sem buggy)</td><td class="us">120</td><td>124,90</td><td>99,90</td><td>99,80</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Canoa Quebrada</td><td class="us">—</td><td>129,90</td><td>120</td><td>—</td><td>—</td><td>120</td><td>—</td></tr>
+      <tr><td>Flecheiras / Mundaú</td><td class="us">220</td><td>230</td><td>174,90</td><td>—</td><td>90 (só Flecheiras)</td><td>—</td><td>—</td></tr>
+      <tr><td>Beach Park (transfer)</td><td class="us">80</td><td>80</td><td>59,90</td><td>59,90</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Jericoacoara 1 dia</td><td class="us">250 / 300 / 450</td><td>280</td><td>150</td><td>199,80</td><td>300 (VIP)</td><td>179,90</td><td>169</td></tr>
+      <tr><td>Transfer Fortaleza–Jeri (1 trecho)</td><td class="us">130</td><td>—</td><td>—</td><td>164,50</td><td>—</td><td>—</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Cada concorrente</h2>
+
+  <div class="card">
+    <div class="chips"><span class="chip">Marca grande</span><span class="chip neutro">Preço escondido</span></div>
+    <h3>Planetatur Viagens</h3>
+    <dl class="kv">
+      <dt>Onde</dt><dd><a href="https://planetaturviagens.com.br/loja/" target="_blank" rel="noopener">planetaturviagens.com.br</a> · loja na Av. Beira Mar, 2500, loja 03, Meireles</dd>
+      <dt>Instagram</dt><dd><a href="https://www.instagram.com/planetaturceviagens/" target="_blank" rel="noopener">@planetaturceviagens</a>, 132 mil seguidores, “desde 2011”, “+1 milhão de clientes”, frota própria</dd>
+      <dt>Vende por</dt><dd>WhatsApp (85) 98166-8016 e plantão 24 h (85) 99902-9220</dd>
+      <dt>Preços</dt><dd>Não publica no site</dd>
+      <dt>Avaliação</dt><dd>4,8 com 3.250 avaliações no Tripadvisor numa leitura anterior; hoje não confirmado</dd>
+      <dt>Espanhol / reserva online</dt><dd>Não</dd>
+    </dl>
+    <p class="small"><b>Copiar:</b> Instagram com dicas úteis de Jeri e pousadas; prova social (“desde 2011”). <b>Evitar:</b> preço só no WhatsApp; queixas de extras caros e cancelamento.</p>
+  </div>
+
+  <div class="card">
+    <div class="chips"><span class="chip">Preço agressivo</span><span class="chip risco">Pós-venda lento</span></div>
+    <h3>Sim7 Turismo</h3>
+    <dl class="kv">
+      <dt>Onde</dt><dd><a href="https://sim7viagens.com" target="_blank" rel="noopener">sim7viagens.com</a> · <a href="https://www.instagram.com/sim7_viagens/" target="_blank" rel="noopener">@sim7_viagens</a>, 100 mil seguidores, verificado</dd>
+      <dt>Vende por</dt><dd>WhatsApp (85) 99919-0565, 24 h todos os dias. CNPJ e Cadastur 05.160.116/0001-01 no rodapé</dd>
+      <dt>Preços</dt><dd>3 Praias R$ 99,80 · Lagoinha R$ 85 · Águas Belas R$ 75 · Jeri 1 dia R$ 199,80 · transfer Fortaleza–Jeri R$ 164,50 · aeroporto–orla R$ 44,90 · Beach Park R$ 59,90 · aeroporto de Jeri–vila R$ 95</dd>
+      <dt>Pagamento</dt><dd>Até 10x sem juros; cartão, Pix, transferência, dinheiro. Sinal e cancelamento só nos Termos de Uso</dd>
+      <dt>Avaliação</dt><dd>Cerca de 4,8 com milhares de avaliações (fontes não batem). Reclame Aqui: 66 reclamações no 1º semestre de 2026, resposta média em 19 dias</dd>
+      <dt>Afiliados</dt><dd>Cupom de 10% via blog <a href="https://www.maladeaventuras.com/agencias-de-turismo-jericoacoara/" target="_blank" rel="noopener">Mala de Aventuras</a>; programa “Seja Nosso Parceiro”</dd>
+    </dl>
+    <p class="small"><b>Copiar:</b> cupom com blogueiro, parcelamento, Cadastur visível, transfer com preço. <b>Evitar:</b> resposta lenta, roteiro de Jeri de 18 horas.</p>
+  </div>
+
+  <div class="card">
+    <div class="chips"><span class="chip">Vitrine com preço</span><span class="chip risco">Sem CNPJ no site</span></div>
+    <h3>Canoa Brasil Tur</h3>
+    <dl class="kv">
+      <dt>Onde</dt><dd><a href="https://canoabrasil.com.br" target="_blank" rel="noopener">canoabrasil.com.br</a> · <a href="https://www.instagram.com/canoabtur/" target="_blank" rel="noopener">@canoabtur</a> (seguidores não confirmados)</dd>
+      <dt>Preços</dt><dd>Cumbuco R$ 80 · Beach Park R$ 80 · Morro Branco + Fontes R$ 89,90 · Paracuru R$ 99,90 · Águas Belas R$ 100 · Lagoinha R$ 120 · 3 Praias + Engenho R$ 124,90 · Canoa R$ 129,90 · Flecheiras e Mundaú R$ 230 · Jeri R$ 280 · 5 praias em 3 dias R$ 279,90</dd>
+      <dt>Reserva</dt><dd>Botão “Reservar Agora” em cada passeio (pagamento não confirmado)</dd>
+      <dt>Avaliação</dt><dd>Reclame Aqui com 0% de respostas</dd>
+    </dl>
+    <p class="small"><b>Copiar:</b> card com preço, horário de saída e botão de reservar; pacote de 3 dias. <b>Evitar:</b> site sem CNPJ, Cadastur e endereço; reclamação sem resposta.</p>
+  </div>
+
+  <div class="card">
+    <div class="chips"><span class="chip">Mais barata</span><span class="chip risco">Reclamações</span></div>
+    <h3>Girafatur</h3>
+    <dl class="kv">
+      <dt>Onde</dt><dd><a href="https://www.girafatur.com.br" target="_blank" rel="noopener">girafatur.com.br</a> · WhatsApp (85) 99680-5600 (de diretório, o site não mostra)</dd>
+      <dt>Preços</dt><dd>Cumbuco R$ 54,90 · Beach Park R$ 59,90 · Águas Belas R$ 74,90 · Lagoinha R$ 79,90 · Paracuru R$ 84,90 · Morro Branco R$ 85 · 3 Praias R$ 99,90 · Canoa R$ 120 · Jeri bate-volta R$ 150 · Flexaú R$ 174,90 · Jeri ida e volta em dias diferentes R$ 240</dd>
+      <dt>Pagamento</dt><dd>Até 4x ou Pix; cancelamento grátis até 24 h antes</dd>
+      <dt>Avaliação</dt><dd>4,6 a 4,7 no Booking; vende também em Viator, Booking e Expedia. <a href="https://www.reclameaqui.com.br/girafatur/cuidado-esta-empresa-nao-entrega-o-que-vende_WIzCVWMZNbMhMTKq/" target="_blank" rel="noopener">Reclamação: “não entrega o que vende”</a></dd>
+    </dl>
+    <p class="small"><b>Copiar:</b> cancelamento grátis até 24 h escrito na página; estar nas plataformas para ganhar avaliações. <b>Evitar:</b> preço tão baixo que a entrega piora.</p>
+  </div>
+
+  <div class="card">
+    <div class="chips"><span class="chip neutro">Quase sem presença online</span></div>
+    <h3>Enseada Turismo</h3>
+    <p class="small">Site enseadaturismo.com.br não existe. Instagram encontrado com 152 seguidores (pode não ser a mesma empresa). Telefone antigo (85) 3091-2762. Vende por promotores e balcão, e para agentes pelo net, como faz com o Bruno. Não é ameaça online hoje; é fornecedora.</p>
+  </div>
+
+  <h2>Outros que vendem os mesmos passeios</h2>
+  <div class="card">
+    <h3>Prime Ceará Receptivo</h3>
+    <p class="small">76,9 mil seguidores. Águas Belas R$ 75 · Flecheiras R$ 90 · Jeri VIP R$ 300 · barco no pôr do sol R$ 70 · buggy privativo em Cumbuco R$ 600 por carro (até 4) · pacote Jeri 3 dias / 2 noites R$ 600 a R$ 850 · sinal de R$ 50 no jet ski. WhatsApp (85) 98662-1842. Sem espanhol e sem regra de cancelamento. <a href="https://primecearareceptivo.com/todos-os-servicos/" target="_blank" rel="noopener">site</a></p>
+  </div>
+  <div class="card">
+    <h3>Montaltur (privativos)</h3>
+    <p class="small">Preço por carro: Cumbuco R$ 400 · Beach Park R$ 400 · Morro Branco R$ 680 · Lagoinha R$ 700 · Mundaú e Flecheiras R$ 800 · Canoa R$ 800 · aeroporto–orla R$ 180 · aeroporto–Cumbuco R$ 350. WhatsApp (85) 99687-0706. <a href="https://www.montaltur.com.br/tabela-de-precos" target="_blank" rel="noopener">tabela</a></p>
+  </div>
+  <div class="card">
+    <h3>Civitatis (plataforma)</h3>
+    <p class="small">A que mais aparece no Google, em português e espanhol. Cumbuco a partir de R$ 53,33 (nota 8,7) · Lagoinha R$ 80 (9,3; guia em português e espanhol) · Canoa R$ 120 (8,4; guia pt/es) · Jeri R$ 179,90 (7,8; só português; taxa ambiental de R$ 41,50 e entradas à parte). Cancelamento de 24 h a 7 dias, conforme o passeio.</p>
+  </div>
+  <div class="card">
+    <h3>Nomades (plataforma)</h3>
+    <p class="small">Jeri R$ 169, nota 4,8 com mais de 100 opiniões. <b>Devolve 100% até 48 h antes e devolve tudo se o tempo cancelar o passeio.</b> Página em espanhol. Cumbuco R$ 52. É o melhor modelo de regra de cancelamento para copiar.</p>
+  </div>
+  <div class="card">
+    <h3>Outros</h3>
+    <ul class="small">
+      <li><b>Fortline:</b> tabela para convênio (ANFIP 2024), combo buggy + catamarã + jardineira em Lagoinha R$ 200. Tel. (85) 3248-8333.</li>
+      <li><b>Viator, GetYourGuide, Tripadvisor, Decolar, Hurb:</b> bloquearam a leitura. A pesquisa anterior apontou comissão de 20% a 30% nas plataformas.</li>
+      <li><b>Agências de Jeri</b> (Loucos por Jeri, Jeri Bidão, Elas em Jeri, Rumo a Jeri): transfer e 4x4; privativo Fortaleza–Jeri em torno de R$ 800 por carro.</li>
+      <li><b>Receptivos que vendem só para agências:</b> VM Turismo (da Azul Viagens), Conexão Receptivo, Wee Receptivo, ForYou.</li>
+    </ul>
+  </div>
+
+  <h2>Quem aparece no Google</h2>
+  <div class="card">
+    <p>Nas buscas de “Jericoacoara saindo de Fortaleza”, “Canoa Quebrada Fortaleza”, “excursão Cumbuco” e “Lagoinha passeio” aparecem sobretudo <b>blogs de viagem</b> (Viciada em Viajar, Mala de Aventuras, Quanto Custa Viajar, Grupo Dicas) e a <b>Civitatis</b>. Em espanhol: Civitatis, Hello Tickets, Expedia, Girafatur pelo Booking e Nomades. Agência local pequena não aparece no topo.</p>
+    <p class="small muted">Na prática: para aparecer, estar nos blogs (com cupom) e nas plataformas.</p>
+  </div>
+
+  <h2>Pagamento e cancelamento de cada um</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Quem</th><th>Parcela</th><th class="wrap">Cancelamento publicado</th><th>Reserva com pagamento</th><th>Espanhol</th><th>Cupom ou afiliado</th></tr></thead>
+    <tbody>
+      <tr><td>Planetatur</td><td>não confirmado</td><td class="wrap">não confirmado</td><td>não</td><td>não</td><td>não confirmado</td></tr>
+      <tr><td>Sim7</td><td>10x sem juros</td><td class="wrap">nos Termos de Uso</td><td>não confirmado</td><td>não</td><td>10% via blog; programa de parceiros</td></tr>
+      <tr><td>Canoa Brasil</td><td>não confirmado</td><td class="wrap">não</td><td>botão “Reservar”</td><td>não</td><td>não</td></tr>
+      <tr><td>Girafatur</td><td>4x ou Pix</td><td class="wrap">grátis até 24 h</td><td>nas plataformas</td><td>não</td><td>não</td></tr>
+      <tr><td>Prime Ceará</td><td>crédito +5% no jet ski</td><td class="wrap">não</td><td>não</td><td>não</td><td>não</td></tr>
+      <tr><td>Civitatis</td><td>—</td><td class="wrap">24 h a 7 dias</td><td>sim</td><td>guia em 2 passeios</td><td>afiliados</td></tr>
+      <tr><td>Nomades</td><td>—</td><td class="wrap">100% até 48 h; tudo de volta se o tempo cancelar</td><td>sim</td><td>página em espanhol</td><td>não confirmado</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Espaços que ninguém ocupa</h2>
+  <div class="card">
+    <ol>
+      <li><b>Preço final sem surpresa.</b> Taxa ambiental de Jeri (R$ 41,50), Buraco Azul (R$ 40 a 50), Lagoa do Paraíso (R$ 40) e almoço ficam fora do preço de quase todos. O Premium e o Blue Day já incluem entradas: vender como “preço com tudo”.</li>
+      <li><b>Regra de chuva e cancelamento escrita.</b> Só Nomades e Girafatur mostram.</li>
+      <li><b>Pagar online e receber o comprovante na hora.</b> Nenhuma agência local mostrou isso.</li>
+      <li><b>Espanhol.</b> Poucos argentinos chegam de voo direto (5.565 de janeiro a maio de 2026, contra 50.196 na Bahia), mas quase não há concorrência, e o pico é em janeiro e fevereiro.</li>
+      <li><b>Resposta rápida</b> no WhatsApp, com sócio guia e, depois, atendente automático.</li>
+      <li><b>Jeri com pernoite.</b> O bate-volta cansa (até 18 horas). Pacote de 3 dias com pousada sai de R$ 600 a R$ 850 na Prime.</li>
+      <li><b>Privativo com preço por carro na tela.</b> Só a Montaltur publica.</li>
+      <li><b>Quem volta ao Ceará:</b> 72,7% dos turistas já tinham ido antes e procuram algo novo (barco no pôr do sol, Flecheiras, Jeri com pernoite).</li>
+    </ol>
+  </div>
+
+  <h2>15 ideias para ganhar dinheiro</h2>
+  <p class="small muted">Em ordem de retorno pelo esforço. Os valores são estimativas para teste, com margem suposta de 20% a 25%; a margem real sai quando os nets estiverem cadastrados.</p>
+  <div class="card">
+    <div class="idea"><span class="n">1</span><div><b>Comprovante na hora e regra de chuva escrita.</b> Custo zero. Copiar o modelo Nomades: 100% de volta até 48 h e reembolso total se o tempo cancelar. Diminui o “vou pensar”.</div></div>
+    <div class="idea"><span class="n">2</span><div><b>Sinal pequeno no Pix, resto no embarque.</b> Já funciona no site (20%). Cada falta evitada vale de R$ 50 a 60.</div></div>
+    <div class="idea"><span class="n">3</span><div><b>Pousadas e anfitriões de Airbnb com 10% de comissão.</b> Cartão com QR e cupom em 20 lugares (cerca de R$ 100 de impressão). Com 5 parceiros vendendo 4 por mês: cerca de R$ 4.000 vendidos e R$ 800 a 1.000 de margem.</div></div>
+    <div class="idea"><span class="n">4</span><div><b>Recepcionistas e porteiros comissionados.</b> R$ 15 a 30 por passageiro, pago no Pix no dia seguinte. Só custa quando vende. 10 recepcionistas com 2 vendas por semana: cerca de R$ 4.000 por mês.</div></div>
+    <div class="idea"><span class="n">5</span><div><b>Cupom de blogueiro (10%).</b> Escrever para 10 blogs e perfis do Ceará. É o que aparece no Google, e a Sim7 já faz.</div></div>
+    <div class="idea"><span class="n">6</span><div><b>Combos.</b> Leste Oeste (R$ 300 e R$ 660) com foto e passo a passo. O valor por cliente sobe de R$ 120 para R$ 300.</div></div>
+    <div class="idea"><span class="n">7</span><div><b>Buggy e fotos depois da compra.</b> “Quer garantir o buggy em Morro Branco?” (+R$ 100). Fotógrafo de praia por comissão.</div></div>
+    <div class="idea"><span class="n">8</span><div><b>Transfer de aeroporto</b> com preço na tela. Privativo a R$ 150–200 com margem de R$ 30–50; abre a conversa para vender passeio.</div></div>
+    <div class="idea"><span class="n">9</span><div><b>Espanhol.</b> Site pronto, mensagens prontas, grupos de viajantes argentinos e uruguaios no Facebook.</div></div>
+    <div class="idea"><span class="n">10</span><div><b>Plataformas</b> (Civitatis, Nomades, Viator, GetYourGuide). Comissão de 20% a 30%, mas trazem avaliações e tráfego.</div></div>
+    <div class="idea"><span class="n">11</span><div><b>Grupos</b> (empresas, igrejas, formaturas, escolas): 10 ou mais com 1 vaga grátis ou van exclusiva.</div></div>
+    <div class="idea"><span class="n">12</span><div><b>Jeri com pernoite</b> junto com 2 ou 3 pousadas. 4 pacotes por mês a R$ 700: R$ 100 a 140 de margem cada.</div></div>
+    <div class="idea"><span class="n">13</span><div><b>Barco no pôr do sol</b> na Beira-Mar (Prime cobra R$ 70) para quem já comprou praia.</div></div>
+    <div class="idea"><span class="n">14</span><div><b>Mensagem de volta no ano seguinte</b> com cupom de cliente da casa.</div></div>
+    <div class="idea"><span class="n">15</span><div><b>Guias autônomos com Cadastur</b> levando clientes, com comissão.</div></div>
+    <p class="small muted">As 4 primeiras dá para começar esta semana sem gastar. Os valores das ideias 3, 4, 5, 11 e 15 são hipóteses: testar duas por mês e medir.</p>
+  </div>
+
+  <div class="card warn">
+    <h3>O que não deu para confirmar</h3>
+    <ul class="small">
+      <li>Seguidores de Canoa Brasil e Girafatur; notas no Google de todos; nota atual da Planetatur e da Sim7.</li>
+      <li>Preços de Viator, GetYourGuide, Decolar e Hurb (bloquearam), da Planetatur e da Enseada (não publicam).</li>
+      <li>Comissão exata das plataformas e dos promotores de rua.</li>
+      <li>Se Sim7 e Canoa Brasil cobram o pagamento direto no site.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ EMPRESAS PARA NET ============ -->
+<section class="view" id="v-empresas" hidden>
+  <div class="card hi">
+    <h2>Resumo das empresas</h2>
+    <ul>
+      <li><b>24 empresas confirmadas</b>, com o contato que elas mesmas publicam (quando o contato veio de outro site, está avisado).</li>
+      <li><b>Só a Sim7 publica programa para agentes.</b> As outras não publicam: o net só se descobre perguntando.</li>
+      <li>Nenhuma divulga o valor do net. Os preços citados são de venda ao turista, só para comparar.</li>
+      <li>O site do Cadastur não abriu na pesquisa. Os números de registro são os que a empresa mostra; conferir em cadastur.turismo.gov.br antes de fechar.</li>
+    </ul>
+  </div>
+
+  <h2>As 8 para contatar primeiro</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>#</th><th>Empresa</th><th>Contato</th><th class="wrap">Por que</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><b>Sim7 Viagens</b></td><td>(85) 99186-8652 (parceiros)</td><td class="wrap">Única com programa de parceiros publicado: tarifário em até 24 h, suporte 24 h. É também concorrente: pedir que não venda ao turista mais barato que nós.</td></tr>
+      <tr><td>2</td><td><b>ForYou Receptivo</b></td><td>(85) 99108-7196 · comercial@foryoureceptivo.com.br</td><td class="wrap">Fala em “suporte a agências parceiras”, frota completa e loja 24 h no aeroporto. Cobre quase todo o nosso catálogo.</td></tr>
+      <tr><td>3</td><td><b>VM Turismo</b></td><td>não publicado</td><td class="wrap">Receptivo oficial da Azul Viagens, com promoção para agentes. Procurar pelo Instagram ou pela Azul Viagens Fortaleza (consultora citada: Claudiana Matos).</td></tr>
+      <tr><td>4</td><td><b>Passeios Fortaleza</b></td><td>(85) 99608-0811</td><td class="wrap">Catálogo mais parecido com o nosso (Jeri Premium, Blue Day, combos). Também revende outros, então perguntar quem opera de fato.</td></tr>
+      <tr><td>5</td><td><b>Coco Verde Turismo</b></td><td>(85) 9771-2281</td><td class="wrap">Desde 2013, CNPJ publicado, Jeri Economy e Premium. Provável fornecedor direto de Jeri.</td></tr>
+      <tr><td>6</td><td><b>PFTUR</b></td><td>(85) 98683-4773</td><td class="wrap">Cadastur no rodapé, foco em privativo e transfer (sem Jeri).</td></tr>
+      <tr><td>7</td><td><b>Vitorino Turismo</b></td><td>(85) 98115-1033 · reservas@vitorinotur.com.br</td><td class="wrap">Vende em várias plataformas, sabe trabalhar com revenda. Resolver o CNPJ que aparece diferente antes de fechar.</td></tr>
+      <tr><td>8</td><td><b>Girafatur</b></td><td>(85) 99680-5600 (de diretório)</td><td class="wrap">Catálogo igual ao nosso e preço baixo, então o net pode ser bom. Ler as 54 reclamações antes de mandar cliente.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small muted">Se precisar de mais: Bem Receptivo, Aquiraz Turismo, Jeri Bidão (transfer para Jeri), Felipetur (bilíngue). Enseada fica com o Bruno, como referência.</p>
+
+  <h2>Mensagem pronta</h2>
+  <div class="card">
+    <h3>WhatsApp, primeira mensagem</h3>
+    <div class="msg" id="m1">Olá, tudo bem? Aqui é o Pablo, da Maré Tur, agência online de passeios no Ceará, com guia credenciado no Cadastur. Vendemos Jericoacoara em 1 dia, transfer Fortaleza–Jeri, 3 Praias, Cumbuco, Lagoinha, Paracuru, Flecheiras/Mundaú, Águas Belas, Beach Park e city tour.
+Vocês trabalham com tarifa net para agências e agentes? Se sim, podem me enviar o tarifário net vigente (2026 e alta temporada de 2027), com as condições de pagamento e repasse?
+Também preciso saber: política de criança e gratuidade, horários de busca no hotel e pontos de embarque. Quem fala com a gente no comercial? Obrigado!</div>
+    <button class="btn" type="button" data-copy="m1">Copiar mensagem</button>
+  </div>
+  <div class="card">
+    <h3>WhatsApp, se responderem que sim</h3>
+    <div class="msg" id="m2">Perfeito. Funcionamos assim: eu vendo, passo a vocês nome do cliente, hotel e o valor a receber no embarque, e vocês operam. Pode me confirmar se esse formato (cobrança do cliente no embarque ou repasse depois) é possível? Quais datas e horários de corte vocês têm para confirmar a reserva?</div>
+    <button class="btn" type="button" data-copy="m2">Copiar mensagem</button>
+  </div>
+  <div class="card">
+    <h3>E-mail (quando só houver e-mail)</h3>
+    <div class="msg" id="m3">Assunto: Pedido de tarifário net 2026 – Maré Tur (agência online, guia Cadastur)
+
+Olá, equipe comercial,
+
+Sou Pablo, da Maré Tur, agência online de passeios no Ceará. Nossa operação tem guia credenciado no Cadastur e atende turistas brasileiros e hispanofalantes. Vendemos online: Jericoacoara em 1 dia (Economy, Premium e Blue Day), transfer Fortaleza–Jeri, 3 Praias (Canoa Quebrada, Morro Branco e Praia das Fontes), Cumbuco, Lagoinha, Paracuru, Flecheiras e Mundaú, Águas Belas, Beach Park, Lagoa Encantada/Alchymist e city tour.
+
+Gostaríamos de ser parceiros de vocês. Peço por gentileza:
+1. Tarifário net para agências vigente (2026 e alta temporada de 2027), por passeio e por tipo (compartilhado e privativo).
+2. Condições de pagamento e repasse (sinal, cobrança no embarque, prazo para acerto, forma de pagamento).
+3. Política de crianças (idades, gratuidade, meia) e de pessoas com mobilidade reduzida.
+4. Horários e pontos de busca no hotel por região (Meireles, Iracema, Aldeota, Praia do Futuro, Aquiraz).
+5. Documentos para cadastro de agência e prazo de resposta.
+6. Política de cancelamento, remarcação e não comparecimento.
+
+Podemos fazer uma videochamada rápida ou seguir por WhatsApp.
+
+Obrigado,
+Pablo – Maré Tur</div>
+    <button class="btn" type="button" data-copy="m3">Copiar e-mail</button>
+  </div>
+  <div class="card warn small">
+    <p><b>Cuidado:</b> nunca diga por quanto vende nem cite o net de outra empresa. Ao receber a tabela, cadastre no painel antes de responder: o sistema mostra se sobra margem.</p>
+  </div>
+
+  <h2>Perguntas antes de fechar</h2>
+  <div class="card">
+    <details open><summary>Segurança e documentos</summary><ol>
+      <li>Número do Cadastur da empresa e dos guias (conferir no site oficial).</li>
+      <li>CNPJ e razão social que emitem a nota batem com a Receita?</li>
+      <li>Têm seguro de responsabilidade civil e de acidentes para passageiros? Pedir a apólice.</li>
+      <li>Veículos: licença de transporte turístico, vistoria, idade da frota, próprios ou terceirizados. Em Jeri, 4x4 credenciado e se a taxa ambiental está inclusa.</li>
+      <li>Quem opera de fato o passeio? Se for terceirizado, quem responde por problema?</li>
+    </ol></details>
+    <details><summary>Dinheiro</summary><ol start="6">
+      <li>O net é por passageiro e por data? Muda em alta temporada, feriado e réveillon? Quando vence a tabela?</li>
+      <li>Em quantos dias devolvem a diferença, por Pix? E se atrasar?</li>
+      <li>Aceitam o sinal pago à Maré Tur e cobram o resto no embarque?</li>
+      <li>Há taxa ou ingresso à parte (parque, lagoa, Beach Park, Alchymist, barco)?</li>
+      <li>Comissão nos opcionais (buggy, almoço, catamarã, fotos): quanto e como repassam?</li>
+      <li>Preço de criança, idade de gratuidade, meia, bebê de colo e idoso.</li>
+    </ol></details>
+    <details><summary>Operação e atendimento</summary><ol start="12">
+      <li>Horário de corte para confirmar no dia anterior e no mesmo dia. Mínimo de passageiros para sair?</li>
+      <li>Cancelamento: prazo, multa, remarcação; o que acontece com chuva, maré ou estrada fechada; quem devolve o sinal.</li>
+      <li>Cliente que não aparece ou hotel errado: cobram tudo? Tolerância de espera na busca?</li>
+      <li>Se a empresa atrasar ou falhar, há compensação?</li>
+      <li>Como confirmam a vaga e em quantos minutos? Têm plantão no fim de semana e de madrugada?</li>
+      <li>O guia fala espanhol ou inglês?</li>
+      <li>Posso usar fotos e vídeos de vocês no site?</li>
+    </ol></details>
+    <details><summary>Relação comercial</summary><ol start="19">
+      <li>Vocês vendem direto ao turista mais barato que eu? Combinam não fazer isso? O cliente e os dados ficam comigo?</li>
+      <li>Exige exclusividade ou volume mínimo?</li>
+      <li>O net fica em sigilo dos dois lados?</li>
+      <li>Contato fixo (nome e WhatsApp) para emergência no dia.</li>
+      <li>Como tratam reclamações? Qual o histórico no Reclame Aqui, Google e Tripadvisor?</li>
+    </ol></details>
+  </div>
+
+  <h2>Todas as empresas</h2>
+  <p class="small muted">Toque para ver os detalhes.</p>
+  <div class="card">
+    <details><summary>Sim7 Viagens · programa para agentes</summary><p class="small">Transfers Fortaleza–Jeri e passeios. <a href="https://sim7viagens.com/seja-nosso-parceiro" target="_blank" rel="noopener">Página de parceiros</a>: comissão (percentual não divulgado), tarifário em até 24 h, integração com sistemas, suporte 24 h. WhatsApp parceiros (85) 99186-8652; geral (85) 99919-0565, reservas@sim7viagens.com. CNPJ/Cadastur 05.160.116/0001-01. Sede em Eusébio.</p></details>
+    <details><summary>ForYou Receptivo · cita agências parceiras</summary><p class="small">Transfers e quase todo o catálogo, loja 24 h no aeroporto, frota de sedan a ônibus. <a href="https://lp.foryoureceptivo.com.br/" target="_blank" rel="noopener">site</a>. (85) 99113-9980 (grupos), (85) 99108-7196, comercial@ e reservas@foryoureceptivo.com.br. Vende também em Bookaway/Pelago. CNPJ não encontrado.</p></details>
+    <details><summary>VM Turismo · promoção para agentes</summary><p class="small">Receptivo oficial da Azul Viagens no Ceará. Promoção: 2 passeios = transfer grátis. Contato não publicado; consultora citada Claudiana Matos. <a href="https://brasilturis.com.br/2026/06/17/vm-turismo-reforca-receptivo-no-ceara-e-destaca-rota-das-falesias/" target="_blank" rel="noopener">matéria</a></p></details>
+    <details><summary>Vitorino Turismo · CNPJ a conferir</summary><p class="small">Desde 2011. Canoa, city tour, Águas Belas, 3 Praias, transfers. Vende em Civitatis, Booking, Expedia, Airbnb. reservas@vitorinotur.com.br, (85) 98115-1033. Av. Santos Dumont, 1687. CNPJ 27.318.796/0001-81 numa fonte e 14.791.645/0001-02 em outra. Nota 3,8 com 6 avaliações no Booking.</p></details>
+    <details><summary>Nettour · risco</summary><p class="small">City tour, Cumbuco, Canoa, Morro Branco, Lagoinha, transfers, Jeri. Tel. de terceiro 85 99931-4423. O diretor faleceu em 18/02/2026; confirmar quem responde antes de contatar.</p></details>
+    <details><summary>Ernanitur</summary><p class="small">Receptivo desde 1988, foco em grupos e operadoras. Contato não encontrado. Dado de 2019.</p></details>
+    <details><summary>Conexão Receptivo</summary><p class="small">Aberto em 2024 por ex-diretor da Ernanitur, atende operadoras. Contato não encontrado.</p></details>
+    <details><summary>Enseada Turismo · fornecedora do Bruno</summary><p class="small">Uma das maiores do Ceará. Site enseada.tur.br (não abriu), (85) 99608-1221, vendas@enseada.tur.br. Av. Monsenhor Tabosa (número varia entre fontes). Fica como referência, pelo Bruno.</p></details>
+    <details><summary>Girafatur · 54 reclamações</summary><p class="small">Catálogo quase igual ao nosso, preço baixo. <a href="https://www.girafatur.com.br" target="_blank" rel="noopener">site</a>, (85) 99680-5600 (diretório). CNPJ 04.252.269/0001-16. <a href="https://www.reclameaqui.com.br/empresa/girafatur/lista-reclamacoes/" target="_blank" rel="noopener">reclamações</a>. Não confundir com Giratur.</p></details>
+    <details><summary>PFTUR Passeios e Transfers</summary><p class="small">Privativos e transfers (sem Jeri). <a href="https://www.pftur.com.br" target="_blank" rel="noopener">site</a>, @pftur.transfers, (85) 98683-4773. Cadastur 53.333.447/0001-49 no rodapé.</p></details>
+    <details><summary>Passeios Fortaleza Viagens e Turismo</summary><p class="small">Jeri Premium, Blue Day, Buraco Azul, transfer, combos, catamarã, helicóptero; revende outras operadoras. <a href="https://passeiosfortalezace.com.br" target="_blank" rel="noopener">site</a>, (85) 99608-0811, (85) 2130-2650, reservas@passeiosfortalezace.com. CNPJ 41.158.838/0001-95. Desconto para grupos de 10 ou mais.</p></details>
+    <details><summary>Coco Verde Turismo</summary><p class="small">Desde 2013. Jeri Economy R$ 150 e Premium R$ 249, 3 Praias com buggy R$ 149, Cumbuco R$ 55, Flechaú com catamarã R$ 185. <a href="https://cocoverdeviagens.com.br" target="_blank" rel="noopener">site</a>, (85) 9771-2281 (6h às 22h). CNPJ 17.720.976/0001-31.</p></details>
+    <details><summary>Bem Receptivo</summary><p class="small">Catálogo completo com Jeri e noturnos; parceria com Beach Park. <a href="https://bemreceptivo.com.br" target="_blank" rel="noopener">site</a>, (85) 4141-6666, reservas@bemreceptivo.com.br, R. Antônio Augusto, 186, Meireles.</p></details>
+    <details><summary>Aquiraz Turismo</summary><p class="small">Porto das Dunas, boa para quem fica em Aquiraz e Beach Park. Frota de Spin a ônibus. <a href="https://aquirazturismo.com.br" target="_blank" rel="noopener">site</a>, (85) 98780-4205, 6h às 22h.</p></details>
+    <details><summary>Passeios Tiago Turismo</summary><p class="small">Guia em Fortaleza, privativos e compartilhados. <a href="https://passeiostiagoturismo.com.br" target="_blank" rel="noopener">site</a>, (85) 98633-8139. Pequeno, depende de uma pessoa.</p></details>
+    <details><summary>Maracatur</summary><p class="small">Pacotes de vários dias, Jeri, fretamento. <a href="https://www.maracaturturismo.com.br" target="_blank" rel="noopener">site</a>, (85) 99902-0888 (24 h), reservas@maracaturturismo.com.br, Av. Almirante Barroso, 966.</p></details>
+    <details><summary>VIP Receptivo</summary><p class="small">Vans com motorista (até 15 lugares), privativos e grupos, 24 h. <a href="https://vipreceptivo.com.br" target="_blank" rel="noopener">site</a>, (85) 99803-9291, transfer@vipreceptivo.com.br, Varjota.</p></details>
+    <details><summary>Felipetur · guias bilíngues</summary><p class="small">Traslados e passeios, recepção no aeroporto com guia bilíngue. (85) 99675-0800 (8h às 20h). CNPJ 22.017.551/0001-09. Boa para estrangeiros.</p></details>
+    <details><summary>Fortline</summary><p class="small">City tour, buggy, Águas Belas; faz tabela para convênio. (85) 3248-8333, Av. Santos Dumont, 2626. Dado de 2024.</p></details>
+    <details><summary>A3 Turismo e Receptivo</summary><p class="small">Site não carregou; Cumbuco a partir de R$ 70. Contato não encontrado.</p></details>
+    <details><summary>Jeri Bidão Turismo · transfer para Jeri</summary><p class="small">Transfer Fortaleza–Jeri (asfalto 4h30 ou pela praia), passeios em Jeri. <a href="https://jeribidaoturismo.com.br" target="_blank" rel="noopener">site</a>, +55 85 8179-2242, contato@jeribidaoturismo.com.br, 24 h.</p></details>
+    <details><summary>Loucos por Jeri</summary><p class="small">Transfer 4x4 Fortaleza–Jeri, privativo e compartilhado, passeios na vila. <a href="https://loucosporjeri.com.br" target="_blank" rel="noopener">site</a>, (88) 98121-3084.</p></details>
+    <details><summary>Jeri Off Road</summary><p class="small">Desde 1998, transfers e passeios em Jeri. Telefone de terceiro +55 88 99971-3330.</p></details>
+    <details><summary>Rumo a Jeri</summary><p class="small">Passeios na vila e transfer do aeroporto de Jeri; não faz Fortaleza–Jeri. <a href="https://rumoajeri.com" target="_blank" rel="noopener">site</a>, +55 88 99619-6645.</p></details>
+    <details><summary>Beach Park (ingressos)</summary><p class="small">Tem portal para agentes. Pedir tabela de ingresso para agência pelo site de parceiros.</p></details>
+    <details><summary>Alchymist Lagoa Encantada · associações de bugueiros</summary><p class="small">Sem contato para agência encontrado. As operadoras já embutem o ingresso e o buggy; não vale contatar no início.</p></details>
+  </div>
+
+  <div class="card warn">
+    <h3>Nomes que não deu para confirmar</h3>
+    <p class="small">PlanetaTur, Lisboa Tur e Cearatur: nada encontrado como fornecedora. Canoa Brasil Tur: esta busca não achou, mas a pesquisa de concorrentes achou o site; perguntar ao Bruno. Sim 7 Tur é a Sim7 Viagens, Girafa Tur é a Girafatur. Empresa de catamarã com contato para agência não foi encontrada; perguntar à Passeios Fortaleza quem opera.</p>
+    <p class="small muted">Nenhuma mensagem foi enviada a ninguém.</p>
+  </div>
+</section>
+
+<!-- ============ ANÚNCIOS ============ -->
+<section class="view" id="v-anuncios" hidden>
+  <div class="card hi">
+    <h2>O que está no ar na Meta</h2>
+    <p>Consulta na biblioteca de anúncios da Meta em 17/11/2026. Ela mostra só anúncios ativos, sem os resultados.</p>
+  </div>
+  <div class="grid2">
+    <div class="card"><span class="big">151</span><p>anúncios ativos com “passeio Jericoacoara Fortaleza” no Brasil</p></div>
+    <div class="card"><span class="big">32</span><p>com “passeios Fortaleza Canoa Quebrada Cumbuco”</p></div>
+    <div class="card"><span class="big">0</span><p>em espanhol para a Argentina (“excursión Jericoacoara”)</p></div>
+    <div class="card"><span class="big">0</span><p>da Enseada pelo nome: ela vende pelos agentes</p></div>
+  </div>
+  <div class="card">
+    <h3>Quem anuncia</h3>
+    <ul class="small">
+      <li><b>Agências pequenas de Fortaleza</b>, quase todas mandando para o WhatsApp: Monteiro Tur (“Conheça o Ceará com quem entende!”), Roteiros no Ceará (“Pacote Jeri hospedagem R$ 850, 3 dias e 2 noites” e “Super combo Cumbuco + Lagoa Encantada”), Rotas do Ceará Tur (“2 passeios mais buscados em Fortaleza por R$ 165 por pessoa”), destinofortalezaturismo, Jefferson Passeios, página “Passeios em Fortaleza”, página “3 praias em 1 dia”, Amaré Trip, Azevedo Turismo, Beachturjeri, Mazu, roneyturismo.ce.</li>
+      <li><b>Sim7</b> está anunciando agora. Também W7 Turismo, EP Agência, Reserve Turismo (“5 praias em 3 dias”), Guilherme buggy passeios, Listur, Gil Passeios, For You Receptivo.</li>
+      <li><b>CVC</b> anuncia pacote completo (voo e hotel) saindo do Sul, com Jericoacoara e Vila Galé Cumbuco.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>O que isso quer dizer para a Maré Tur</h3>
+    <ol>
+      <li><b>Todo mundo vende igual:</b> anúncio para o WhatsApp e atendimento por uma pessoa. Quase ninguém leva a um site com preço, reserva e sinal. Use isso: “reserve em 1 minuto, preço fechado na tela, 20% de sinal”.</li>
+      <li><b>Preço no título funciona.</b> Os que mais anunciam mostram o preço já na chamada. Anunciar combos com preço: Leste Oeste por R$ 300 e um Cumbuco + Lagoa Encantada.</li>
+      <li><b>Espanhol está vazio.</b> Com o site em espanhol, um teste de R$ 10 a 15 por dia para Buenos Aires, Córdoba e Rosário.</li>
+      <li><b>Black November:</b> várias agências estão em promoção. Vale uma oferta real de dezembro e janeiro com cupom, sem preço inventado.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3>Ver um anúncio</h3>
+    <p class="small">A consulta traz o título e o link, não a imagem. Exemplo para abrir: <a href="https://www.facebook.com/ads/library/?id=1456968673147113" target="_blank" rel="noopener">Rotas do Ceará, 2 passeios por R$ 165</a> · <a href="https://www.facebook.com/ads/library/?id=1624228446170623" target="_blank" rel="noopener">Roteiros no Ceará, Cumbuco + Lagoa Encantada</a> · <a href="https://www.facebook.com/ads/library/?id=4507157459533967" target="_blank" rel="noopener">Sim7</a></p>
+  </div>
+</section>
+</div>
+
+<script>
+(function () {
+  var views = ["comece", "concorrentes", "empresas", "anuncios"];
+  function show() {
+    var h = (location.hash || "").slice(1);
+    if (views.indexOf(h) < 0) h = "comece";
+    views.forEach(function (v) { document.getElementById("v-" + v).hidden = v !== h; });
+    document.querySelectorAll("nav.tabs a").forEach(function (a) { a.setAttribute("aria-current", a.getAttribute("href") === "#" + h ? "page" : "false"); });
+  }
+  window.addEventListener("hashchange", function () { show(); window.scrollTo(0, 0); });
+  show();
+  document.querySelectorAll("[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var el = document.getElementById(b.dataset.copy), txt = el.textContent, label = b.textContent;
+      function done() { b.textContent = "Copiado"; setTimeout(function () { b.textContent = label; }, 1800); }
+      function fallback() { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Texto selecionado: copie"; }
+      try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
+    });
+  });
+})();
+</script>

@@ -1,6 +1,7 @@
 /* Peças comuns das páginas públicas */
 (function () {
   var D = window.SiteData;
+  var I = window.I18N || { es: false, t: function (k) { return k; }, tx: function (s) { return s; }, altFile: function () { return ""; }, tr: function (o, f) { return o ? o[f] : ""; } };
   var tt;
   // Descrição de cada foto (texto alternativo), pelo nome do arquivo.
   var ALT = {
@@ -41,8 +42,8 @@
     "alchymist-2.jpg": "Espreguiçadeiras no Alchymist Beach Club",
     "hero-2.jpg": "Praia de Iracema e Beira-Mar de Fortaleza"
   };
-  function altOf(url, fallback) { var f = String(url || "").split("/").pop(); return ALT[f] || fallback || ""; }
-  function alt(t, i) { var p = (t.photos || [])[i]; return altOf(p && (p.url || p), t.name + " – foto " + (i + 1)); }
+  function altOf(url, fallback) { var f = String(url || "").split("/").pop(); return I.altFile(url) || ALT[f] || fallback || ""; }
+  function alt(t, i) { var p = (t.photos || [])[i]; return altOf(p && (p.url || p), I.t("photo.n", I.tr(t, "name"), i + 1)); }
   function toast(m) {
     var t = document.getElementById("toast");
     if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
@@ -51,20 +52,20 @@
   function photo(p, seed, alt, eager) {
     var url = p && (p.url || p);
     if (!url) return '<div class="photo">' + D.art(seed) + "</div>";
-    var credit = p && p.credit ? '<span class="credit">' + D.esc(p.credit) + "</span>" : "";
+    var credit = p && p.credit ? '<span class="credit">' + D.esc(I.es ? String(p.credit).replace("Domínio público", I.t("credit.fix")).replace("Public domain", I.t("credit.fix")) : p.credit) + "</span>" : "";
     var load = eager ? 'fetchpriority="high"' : 'loading="lazy"';
     return '<div class="photo"><img src="' + D.esc(url) + '" alt="' + D.esc(altOf(url, alt)) + '" ' + load + ' decoding="async" onerror="this.outerHTML=window.SiteData.art(\'' + D.esc(seed) + '\')">' + credit + "</div>";
   }
   function brand(s) {
     document.querySelectorAll("[data-brand]").forEach(function (el) { el.textContent = s.brand; });
-    document.querySelectorAll("[data-brand-sub]").forEach(function (el) { el.textContent = s.brand_sub; });
-    document.querySelectorAll("[data-footer]").forEach(function (el) { el.textContent = s.brand + " · " + s.footer_note; });
+    document.querySelectorAll("[data-brand-sub]").forEach(function (el) { el.textContent = I.tx(s.brand_sub); });
+    document.querySelectorAll("[data-footer]").forEach(function (el) { el.textContent = s.brand + " · " + I.tx(s.footer_note); });
   }
   function chat(s, text) {
     var a = document.getElementById("chat"); if (!a) return;
-    var link = D.waLink(s.whatsapp, text || "Olá! Quero saber sobre os passeios.");
+    var link = D.waLink(s.whatsapp, text || I.t("wa.hello"));
     if (link) { a.href = link; a.target = "_blank"; a.rel = "noopener"; }
-    else a.addEventListener("click", function (e) { e.preventDefault(); toast("O WhatsApp de atendimento ainda não foi cadastrado no painel."); });
+    else a.addEventListener("click", function (e) { e.preventDefault(); toast(I.t("wa.missing")); });
   }
   async function applyCouponFromUrl() {
     try {
@@ -81,9 +82,9 @@
   function avg(list) { return list.reduce(function (a, r) { return a + (Number(r.stars) || 5); }, 0) / list.length; }
   // Nota geral: a do Google (se cadastrada no painel) ou a média de pelo menos 3 avaliações reais publicadas.
   function ratings(S, reviews) {
-    if (S && String(S.rating_count || "").trim() && String(S.rating_value || "").trim()) return { value: String(S.rating_value), label: S.rating_count + " avaliações no Google" };
+    if (S && String(S.rating_count || "").trim() && String(S.rating_value || "").trim()) return { value: String(S.rating_value), label: I.t("rating.google", S.rating_count) };
     if (!reviews || reviews.length < 3) return null;
-    return { value: fmt(avg(reviews)), label: reviews.length + " avaliações de clientes" };
+    return { value: fmt(avg(reviews)), label: I.t("rating.clients", reviews.length) };
   }
   function tourReviews(t, reviews) {
     var n = String(t.name || "").toLowerCase(), s = String(t.slug || "").toLowerCase();
@@ -92,7 +93,7 @@
   function tourRating(t, reviews) { var l = tourReviews(t, reviews); return l.length ? { value: fmt(avg(l)), count: l.length } : null; }
   function review(r) {
     var n = Math.max(1, Math.min(5, Number(r.stars) || 5));
-    return '<article class="review"><span class="stars" aria-label="' + n + ' de 5 estrelas">' + "★★★★★".slice(0, n) + "</span>" + (r.tour ? '<span class="trip">' + D.esc(r.tour) + "</span>" : "") + "<p>" + D.esc(r.text) + "</p><footer><span>" + D.esc(r.name) + (r.origin ? " · " + D.esc(r.origin) : "") + "</span><span>" + D.esc(r.month) + "</span></footer></article>";
+    return '<article class="review"><span class="stars" aria-label="' + I.t("stars.label", n) + '">' + "★★★★★".slice(0, n) + "</span>" + (r.tour ? '<span class="trip">' + D.esc(r.tour) + "</span>" : "") + "<p>" + D.esc(r.text) + "</p><footer><span>" + D.esc(r.name) + (r.origin ? " · " + D.esc(r.origin) : "") + "</span><span>" + D.esc(r.month) + "</span></footer></article>";
   }
   function tourUrl(slug) { return (window.MT_PAGES || []).indexOf(slug) >= 0 ? "passeio-" + slug + ".html" : "passeio.html?p=" + encodeURIComponent(slug); }
   window.UI = { tourUrl: tourUrl, toast: toast, photo: photo, brand: brand, chat: chat, applyCouponFromUrl: applyCouponFromUrl, alt: alt, ratings: ratings, tourRating: tourRating, tourReviews: tourReviews, review: review };

@@ -20,6 +20,16 @@ const get = async q => {
 };
 const settings = (await get('settings?select=data&id=eq.1'))[0].data;
 const tours = (await get('tours?select=*&active=eq.true&order=sort')).map(({ updated_at, ...t }) => t);
+// Traduções (tours.i18n): se o banco ainda não as tem, mantém as do data.js atual para não perdê-las
+try {
+  const old = fs.readFileSync(path.join(dir, 'assets/data.js'), 'utf8');
+  const i = old.indexOf('  var TOURS = '), j = old.indexOf(';' + String.fromCharCode(10) + '  var REVIEWS');
+  const prev = JSON.parse(old.slice(i + '  var TOURS = '.length, j));
+  for (const t of tours) {
+    const p = prev.find(x => x.slug === t.slug);
+    if (p && p.i18n && !(t.i18n && t.i18n.es)) t.i18n = p.i18n;
+  }
+} catch (e) { console.warn('aviso: não foi possível preservar i18n do data.js:', e.message); }
 const faqs = await get('faqs?select=question,answer,sort,published&published=eq.true&order=sort');
 
 // 1. data.js
