@@ -515,63 +515,133 @@
     var res = await Promise.all([sb.from("suppliers").select("*").order("name"), sb.from("tour_rates").select("*"), sb.from("tours").select("slug,name,price_pix,price_card,active,sort,capacity_per_day").order("sort"), bizData()]);
     if (fail(res[0]) || fail(res[1]) || fail(res[2])) return;
     var sups = res[0].data, rates = res[1].data, tours = res[2].data, B = res[3];
-    var AD = Number(B.ad_cost_per_pax || 0), MM = Number(B.min_margin_per_pax || 0), FEE = Number(B.card_fee_pct || 0);
-    var only = cache.netTour || "";
-    var openSup = cache.supOpen; cache.supOpen = null;
-    p.innerHTML = '<div class="item"><h3>Empresas parceiras</h3><p class="small muted">Toque numa empresa para editar. O WhatsApp é para onde vai o botão "Enviar à empresa" na Operação.</p>' +
-      '<form id="sNew" class="row" style="margin-bottom:10px"><input id="sNewName" placeholder="Nome da nova empresa" style="flex:1;min-width:180px"><input id="sNewWa" placeholder="WhatsApp 5585..." inputmode="tel" style="width:160px"><button class="btn btn-mar" type="submit">+ Adicionar</button></form>' +
-      (sups.length ? "" : '<p class="small muted">Nenhuma empresa ainda. Adicione a primeira acima.</p>') +
-      sups.map(function (s) {
-        var nNet = rates.filter(function (r) { return r.supplier_id === s.id && r.active; }).length;
-        var wa = s.whatsapp ? '<a class="small" href="https://wa.me/' + esc(s.whatsapp) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">WhatsApp</a>' : '<span class="small" style="color:var(--ruim)">falta WhatsApp</span>';
-        return '<details class="sup"' + (openSup === s.id ? " open" : "") + ' data-sup="' + s.id + '"><summary><span class="sup-name">' + esc(s.name) + (s.active ? "" : ' <span class="small muted">(inativa)</span>') + '</span><span class="sup-meta">' + wa + ' · <span class="small ' + (nNet ? "" : "muted") + '">' + nNet + (nNet === 1 ? " net" : " nets") + '</span></span></summary>' +
-          '<div class="formgrid">' + f("su" + s.id + "_name", "Nome", s.name) + f("su" + s.id + "_whatsapp", "WhatsApp (55 + DDD)", s.whatsapp, "", 'inputmode="tel"') + f("su" + s.id + "_contact_name", "Contato", s.contact_name) + f("su" + s.id + "_pickup_notes", "Observações (horários, ponto de encontro)", s.pickup_notes) +
-          ta("su" + s.id + "_msg_template", "Modelo da mensagem para a empresa (vazio = padrão). Dá para usar {codigo} {passeio} {data} {cliente} {telefone} {hotel} {pessoas} {cobrar} {total} {obs}", s.msg_template) + '<label class="check"><input type="checkbox" id="su' + s.id + '_active"' + (s.active ? " checked" : "") + "> Ativa</label></div>" +
-          '<div class="row"><button class="btn btn-mar" type="button" data-ssave="' + s.id + '">Salvar</button><button class="btn btn-ghost" type="button" data-sclose="' + s.id + '">Fechar</button><button class="btn btn-danger" type="button" data-sdel="' + s.id + '">Excluir</button></div></details>';
-      }).join("") + "</div>" +
-      '<div class="item"><h3>Net por passeio</h3><p class="small muted">Mínimo = net + anúncio (' + D.brl(AD) + ') + margem mínima (' + D.brl(MM) + ') por pessoa. O site nunca vende abaixo disso: cupom e desconto param no mínimo. A empresa preferida recebe as reservas novas.</p>' +
+    var AD = Number(B.ad_cost_per_pax || 0), MM = Number(B.min_margin_per_pax || 0), FEE = Number(B.card_fee_pct || 0), SPLIT = Number(B.partner_split_pct || 50);
+    if (cache.netTour) { cache.empView = "passeios"; cache.empOpenT = cache.netTour; cache.netTour = ""; }
+    var mode = cache.empView || "passeios", openT = cache.empOpenT, openSup = cache.supOpen;
+    cache.empOpenT = null; cache.supOpen = null;
+    if (!sups.some(function (s) { return String(s.id) === String(cache.empSup); })) cache.empSup = sups.length ? String(sups[0].id) : "";
+    var brl = function (n) { return D.brl(n).replace(",00", ""); };
+    var supName = function (id) { var s = sups.filter(function (z) { return z.id === id; })[0]; return s ? s.name : "?"; };
+    var tourOf = function (slug) { return tours.filter(function (t) { return t.slug === slug; })[0]; };
+    function prefOf(slug) { var tr = rates.filter(function (r) { return r.tour_slug === slug && r.active; }); return tr.filter(function (r) { return r.preferred; })[0] || tr.sort(function (a, b) { return a.net_adult - b.net_adult; })[0]; }
+    function calc(t, net) { if (net === "" || net == null || isNaN(Number(net))) return null; net = Number(net); var base = net + AD + MM; return { floor: Math.ceil(base), floorCard: Math.ceil(base / (1 - FEE / 100)), sobra: Number(t.price_pix) - net - AD, ok: Number(t.price_pix) >= Math.ceil(base) }; }
+    function sumHtml(t) {
+      var r = prefOf(t.slug), c = r && calc(t, r.net_adult);
+      if (!c) return '<span class="bad">sem net · site sem trava de mínimo</span> · site ' + brl(t.price_pix);
+      return "net " + brl(r.net_adult) + " (" + esc(supName(r.supplier_id)) + ") · site " + brl(t.price_pix) + ' · <b class="' + (c.ok ? "ok" : "bad") + '">' + (c.ok ? "sobra " + brl(c.sobra) : "abaixo do mínimo " + brl(c.floor)) + "</b>";
+    }
+    function footHtml(t) { var r = prefOf(t.slug), c = r && calc(t, r.net_adult); return c ? "Mínimo no site: <b>" + brl(c.floor) + " Pix · " + brl(c.floorCard) + " cartão</b> · cada sócio " + brl(c.sobra * SPLIT / 100) : "Lance um net para travar o preço mínimo."; }
+    function rowAttrs(t, net, margin) { return ' data-row data-name="' + esc(t.name) + '" data-net="' + (net ? "com" : "sem") + '" data-status="' + (t.active ? "on" : "off") + '" data-sort="' + t.sort + '" data-margin="' + (margin == null ? -1 : margin) + '"'; }
 
-      tours.filter(function (t) { return !only || t.slug === only; }).map(function (t) {
-        var tr = rates.filter(function (r) { return r.tour_slug === t.slug; });
-        var pref = tr.filter(function (r) { return r.preferred && r.active; })[0] || tr.filter(function (r) { return r.active; }).sort(function (a, b) { return a.net_adult - b.net_adult; })[0];
-        var floor = pref ? Math.ceil(Number(pref.net_adult) + AD + MM) : null, floorCard = pref ? Math.ceil((Number(pref.net_adult) + AD + MM) / (1 - FEE / 100)) : null;
-        var margin = pref ? Number(t.price_pix) - Number(pref.net_adult) - AD : null;
-        return '<div class="item sub" data-row data-name="' + esc(t.name) + '" data-net="' + (pref ? "com" : "sem") + '" data-status="' + (t.active ? "on" : "off") + '" data-sort="' + t.sort + '" data-margin="' + (margin == null ? -1 : margin) + '"><div class="item-head"><div><h3>' + esc(t.name) + (t.active ? "" : " (oculto)") + '</h3><p class="small muted">Site: ' + D.brl(t.price_pix) + " Pix · " + D.brl(t.price_card) + " cartão" +
-          (pref ? " · <b>mínimo " + D.brl(floor) + " Pix / " + D.brl(floorCard) + " cartão</b> · sobra por pessoa " + D.brl(margin) + " (cada sócio " + D.brl(margin * Number(B.partner_split_pct || 50) / 100) + ")" : ' · <b style="color:var(--ruim)">sem net: o site vende sem trava de mínimo</b>') + "</p></div>" +
-          '<div class="field" style="width:150px"><label class="label" for="cap_' + esc(t.slug) + '">Vagas por dia</label><input id="cap_' + esc(t.slug) + '" type="number" min="0" placeholder="sem limite" value="' + (t.capacity_per_day == null ? "" : t.capacity_per_day) + '" data-cap="' + esc(t.slug) + '"></div></div>' +
+    var seg = '<div class="seg">' + [["passeios", "Por passeio"], ["tabela", "Lançar tabela"], ["empresas", "Empresas (" + sups.length + ")"]].map(function (o) { return '<button type="button" data-mode="' + o[0] + '"' + (mode === o[0] ? ' class="on"' : "") + ">" + o[1] + "</button>"; }).join("") + "</div>";
+    var body = "";
+
+    if (mode === "passeios") {
+      body = '<p class="small muted hint">Toque no passeio para ver e mudar o net. ★ marca a empresa que recebe as reservas. Muda e já salva.</p>' + tours.map(function (t) {
+        var tr = rates.filter(function (r) { return r.tour_slug === t.slug; }), pr = prefOf(t.slug), c = pr && calc(t, pr.net_adult);
+        var free = sups.filter(function (s) { return !tr.some(function (r) { return r.supplier_id === s.id; }); });
+        return '<details class="nrow" data-tour="' + esc(t.slug) + '"' + rowAttrs(t, pr, c && c.sobra) + (openT === t.slug ? " open" : "") + '><summary><span class="nr-name">' + esc(t.name) + (t.active ? "" : ' <span class="muted">(oculto)</span>') + '</span><span class="nr-info">' + sumHtml(t) + "</span></summary>" +
+          '<div class="nr-body">' + 
           tr.map(function (r) {
-            var s = sups.filter(function (z) { return z.id === r.supplier_id; })[0];
-            return '<div class="row small" data-rate="' + r.id + '"><b style="min-width:130px">' + esc(s ? s.name : "?") + "</b>" +
-              '<label>Net adulto <input type="number" step="0.01" min="0" value="' + r.net_adult + '" data-k="net_adult" style="width:90px"></label>' +
-              '<label>Net criança <input type="number" step="0.01" min="0" value="' + (r.net_child == null ? "" : r.net_child) + '" placeholder="= adulto" data-k="net_child" style="width:90px"></label>' +
-              '<label>Net veículo <input type="number" step="0.01" min="0" value="' + (r.net_vehicle == null ? "" : r.net_vehicle) + '" placeholder="—" data-k="net_vehicle" style="width:90px"></label>' +
-              '<label class="check"><input type="radio" name="pref_' + esc(t.slug) + '" data-k="preferred"' + (r.preferred ? " checked" : "") + "> Preferida</label>" +
-              '<label class="check"><input type="checkbox" data-k="active"' + (r.active ? " checked" : "") + "> Ativo</label>" +
-              '<button class="btn btn-mar" type="button" data-rsave="' + r.id + '">Salvar</button><button class="btn btn-danger" type="button" data-rdel="' + r.id + '">Excluir</button></div>';
+            return '<div class="nr-rate" data-rate="' + r.id + '"><span class="nr-sup">' + esc(supName(r.supplier_id)) + (r.active ? "" : " (pausado)") + '</span><label class="nr-f">Net adulto<input type="number" inputmode="decimal" step="0.01" min="0" value="' + r.net_adult + '" data-k="net_adult"></label><label class="nr-f">Net criança<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_child == null ? "" : r.net_child) + '" placeholder="= adulto" data-k="net_child"></label><button type="button" class="star' + (r.preferred ? " on" : "") + '" data-pref="' + r.id + '" title="Recebe as reservas">★</button><button type="button" class="xbtn" data-rdel="' + r.id + '" title="Excluir">✕</button></div>';
           }).join("") +
-          (sups.length ? '<div class="row small"><select data-newsup="' + esc(t.slug) + '" style="width:auto">' + sups.filter(function (s) { return !tr.some(function (r) { return r.supplier_id === s.id; }); }).map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + "</option>"; }).join("") + '</select><input type="number" step="0.01" min="0" placeholder="Net adulto (R$)" data-newnet="' + esc(t.slug) + '" style="width:150px"><button class="btn btn-ghost" type="button" data-radd="' + esc(t.slug) + '">Adicionar net</button></div>' : '<p class="small muted">Cadastre uma empresa acima para lançar o net.</p>') + "</div>";
-      }).join("") + "</div>";
+          (free.length ? '<div class="nr-add"><select data-newsup="' + esc(t.slug) + '" aria-label="Empresa">' + free.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + "</option>"; }).join("") + '</select><input type="number" inputmode="decimal" step="0.01" min="0" placeholder="Net" data-newnet="' + esc(t.slug) + '" aria-label="Net adulto"><button type="button" class="btn btn-mar" data-radd="' + esc(t.slug) + '">+</button></div>' : (sups.length ? "" : '<p class="small muted">Cadastre a empresa na aba Empresas.</p>')) +
+          '<div class="nr-foot"><span data-foot>' + footHtml(t) + '</span><label>Vagas/dia <input type="number" min="0" placeholder="∞" value="' + (t.capacity_per_day == null ? "" : t.capacity_per_day) + '" data-cap="' + esc(t.slug) + '"></label></div></div></details>';
+      }).join("");
+    } else if (mode === "tabela") {
+      body = sups.length ? '<p class="small muted hint">Chegou a tabela de uma empresa? Escolha a empresa e digite o net de cada passeio. Só os campos alterados são salvos.</p>' +
+        '<select id="tSup" class="tsup">' + sups.map(function (s) { return '<option value="' + s.id + '"' + (String(s.id) === String(cache.empSup) ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("") + "</select>" +
+        '<div class="tlist">' + tours.map(function (t) {
+          var r = rates.filter(function (x) { return x.tour_slug === t.slug && String(x.supplier_id) === String(cache.empSup); })[0], c = r && calc(t, r.net_adult);
+          return '<div class="trow"' + rowAttrs(t, r, c && c.sobra) + '><div><b>' + esc(t.name) + (t.active ? "" : ' <span class="muted">(oculto)</span>') + "</b><small>site " + brl(t.price_pix) + ' · <span data-live="' + esc(t.slug) + '">' + (c ? (c.ok ? "sobra " + brl(c.sobra) : '<span class="bad">abaixo do mínimo ' + brl(c.floor) + "</span>") : "sem net") + '</span></small></div><input type="number" inputmode="decimal" step="0.01" min="0" placeholder="net" value="' + (r ? r.net_adult : "") + '" data-orig="' + (r ? r.net_adult : "") + '" data-tnet="' + esc(t.slug) + '" data-rid="' + (r ? r.id : "") + '" aria-label="Net de ' + esc(t.name) + '"></div>';
+        }).join("") + '</div><div class="savebar"><button type="button" class="btn btn-mar" id="tSave" disabled>Nada alterado</button></div>'
+        : '<p class="small muted">Cadastre a empresa primeiro, na aba Empresas.</p>';
+    } else {
+      body = '<form id="sNew" class="nr-add sadd"><input id="sNewName" placeholder="Nome da nova empresa" aria-label="Nome"><input id="sNewWa" placeholder="WhatsApp 5585…" inputmode="tel" aria-label="WhatsApp"><button class="btn btn-mar" type="submit">+</button></form>' +
+        (sups.length ? "" : '<p class="small muted">Nenhuma empresa ainda.</p>') +
+        sups.map(function (s) {
+          var nNet = rates.filter(function (r) { return r.supplier_id === s.id && r.active; }).length;
+          var wa = s.whatsapp ? '<a href="https://wa.me/' + esc(s.whatsapp) + '" target="_blank" rel="noopener" data-stop>WhatsApp</a>' : '<span class="bad">falta WhatsApp</span>';
+          return '<details class="nrow" data-sup="' + s.id + '"' + (openSup === s.id ? " open" : "") + '><summary><span class="nr-name">' + esc(s.name) + (s.active ? "" : ' <span class="muted">(inativa)</span>') + '</span><span class="nr-info">' + wa + " · " + nNet + (nNet === 1 ? " passeio com net" : " passeios com net") + "</span></summary>" +
+            '<div class="nr-body"><div class="formgrid">' + f("su" + s.id + "_name", "Nome", s.name) + f("su" + s.id + "_whatsapp", "WhatsApp (55 + DDD)", s.whatsapp, "", 'inputmode="tel"') + f("su" + s.id + "_contact_name", "Contato", s.contact_name) + f("su" + s.id + "_pickup_notes", "Observações (horários, ponto de encontro)", s.pickup_notes) +
+            ta("su" + s.id + "_msg_template", "Mensagem para a empresa (vazio = padrão). Use {codigo} {passeio} {data} {cliente} {telefone} {hotel} {pessoas} {cobrar} {total} {obs}", s.msg_template) + '<label class="check"><input type="checkbox" id="su' + s.id + '_active"' + (s.active ? " checked" : "") + "> Ativa</label></div>" +
+            '<div class="row"><button class="btn btn-mar" type="button" data-ssave="' + s.id + '">Salvar</button><button class="btn btn-ghost" type="button" data-snet="' + s.id + '">Lançar tabela</button><button class="btn btn-danger" type="button" data-sdel="' + s.id + '">Excluir</button></div></div></details>';
+        }).join("");
+    }
+    p.innerHTML = '<div class="item emp">' + seg + body + "</div>";
 
-    document.getElementById("sNew").addEventListener("submit", async function (e) { e.preventDefault(); var n = document.getElementById("sNewName").value.trim(); if (!n) return U.toast("Digite o nome da empresa."); var i = await sb.from("suppliers").insert({ name: n, whatsapp: document.getElementById("sNewWa").value.replace(/\D/g, "") }).select("id").single(); if (!fail(i)) { cache.supOpen = i.data && i.data.id; U.toast("Empresa adicionada. Complete os dados e lance o net abaixo."); render(); } });
-    p.querySelectorAll("[data-sclose]").forEach(function (b) { b.addEventListener("click", function () { b.closest("details").open = false; }); });
+    async function again(keep) { var y = window.scrollY; Object.keys(keep || {}).forEach(function (k) { cache[k] = keep[k]; }); await render(); window.scrollTo(0, y); }
+    function repaint(slug) { var t = tourOf(slug), d = p.querySelector('details[data-tour="' + slug + '"]'); if (!d || !t) return; d.querySelector(".nr-info").innerHTML = sumHtml(t); d.querySelector("[data-foot]").innerHTML = footHtml(t); var pr = prefOf(slug), c = pr && calc(t, pr.net_adult); d.dataset.net = pr ? "com" : "sem"; d.dataset.margin = c ? c.sobra : -1; }
+    p.querySelectorAll("[data-mode]").forEach(function (b) { b.addEventListener("click", function () { cache.empView = b.dataset.mode; render(); }); });
+    p.querySelectorAll("[data-stop]").forEach(function (a) { a.addEventListener("click", function (e) { e.stopPropagation(); }); });
+
+    // Por passeio: muda e salva na hora
+    p.querySelectorAll("[data-rate] input").forEach(function (inp) { inp.addEventListener("change", async function () {
+      var id = Number(inp.closest("[data-rate]").dataset.rate), r = rates.filter(function (x) { return x.id === id; })[0], k = inp.dataset.k;
+      var v = inp.value === "" ? null : Number(inp.value);
+      if (k === "net_adult" && (v == null || v < 0)) { inp.value = r.net_adult; return U.toast("Digite o net."); }
+      var upd = { updated_at: new Date().toISOString() }; upd[k] = v;
+      var u = await sb.from("tour_rates").update(upd).eq("id", id); if (fail(u)) return;
+      r[k] = v; repaint(r.tour_slug); U.toast("Salvo.");
+    }); });
+    p.querySelectorAll("[data-pref]").forEach(function (b) { b.addEventListener("click", async function () {
+      var id = Number(b.dataset.pref), r = rates.filter(function (x) { return x.id === id; })[0];
+      if (r.preferred) return U.toast("Esta já recebe as reservas.");
+      var c = await sb.from("tour_rates").update({ preferred: false }).eq("tour_slug", r.tour_slug).neq("id", id); if (fail(c)) return;
+      var u = await sb.from("tour_rates").update({ preferred: true }).eq("id", id); if (fail(u)) return;
+      rates.forEach(function (x) { if (x.tour_slug === r.tour_slug) x.preferred = x.id === id; });
+      b.closest(".nr-body").querySelectorAll(".star").forEach(function (s) { s.classList.toggle("on", s === b); });
+      repaint(r.tour_slug); U.toast(supName(r.supplier_id) + " recebe as reservas.");
+    }); });
+    p.querySelectorAll("[data-rdel]").forEach(function (b) { b.addEventListener("click", async function () {
+      if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "?"; b.title = "Toque de novo para excluir"; U.toast("Toque de novo no ✕ para excluir."); return; }
+      var id = Number(b.dataset.rdel), r = rates.filter(function (x) { return x.id === id; })[0];
+      var u = await sb.from("tour_rates").delete().eq("id", id); if (fail(u)) return;
+      again({ empOpenT: r.tour_slug });
+    }); });
+    p.querySelectorAll("[data-radd]").forEach(function (b) { b.addEventListener("click", async function () {
+      var slug = b.dataset.radd, sel = p.querySelector('[data-newsup="' + slug + '"]'), net = p.querySelector('[data-newnet="' + slug + '"]');
+      if (!sel.value || net.value === "") return U.toast("Digite o net.");
+      var first = !rates.some(function (r) { return r.tour_slug === slug && r.preferred && r.active; });
+      var i = await sb.from("tour_rates").insert({ tour_slug: slug, supplier_id: Number(sel.value), net_adult: Number(net.value), preferred: first }); if (fail(i)) return;
+      U.toast("Net salvo."); again({ empOpenT: slug });
+    }); });
+    p.querySelectorAll("[data-cap]").forEach(function (inp) { inp.addEventListener("change", async function () { var v = inp.value === "" ? null : Math.max(0, parseInt(inp.value, 10) || 0); var u = await sb.from("tours").update({ capacity_per_day: v }).eq("slug", inp.dataset.cap); if (!fail(u)) U.toast(v == null ? "Sem limite de vagas." : v + " vagas por dia."); }); });
+
+    // Lançar tabela
+    var tSup = document.getElementById("tSup");
+    if (tSup) {
+      tSup.addEventListener("change", function () { cache.empSup = tSup.value; render(); });
+      var save = document.getElementById("tSave");
+      var changed = function () { return [].filter.call(p.querySelectorAll("[data-tnet]"), function (i) { return i.value !== i.dataset.orig && i.value !== ""; }); };
+      p.querySelectorAll("[data-tnet]").forEach(function (inp) { inp.addEventListener("input", function () {
+        var t = tourOf(inp.dataset.tnet), c = calc(t, inp.value), live = p.querySelector('[data-live="' + inp.dataset.tnet + '"]');
+        live.innerHTML = c ? (c.ok ? "sobra " + brl(c.sobra) + " · mínimo " + brl(c.floor) : '<span class="bad">abaixo do mínimo ' + brl(c.floor) + "</span>") : "sem net";
+        inp.closest(".trow").classList.toggle("chg", inp.value !== inp.dataset.orig);
+        var n = changed().length; save.disabled = !n; save.textContent = n ? "Salvar " + n + (n === 1 ? " net" : " nets") : "Nada alterado";
+      }); });
+      save.addEventListener("click", async function () {
+        var list = changed(); if (!list.length) return; save.disabled = true; save.textContent = "Salvando…";
+        var sid = Number(tSup.value), ok = 0;
+        for (var i = 0; i < list.length; i++) {
+          var inp = list[i], slug = inp.dataset.tnet, v = Number(inp.value), q;
+          if (inp.dataset.rid) q = await sb.from("tour_rates").update({ net_adult: v, active: true, updated_at: new Date().toISOString() }).eq("id", Number(inp.dataset.rid));
+          else q = await sb.from("tour_rates").insert({ tour_slug: slug, supplier_id: sid, net_adult: v, preferred: !rates.some(function (r) { return r.tour_slug === slug && r.preferred && r.active; }) });
+          if (fail(q)) break; ok++;
+        }
+        U.toast(ok + (ok === 1 ? " net salvo." : " nets salvos.")); again();
+      });
+    }
+
+    // Empresas
+    var sNew = document.getElementById("sNew");
+    if (sNew) sNew.addEventListener("submit", async function (e) { e.preventDefault(); var n = document.getElementById("sNewName").value.trim(); if (!n) return U.toast("Digite o nome da empresa."); var i = await sb.from("suppliers").insert({ name: n, whatsapp: document.getElementById("sNewWa").value.replace(/\D/g, "") }).select("id").single(); if (!fail(i)) { U.toast("Empresa adicionada."); again({ supOpen: i.data && i.data.id }); } });
+    p.querySelectorAll("[data-snet]").forEach(function (b) { b.addEventListener("click", function () { cache.empSup = b.dataset.snet; cache.empView = "tabela"; render(); }); });
     p.querySelectorAll("[data-ssave]").forEach(function (b) { b.addEventListener("click", async function () {
       var id = b.dataset.ssave, g = function (k) { return document.getElementById("su" + id + "_" + k); };
       var u = await sb.from("suppliers").update({ name: g("name").value.trim(), whatsapp: g("whatsapp").value.replace(/\D/g, ""), contact_name: g("contact_name").value.trim(), pickup_notes: g("pickup_notes").value.trim(), msg_template: g("msg_template").value.trim(), active: g("active").checked }).eq("id", id);
-      if (!fail(u)) { U.toast("Empresa salva."); render(); } }); });
-    p.querySelectorAll("[data-sdel]").forEach(function (b) { b.addEventListener("click", async function () { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toque de novo: apaga a empresa e os nets dela"; return; } var u = await sb.from("suppliers").delete().eq("id", b.dataset.sdel); if (!fail(u)) render(); }); });
-    p.querySelectorAll("[data-cap]").forEach(function (inp) { inp.addEventListener("change", async function () { var v = inp.value === "" ? null : Math.max(0, parseInt(inp.value, 10) || 0); var u = await sb.from("tours").update({ capacity_per_day: v }).eq("slug", inp.dataset.cap); if (!fail(u)) U.toast(v == null ? "Sem limite de vagas." : "Limite de " + v + " vagas por dia salvo."); }); });
-    p.querySelectorAll("[data-radd]").forEach(function (b) { b.addEventListener("click", async function () {
-      var slug = b.dataset.radd, sel = p.querySelector('[data-newsup="' + slug + '"]'), net = p.querySelector('[data-newnet="' + slug + '"]');
-      if (!sel.value || net.value === "") return U.toast("Escolha a empresa e digite o net.");
-      var first = !rates.some(function (r) { return r.tour_slug === slug && r.preferred && r.active; });
-      var i = await sb.from("tour_rates").insert({ tour_slug: slug, supplier_id: Number(sel.value), net_adult: Number(net.value), preferred: first }); if (!fail(i)) { U.toast("Net salvo."); render(); } }); });
-    p.querySelectorAll("[data-rsave]").forEach(function (b) { b.addEventListener("click", async function () {
-      var row = b.closest("[data-rate]"), id = Number(b.dataset.rsave), v = function (k) { return row.querySelector('[data-k="' + k + '"]'); };
-      var r0 = rates.filter(function (r) { return r.id === id; })[0];
-      var upd = { net_adult: Number(v("net_adult").value), net_child: v("net_child").value === "" ? null : Number(v("net_child").value), net_vehicle: v("net_vehicle").value === "" ? null : Number(v("net_vehicle").value), preferred: v("preferred").checked, active: v("active").checked, updated_at: new Date().toISOString() };
-      if (upd.preferred) { var c = await sb.from("tour_rates").update({ preferred: false }).eq("tour_slug", r0.tour_slug).neq("id", id); if (fail(c)) return; }
-      var u = await sb.from("tour_rates").update(upd).eq("id", id); if (!fail(u)) { U.toast("Net salvo."); render(); } }); });
-    p.querySelectorAll("[data-rdel]").forEach(function (b) { b.addEventListener("click", async function () { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toque de novo"; return; } var u = await sb.from("tour_rates").delete().eq("id", b.dataset.rdel); if (!fail(u)) render(); }); });
+      if (!fail(u)) { U.toast("Empresa salva."); again(); } }); });
+    p.querySelectorAll("[data-sdel]").forEach(function (b) { b.addEventListener("click", async function () { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toque de novo: apaga a empresa e os nets dela"; return; } var u = await sb.from("suppliers").delete().eq("id", b.dataset.sdel); if (!fail(u)) again(); }); });
   };
 
   VIEWS.financeiro = async function (p) {
