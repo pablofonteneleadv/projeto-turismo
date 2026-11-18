@@ -517,13 +517,18 @@
     var sups = res[0].data, rates = res[1].data, tours = res[2].data, B = res[3];
     var AD = Number(B.ad_cost_per_pax || 0), MM = Number(B.min_margin_per_pax || 0), FEE = Number(B.card_fee_pct || 0);
     var only = cache.netTour || "";
-    p.innerHTML = '<div class="item"><h3>Empresas parceiras</h3><p class="small muted">Quem opera os passeios. O WhatsApp é para onde vai o botão "Enviar à empresa". No modelo da mensagem dá para usar {marca} {codigo} {passeio} {data} {cliente} {telefone} {hotel} {pessoas} {cobrar} {total} {obs}.</p>' +
+    var openSup = cache.supOpen; cache.supOpen = null;
+    p.innerHTML = '<div class="item"><h3>Empresas parceiras</h3><p class="small muted">Toque numa empresa para editar. O WhatsApp é para onde vai o botão "Enviar à empresa" na Operação.</p>' +
+      '<form id="sNew" class="row" style="margin-bottom:10px"><input id="sNewName" placeholder="Nome da nova empresa" style="flex:1;min-width:180px"><input id="sNewWa" placeholder="WhatsApp 5585..." inputmode="tel" style="width:160px"><button class="btn btn-mar" type="submit">+ Adicionar</button></form>' +
+      (sups.length ? "" : '<p class="small muted">Nenhuma empresa ainda. Adicione a primeira acima.</p>') +
       sups.map(function (s) {
-        return '<div class="item" style="background:var(--bg)"><div class="formgrid">' + f("su" + s.id + "_name", "Nome", s.name) + f("su" + s.id + "_whatsapp", "WhatsApp (55 + DDD)", s.whatsapp, "", 'inputmode="tel"') + f("su" + s.id + "_contact_name", "Contato", s.contact_name) + f("su" + s.id + "_pickup_notes", "Observações (horários, ponto de encontro)", s.pickup_notes) +
-          ta("su" + s.id + "_msg_template", "Modelo da mensagem para a empresa (vazio = padrão)", s.msg_template) + '<label class="check"><input type="checkbox" id="su' + s.id + '_active"' + (s.active ? " checked" : "") + "> Ativa</label></div>" +
-          '<div class="row"><button class="btn btn-mar" type="button" data-ssave="' + s.id + '">Salvar empresa</button><button class="btn btn-danger" type="button" data-sdel="' + s.id + '">Excluir</button></div></div>';
-      }).join("") +
-      '<form id="sNew" class="row"><input id="sNewName" placeholder="Nome da nova empresa (ex.: Enseada Turismo)" style="flex:1;min-width:200px"><input id="sNewWa" placeholder="WhatsApp 5585..." inputmode="tel" style="width:170px"><button class="btn btn-ghost" type="submit">Adicionar empresa</button></form></div>' +
+        var nNet = rates.filter(function (r) { return r.supplier_id === s.id && r.active; }).length;
+        var wa = s.whatsapp ? '<a class="small" href="https://wa.me/' + esc(s.whatsapp) + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">WhatsApp</a>' : '<span class="small" style="color:var(--ruim)">falta WhatsApp</span>';
+        return '<details class="sup"' + (openSup === s.id ? " open" : "") + ' data-sup="' + s.id + '"><summary><span class="sup-name">' + esc(s.name) + (s.active ? "" : ' <span class="small muted">(inativa)</span>') + '</span><span class="sup-meta">' + wa + ' · <span class="small ' + (nNet ? "" : "muted") + '">' + nNet + (nNet === 1 ? " net" : " nets") + '</span></span></summary>' +
+          '<div class="formgrid">' + f("su" + s.id + "_name", "Nome", s.name) + f("su" + s.id + "_whatsapp", "WhatsApp (55 + DDD)", s.whatsapp, "", 'inputmode="tel"') + f("su" + s.id + "_contact_name", "Contato", s.contact_name) + f("su" + s.id + "_pickup_notes", "Observações (horários, ponto de encontro)", s.pickup_notes) +
+          ta("su" + s.id + "_msg_template", "Modelo da mensagem para a empresa (vazio = padrão). Dá para usar {codigo} {passeio} {data} {cliente} {telefone} {hotel} {pessoas} {cobrar} {total} {obs}", s.msg_template) + '<label class="check"><input type="checkbox" id="su' + s.id + '_active"' + (s.active ? " checked" : "") + "> Ativa</label></div>" +
+          '<div class="row"><button class="btn btn-mar" type="button" data-ssave="' + s.id + '">Salvar</button><button class="btn btn-ghost" type="button" data-sclose="' + s.id + '">Fechar</button><button class="btn btn-danger" type="button" data-sdel="' + s.id + '">Excluir</button></div></details>';
+      }).join("") + "</div>" +
       '<div class="item"><h3>Net por passeio</h3><p class="small muted">Mínimo = net + anúncio (' + D.brl(AD) + ') + margem mínima (' + D.brl(MM) + ') por pessoa. O site nunca vende abaixo disso: cupom e desconto param no mínimo. A empresa preferida recebe as reservas novas.</p>' +
 
       tours.filter(function (t) { return !only || t.slug === only; }).map(function (t) {
@@ -547,11 +552,12 @@
           (sups.length ? '<div class="row small"><select data-newsup="' + esc(t.slug) + '" style="width:auto">' + sups.filter(function (s) { return !tr.some(function (r) { return r.supplier_id === s.id; }); }).map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + "</option>"; }).join("") + '</select><input type="number" step="0.01" min="0" placeholder="Net adulto (R$)" data-newnet="' + esc(t.slug) + '" style="width:150px"><button class="btn btn-ghost" type="button" data-radd="' + esc(t.slug) + '">Adicionar net</button></div>' : '<p class="small muted">Cadastre uma empresa acima para lançar o net.</p>') + "</div>";
       }).join("") + "</div>";
 
-    document.getElementById("sNew").addEventListener("submit", async function (e) { e.preventDefault(); var n = document.getElementById("sNewName").value.trim(); if (!n) return U.toast("Digite o nome da empresa."); var i = await sb.from("suppliers").insert({ name: n, whatsapp: document.getElementById("sNewWa").value.replace(/\D/g, "") }); if (!fail(i)) { U.toast("Empresa adicionada."); render(); } });
+    document.getElementById("sNew").addEventListener("submit", async function (e) { e.preventDefault(); var n = document.getElementById("sNewName").value.trim(); if (!n) return U.toast("Digite o nome da empresa."); var i = await sb.from("suppliers").insert({ name: n, whatsapp: document.getElementById("sNewWa").value.replace(/\D/g, "") }).select("id").single(); if (!fail(i)) { cache.supOpen = i.data && i.data.id; U.toast("Empresa adicionada. Complete os dados e lance o net abaixo."); render(); } });
+    p.querySelectorAll("[data-sclose]").forEach(function (b) { b.addEventListener("click", function () { b.closest("details").open = false; }); });
     p.querySelectorAll("[data-ssave]").forEach(function (b) { b.addEventListener("click", async function () {
       var id = b.dataset.ssave, g = function (k) { return document.getElementById("su" + id + "_" + k); };
       var u = await sb.from("suppliers").update({ name: g("name").value.trim(), whatsapp: g("whatsapp").value.replace(/\D/g, ""), contact_name: g("contact_name").value.trim(), pickup_notes: g("pickup_notes").value.trim(), msg_template: g("msg_template").value.trim(), active: g("active").checked }).eq("id", id);
-      if (!fail(u)) U.toast("Empresa salva."); }); });
+      if (!fail(u)) { U.toast("Empresa salva."); render(); } }); });
     p.querySelectorAll("[data-sdel]").forEach(function (b) { b.addEventListener("click", async function () { if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Toque de novo: apaga a empresa e os nets dela"; return; } var u = await sb.from("suppliers").delete().eq("id", b.dataset.sdel); if (!fail(u)) render(); }); });
     p.querySelectorAll("[data-cap]").forEach(function (inp) { inp.addEventListener("change", async function () { var v = inp.value === "" ? null : Math.max(0, parseInt(inp.value, 10) || 0); var u = await sb.from("tours").update({ capacity_per_day: v }).eq("slug", inp.dataset.cap); if (!fail(u)) U.toast(v == null ? "Sem limite de vagas." : "Limite de " + v + " vagas por dia salvo."); }); });
     p.querySelectorAll("[data-radd]").forEach(function (b) { b.addEventListener("click", async function () {
