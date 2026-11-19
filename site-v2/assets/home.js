@@ -118,6 +118,7 @@
     if (!list.length) { box.innerHTML = '<div class="empty">' + esc(weekday && T.length ? text.dateEmpty : t_("home.empty_cat")) + "</div>"; return; }
     list.forEach(function (t) {
       var inPack = pack.indexOf(t.slug) > -1, fav = !!favs[t.slug];
+      var href = esc(link(t)), name = esc(I.tr(t, "name"));
       var book = booking(t);
       var pricing = data.live && Number(t.price_pix) > 0
         ? '<div><small>' + esc(book ? priceUnit(t) : text.reference + (t.per_vehicle ? copy(" · por veículo", " · por vehículo") : copy(" · por pessoa", " · por persona"))) + '</small><b class="num">' + esc(D.brl(t.price_pix)) + "</b></div>"
@@ -125,15 +126,15 @@
       var cardPay = book && Number(t.price_card) > 0 ? '<span class="pix num">' + esc(D.brl(t.price_card)) + " " + copy("no cartão", "con tarjeta") + "</span>" : "";
       var el = document.createElement("article"); el.className = "card";
       el.innerHTML =
-        '<div style="position:relative">' + U.photo((t.photos || [])[0], t.slug, U.alt(t, 0)) +
+        '<div class="card-media"><a class="card-photo-link" href="' + href + '" aria-label="' + name + '">' + U.photo((t.photos || [])[0], t.slug, U.alt(t, 0)) + '</a>' +
         '<div class="tags"><span class="tag">' + (t.category === "transfers" ? copy("Transfer", "Traslado") : copy("Saindo de Fortaleza", "Desde Fortaleza")) + "</span>" + (t.featured ? '<span class="tag hot">' + t_("card.featured") + "</span>" : "") + "</div>" +
         '<button class="fav" type="button" aria-pressed="' + fav + '" aria-label="' + esc(t_("card.save", I.tr(t, "name"))) + '">' + (fav ? "♥" : "♡") + "</button></div>" +
-        '<div class="body"><h3>' + esc(I.tr(t, "name")) + "</h3>" +
+        '<div class="body"><a class="card-text-link" href="' + href + '"><h3>' + name + '</h3>' +
         '<div class="where"><span>📍 ' + esc(I.tr(t, "location")) + '</span><span class="tour-rating" hidden></span></div>' +
-        '<div class="time">' + esc(I.tr(t, "times")) + "</div>" +
+        '<div class="time">' + esc(I.tr(t, "times")) + '</div>' +
         '<span class="offer-mode">' + esc(book ? text.booking : text.consultation) + "</span>" +
-        '<div class="price">' + pricing + cardPay + "</div>" +
-        '<div class="row"><a class="btn btn-mar tour-link" href="' + esc(link(t)) + '">' + esc(book ? t_("card.view") : text.consult) + '</a>' +
+        '<div class="price">' + pricing + cardPay + '</div></a>' +
+        '<div class="row"><a class="btn btn-mar tour-link" href="' + href + '">' + esc(book ? t_("card.view") : text.consult) + '</a>' +
         '<button class="btn btn-ghost add" type="button" aria-pressed="' + inPack + '">' + t_(inPack ? "card.in_pack" : "card.add_pack") + "</button></div></div>";
       el.querySelector(".fav").addEventListener("click", function () { favs[t.slug] = !favs[t.slug]; try { localStorage.setItem("site-favs", JSON.stringify(favs)); } catch (e) {} U.toast(t_(favs[t.slug] ? "fav.on" : "fav.off")); render(); });
       el.querySelector(".add").addEventListener("click", function () { var i = pack.indexOf(t.slug); if (i > -1) pack.splice(i, 1); else pack.push(t.slug); render(); paintPack(); });
