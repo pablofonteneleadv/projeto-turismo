@@ -54,7 +54,7 @@ def fake_catalog(context, flags, calls):
                     t.pop("sales_mode", None)
         elif endpoint == "settings":
             payload = [dict(data=dict(
-                brand="Maré Tur", whatsapp="5585999990000", pix_key="recebimento-anterior",
+                brand="Maré Tur", whatsapp="5588999990000", pix_key="recebimento-anterior",
                 pix_name="Recebedor de teste", pix_payment_verified=True, deposit_pct=20
             ))]
         elif endpoint in {"reviews", "faqs", "check_coupon"}:
@@ -143,8 +143,15 @@ with sync_playwright() as pw:
     expect(consult).to_be_visible()
     link = consult.get_attribute("href")
     message = parse_qs(urlparse(link).query)["text"][0]
-    assert urlparse(link).hostname == "wa.me" and "Cumbuco" in message and "MT-INSTAGRAM" in message
+    assert urlparse(link).netloc == "wa.me" and urlparse(link).path == "/5588999990000"
+    assert "Cumbuco" in message and "Origem: MT-INSTAGRAM" in message
+    ref = re.search(r"Referência: (MT-C-[A-F0-9]{10})", message)[1]
+    pickup = page.locator("#sheet [data-pickup-field] input")
+    pickup.fill("Meireles")
+    message = parse_qs(urlparse(consult.get_attribute("href")).query)["text"][0]
+    assert "Bairro do embarque: Meireles" in message and ref in message
     assert "example.org" not in message
+    assert "Meireles" not in page.url and "Meireles" not in json.dumps(page.evaluate("UI.attribution()"))
     expect(visible(page, "[data-reserve]")).to_have_count(0)
     assert not [path for path, _ in calls if path in {"quote_booking", "create_booking"}]
     print("OK consulta Android, sem cobrança, com origem da home até o WhatsApp")
@@ -153,6 +160,9 @@ with sync_playwright() as pw:
     expect(page.locator("html")).to_have_attribute("lang", re.compile("es"))
     page.locator("#bar [data-open-book]").click()
     expect(page.locator("#sheet [data-consult]")).to_contain_text(re.compile("consult", re.I))
+    expect(pickup).to_have_value("Meireles")
+    message = parse_qs(urlparse(consult.get_attribute("href")).query)["text"][0]
+    assert "Barrio de embarque: Meireles" in message and "Referencia: " + ref in message
     print("OK consulta em espanhol")
 
     flags["empty"] = True
@@ -171,6 +181,7 @@ with sync_playwright() as pw:
     page.locator("#bar [data-open-book]").click()
     reserve = page.locator("#sheet [data-reserve]")
     expect(reserve).to_be_enabled()
+    expect(pickup).to_be_hidden()
     reserve.click()
     expect(page.locator("#modal")).to_be_visible()
     page.locator("#cName").fill("Cliente de Teste")
@@ -183,6 +194,7 @@ with sync_playwright() as pw:
     expect(page.locator("#pixBox")).not_to_contain_text("recebimento-anterior")
     booking = [p for path, p in calls if path == "create_booking"]
     assert len(booking) == 1 and re.fullmatch(r"[a-f0-9-]{36}", booking[0]["request_id"])
+    assert "Meireles" not in json.dumps(booking[0]) and ref not in json.dumps(booking[0])
     assert booking[0]["attribution"]["campaign"] == "consulta-cumbuco"
     print("OK reserva sintética com cotação validada, protocolo, idempotência e campanha")
     assert not errors, errors
