@@ -28,6 +28,27 @@ def visible(page, selector):
     return page.locator(selector).filter(visible=True).first
 
 
+def broken_rows(page):
+    return page.evaluate("""() => {
+        const rows = document.querySelectorAll(".trip-highlights li, .trip-inclusions .yes, .trip-extras li:has(small)");
+        return [...rows].filter(row => {
+            const label = row.querySelector("span");
+            if (!label) return true;
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            const lines = [...range.getClientRects()];
+            const box = row.getBoundingClientRect();
+            const style = getComputedStyle(row);
+            const detail = row.querySelector("small")?.getBoundingClientRect();
+            const firstLine = lines[0];
+            return !firstLine || firstLine.top > box.top + parseFloat(style.paddingTop) + parseFloat(style.lineHeight)
+                || lines.some(line => Math.abs(line.left - firstLine.left) > 1 || line.right > box.right + 1)
+                || Boolean(detail && (detail.left < label.getBoundingClientRect().right || detail.right > box.right + 1
+                    || detail.top >= firstLine.bottom));
+        }).map(row => row.textContent);
+    }""")
+
+
 def fake_catalog(context, flags, calls):
     def serve(route):
         req = route.request
@@ -252,6 +273,7 @@ with sync_playwright() as pw:
         assert page.locator(".trip-section h2").all_inner_texts()[:2] == ["Sobre o passeio", "Inclusos e extras"], file.name
         assert not page.get_by_text("Como é o dia", exact=True).count()
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), file.name
+        assert not (broken := broken_rows(page)), (file.name, broken)
         expect(page.locator("#bar [data-open-book]")).to_be_enabled()
     page.goto(BASE + "passeio-jeri-vip.html?lang=pt")
     expect(page.locator(".trip-highlights")).to_contain_text("Alchymist")
@@ -273,6 +295,18 @@ with sync_playwright() as pw:
     page.evaluate("() => { navigator.share = async ({ url }) => { window.sharedTourUrl = url; }; }")
     page.locator("#share").click()
     assert page.evaluate("window.sharedTourUrl") == "https://maretur.com.br/passeio-jeri-vip.html"
+    for width in (320, 360, 390, 430, 768, 1280):
+        page.set_viewport_size({"width": width, "height": 844})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
+        assert not (broken := broken_rows(page)), (width, broken)
+    for width in (320, 390, 768):
+        page.set_viewport_size({"width": width, "height": 844})
+        page.goto(BASE + "?lang=es")
+        expect(page.locator("#cards .card").first).to_be_visible()
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
+        page.goto(BASE + "creditos.html")
+        expect(page.locator("#list .item").first).to_be_visible()
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
     print(f"OK padrão móvel nas {len(all_pages)} páginas, galeria, opcionais e versão em espanhol")
     assert not errors, errors
     context.close()
