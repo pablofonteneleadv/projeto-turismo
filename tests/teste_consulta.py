@@ -270,6 +270,9 @@ with sync_playwright() as pw:
     page.goto(BASE + "passeio-jeri-vip.html?lang=es")
     expect(page.get_by_role("heading", name="Sobre el paseo")).to_be_visible()
     expect(page.get_by_role("heading", name="Incluidos y adicionales")).to_be_visible()
+    page.evaluate("() => { navigator.share = async ({ url }) => { window.sharedTourUrl = url; }; }")
+    page.locator("#share").click()
+    assert page.evaluate("window.sharedTourUrl") == "https://maretur.com.br/passeio-jeri-vip.html"
     print(f"OK padrão móvel nas {len(all_pages)} páginas, galeria, opcionais e versão em espanhol")
     assert not errors, errors
     context.close()

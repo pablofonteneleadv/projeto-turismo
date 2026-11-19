@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { parseArgs } from 'node:util';
 
-const BASE = 'https://maretur.onrender.com/';
+const BASE = 'https://maretur.com.br/';
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: { offline: { type: 'boolean' }, snapshot: { type: 'string' } },

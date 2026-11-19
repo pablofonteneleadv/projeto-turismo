@@ -458,7 +458,7 @@
       (b.count > b.data.length ? '<p class="warn">Resumo parcial com as ' + b.data.length + ' reservas mais recentes de ' + b.count + '.</p>' : '') +
       r.data.map(function (c) {
         var s = stats[c.code.toUpperCase()] || emptyStats();
-        var link = new URL("/", location.origin);
+        var link = U.publicUrl("/");
         link.search = new URLSearchParams({ cupom: c.code, utm_source: "parceiro", utm_medium: "indicacao", utm_campaign: "indicacoes", utm_content: c.code.toLowerCase() });
         return '<div class="item" data-row data-name="' + esc(c.code) + '" data-search="' + esc(c.code + " " + c.agent_name + " " + (c.leader || "")) + '" data-status="' + (c.active ? "on" : "off") + '" data-value="' + s.bookedTotal + '"><div class="item-head"><div><h3>' + esc(c.code) + " · " + esc(c.agent_name) + '</h3><p class="small muted">Cliente ganha ' + c.discount_pct + "% · agente ganha " + c.commission_pct + "%" + (c.leader ? " · líder " + esc(c.leader) + " ganha " + c.leader_pct + "%" : "") + '</p></div><span class="st ' + (c.active ? "st-pago" : "st-cancelado") + '">' + (c.active ? "Ativo" : "Pausado") + "</span></div>" +
           '<p class="small">' + s.scheduled + " aguardando passeio · " + s.completed + " realizados · " + D.brl(s.bookedTotal) + " em reservas</p>" +
@@ -575,7 +575,7 @@
     return D.waLink(x.phone, "Olá, " + x.customer_name.split(" ")[0] + "! Como foi o passeio de " + x.tour_name + "? Sua avaliação ajuda muito outros viajantes" + (S.google_review_url ? ": " + S.google_review_url : ". Pode responder aqui mesmo com uma nota de 1 a 5.") + " Obrigado! " + (S.brand || ""));
   }
   function offerLink(x, S, tours) {
-    var site = location.origin + location.pathname.replace(/admin\.html$/, "");
+    var site = U.publicUrl("/").href;
     var picks = tours.filter(function (t) { return t.slug !== x.tour_slug && t.active && t.category !== "transfers"; }).sort(function (a, b) { return (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.sort - b.sort; }).slice(0, 3);
     var cup = S.followup_coupon ? "?cupom=" + encodeURIComponent(S.followup_coupon) : "";
     return D.waLink(x.phone, ["Olá, " + x.customer_name.split(" ")[0] + "! Que bom ter você com a gente no " + x.tour_name + ". Para os próximos dias em Fortaleza:", ""].concat(picks.map(function (t) { return "• " + t.name + " · " + D.brl(t.price_pix) + " no Pix\n  " + site + U.tourUrl(t.slug) + cup; })).concat(S.followup_coupon ? ["", "Com o cupom " + S.followup_coupon + " você tem desconto de cliente da casa."] : []).join("\n"));

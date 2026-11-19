@@ -592,7 +592,7 @@
   paintSave();
   save.addEventListener("click", function () { favs[t.slug] = !favs[t.slug]; try { localStorage.setItem("site-favs", JSON.stringify(favs)); } catch (e) {} paintSave(); });
   document.getElementById("share").addEventListener("click", async function () {
-    var url = new URL(U.tourUrl(t.slug), location.href).href;
+    var url = U.publicUrl(U.tourUrl(t.slug)).href;
     if (navigator.share) { try { await navigator.share({ title: tr("name"), url: url }); return; } catch (e) {} }
     if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { U.toast(T_("tour.link_copied")); }, function () { U.toast(url); });
     else U.toast(url);

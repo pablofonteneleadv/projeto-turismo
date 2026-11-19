@@ -4,8 +4,8 @@ Material inicial da Maré Tur para **consultar disponibilidade**. As artes estã
 
 ## Instagram orgânico
 
-- **Feed 4:5** · [cumbuco-feed-4x5.png](cumbuco-feed-4x5.png), 1080 × 1350. Use o [link rastreável do feed](https://maretur.onrender.com/passeio-cumbuco.html?utm_source=instagram&utm_medium=organic_social&utm_campaign=cumbuco_primeira_reserva&utm_content=feed_4x5) na bio.
-- **Story 9:16** · [cumbuco-story-9x16.png](cumbuco-story-9x16.png), 1080 × 1920. Adicione o sticker **Consultar datas** abaixo de “Consulte disponibilidade”, com o [link rastreável do story](https://maretur.onrender.com/passeio-cumbuco.html?utm_source=instagram&utm_medium=organic_social&utm_campaign=cumbuco_primeira_reserva&utm_content=story_9x16).
+- **Feed 4:5** · [cumbuco-feed-4x5.png](cumbuco-feed-4x5.png), 1080 × 1350. Use o [link rastreável do feed](https://maretur.com.br/passeio-cumbuco.html?utm_source=instagram&utm_medium=organic_social&utm_campaign=cumbuco_primeira_reserva&utm_content=feed_4x5) na bio.
+- **Story 9:16** · [cumbuco-story-9x16.png](cumbuco-story-9x16.png), 1080 × 1920. Adicione o sticker **Consultar datas** abaixo de “Consulte disponibilidade”, com o [link rastreável do story](https://maretur.com.br/passeio-cumbuco.html?utm_source=instagram&utm_medium=organic_social&utm_campaign=cumbuco_primeira_reserva&utm_content=story_9x16).
 
 **Legenda para o feed**
 
@@ -23,7 +23,7 @@ Material inicial da Maré Tur para **consultar disponibilidade**. As artes estã
 | Grupo | `Cumbuco saindo de Fortaleza` |
 | Local do primeiro teste | Fortaleza, com opção de localização por presença. Avaliar separadamente quem planeja a viagem de fora da cidade. |
 | Ação | Consultar disponibilidade |
-| URL final | [Página de Cumbuco com UTM de Search](https://maretur.onrender.com/passeio-cumbuco.html?utm_source=google&utm_medium=cpc&utm_campaign=cumbuco_primeira_reserva&utm_content=rsa_consulta) |
+| URL final | [Página de Cumbuco com UTM de Search](https://maretur.com.br/passeio-cumbuco.html?utm_source=google&utm_medium=cpc&utm_campaign=cumbuco_primeira_reserva&utm_content=rsa_consulta) |
 | Caminho de exibição | `cumbuco` / `consulta` |
 
 **Palavras-chave iniciais**

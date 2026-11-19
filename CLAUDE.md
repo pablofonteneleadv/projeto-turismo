@@ -29,4 +29,4 @@ Antes de executar tarefas de site, painel, catálogo, vendas, campanhas, atendim
 
 ## Estado atual
 
-Marca Maré Tur, site no ar (maretur.onrender.com). Modelo de negócio em `docs/alma-do-negocio.md`; situação e pendências em `docs/decisoes.md`.
+Marca Maré Tur, site oficial em [maretur.com.br](https://maretur.com.br/). Usar este domínio em todos os links públicos, campanhas e respostas. Modelo de negócio em `docs/alma-do-negocio.md`; situação e pendências em `docs/decisoes.md`.
