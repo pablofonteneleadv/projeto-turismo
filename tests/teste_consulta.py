@@ -52,6 +52,8 @@ def fake_catalog(context, flags, calls):
             if not flags.get("bookable"):
                 for t in payload:
                     t.pop("sales_mode", None)
+            if flags.get("package_two") and payload:
+                payload.append(dict(next(t for t in SEED if t["slug"] == "3praias")))
         elif endpoint == "settings":
             payload = [dict(data=dict(
                 brand="Maré Tur", whatsapp="5588999990000", pix_key="recebimento-anterior",
@@ -129,8 +131,44 @@ with sync_playwright() as pw:
     expect(add).to_be_focused()
     print("OK vitrine antes de avaliações e FAQ, com seleção e foco preservados")
 
+    flags["package_two"] = True
+    page.goto(BASE + "?utm_source=instagram&utm_medium=organic&utm_campaign=consulta-cumbuco&lang=pt")
+    expect_portal(page)
+    cards = page.locator("#cards .card")
+    expect(cards).to_have_count(2)
+    for card in cards.all():
+        card.locator(".add").click()
+    page.get_by_role("button", name="Consultar pacote", exact=True).click()
+    package = page.get_by_role("dialog", name="Consultar pacote")
+    expect(package).to_be_visible()
+    expect(package.locator("#packItems li")).to_have_count(2)
+    package.locator("#packDate").fill(DATE)
+    package.get_by_label("Viajantes").fill("4")
+    package.get_by_label("Bairro do embarque (opcional)").fill("Meireles")
+    pack_link = urlparse(package.get_by_role("link", name="Abrir WhatsApp").get_attribute("href"))
+    pack_message = parse_qs(pack_link.query)["text"][0]
+    assert pack_link.path == "/5588999990000"
+    assert all(x in pack_message for x in ["Cumbuco", "3 Praias", "Viajantes: 4", "Bairro do embarque: Meireles", "Origem: MT-INSTAGRAM"])
+    assert re.search(r"Referência: MT-P-[A-F0-9]{10}", pack_message)
+    assert "Meireles" not in page.url and "Meireles" not in json.dumps(page.evaluate("UI.attribution()"))
+    package.get_by_label("Viajantes").fill("0")
+    assert not package.locator("#packPeople").evaluate("el => el.validity.valid")
+    package.get_by_role("button", name="Voltar aos passeios").click()
+    expect(package).to_be_hidden()
+    expect(page.locator("#packCount")).to_have_text("2 passeios")
+    assert not [p for p, _ in calls if p in {"quote_booking", "create_booking"}]
+
+    page.goto(BASE + "?lang=es")
+    expect(cards).to_have_count(2)
+    cards.first.locator(".add").click()
+    page.get_by_role("button", name="Consultar paquete", exact=True).click()
+    expect(page.get_by_role("dialog").get_by_label("Viajeros")).to_be_visible()
+    assert "Viajeros: 2" in parse_qs(urlparse(page.locator("#packGo").get_attribute("href")).query)["text"][0]
+    del flags["package_two"]
+    print("OK pacote Android PT/ES com confirmação de passeios, dados da consulta e protocolo")
+
     page.goto(BASE + "?utm_source=instagram&utm_medium=organic&utm_campaign=consulta-cumbuco"
-                     "&utm_content=feed&utm_term=example%40example.org")
+                     "&utm_content=feed&utm_term=example%40example.org&lang=pt")
     expect_portal(page)
     assert page.evaluate("UI.attribution()") == {
         "source": "instagram", "medium": "organic", "campaign": "consulta-cumbuco", "content": "feed"

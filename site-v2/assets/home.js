@@ -15,6 +15,12 @@
     stepsPickupBody: copy("Confirme o horário e o local de saída antes da viagem.", "Confirmá el horario y el punto de salida antes del viaje."),
     packageDescription: copy("Selecione os passeios que quer combinar e consulte as datas e o valor do roteiro.", "Elegí los paseos que querés combinar y consultá las fechas y el precio del itinerario."),
     packageConsult: copy("Consultar pacote", "Consultar paquete"),
+    packageDate: copy("Data desejada (opcional)", "Fecha deseada (opcional)"),
+    packagePeople: copy("Viajantes", "Viajeros"),
+    packagePickup: copy("Bairro do embarque (opcional)", "Barrio de embarque (opcional)"),
+    packageNote: copy("A equipe confirma as datas e o valor do roteiro pelo WhatsApp.", "El equipo confirma las fechas y el precio del itinerario por WhatsApp."),
+    packageWhatsApp: copy("Abrir WhatsApp", "Abrir WhatsApp"),
+    packageBack: copy("Voltar aos passeios", "Volver a los paseos"),
     termsTitle: copy("Condições por passeio", "Condiciones de cada paseo"),
     termsBody: copy("Confira o preço e as condições do seu roteiro antes de pagar.", "Consultá el precio y las condiciones de tu itinerario antes de pagar."),
     pickupTitle: copy("Embarque combinado", "Embarque a coordinar"),
@@ -62,6 +68,10 @@
   var w = document.getElementById("when");
   var fortalezaToday = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   w.min = fortalezaToday;
+  var packDialog = document.getElementById("packDialog"), packForm = document.getElementById("packDetails");
+  var packDate = document.getElementById("packDate"), packPeople = document.getElementById("packPeople"), packPickup = document.getElementById("packPickup");
+  var packGo = document.getElementById("packGo"), packCode = "";
+  packDate.min = fortalezaToday;
   var catalogStatus = document.getElementById("catalogStatus"), box = document.getElementById("cards");
   var cardRatings = new Map();
   var priceUnit = function (t) { return t_(t.per_vehicle ? "card.from_vehicle" : "card.from_person"); };
@@ -69,8 +79,8 @@
   function leaves(t, weekday) {
     return !weekday || !Array.isArray(t.departure_weekdays) || !t.departure_weekdays.length || t.departure_weekdays.map(Number).indexOf(weekday) !== -1;
   }
-  function dateLabel() {
-    return w.value ? new Intl.DateTimeFormat(I.es ? "es-AR" : "pt-BR", { dateStyle: "short", timeZone: "UTC" }).format(new Date(w.value + "T12:00:00Z")) : "";
+  function dateLabel(value) {
+    return value ? new Intl.DateTimeFormat(I.es ? "es-AR" : "pt-BR", { dateStyle: "short", timeZone: "UTC" }).format(new Date(value + "T12:00:00Z")) : "";
   }
   function link(t) {
     var parts = U.tourUrl(t.slug).split("?");
@@ -98,7 +108,7 @@
     f.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.cat === cat); });
     var weekday = w.value ? new Date(w.value + "T12:00:00Z").getUTCDay() || 7 : 0;
     var list = T.filter(function (t) { return (cat === "todos" || t.category === cat) && (!dest || t.slug === dest) && leaves(t, weekday); });
-    var currentDate = dateLabel();
+    var currentDate = dateLabel(w.value);
     catalogStatus.textContent = [currentDate ? text.departure + currentDate : "", data.live ? "" : text.offline].filter(Boolean).join(" · ");
     catalogStatus.hidden = !catalogStatus.textContent;
     document.getElementById("listTitle").textContent = dest ? t_("home.your_tour") : (cat === "todos" ? t_("home.pick_day") : t_("cat." + cat));
@@ -137,22 +147,48 @@
   function paintPack() {
     var bar = document.getElementById("packbar");
     if (!pack.length) { bar.hidden = true; document.body.classList.remove("has-bar"); return; }
-    var items = pack.map(function (s) { return T.find(function (t) { return t.slug === s; }); });
     document.getElementById("packCount").textContent = pack.length + (pack.length === 1 ? copy(" passeio", " paseo") : copy(" passeios", " paseos"));
     document.getElementById("packSave").textContent = text.packageTerms;
-    var msg = copy("Olá! Quero consultar datas e valor para este pacote:", "¡Hola! Quiero consultar fechas y precio para este paquete:") + "\n" +
-      items.map(function (t) { return "• " + I.tr(t, "name"); }).join("\n");
-    if (w.value) msg += "\n" + copy("Data de referência: ", "Fecha de referencia: ") + dateLabel();
-    if (coupon) msg += "\n" + copy("Cupom: ", "Cupón: ") + coupon.code;
-    var ref = typeof U.attributionRef === "function" ? U.attributionRef() : "";
-    if (ref) msg += "\n" + copy("Referência: ", "Referencia: ") + ref;
-    var go = document.getElementById("packGo"); var l = D.waLink(S.whatsapp, msg);
-    go.href = l || "#"; go.target = l ? "_blank" : ""; go.onclick = l ? null : function (e) { e.preventDefault(); U.toast(t_("wa.missing")); };
+    if (packDialog.open) paintPackLink();
     bar.hidden = false; document.body.classList.add("has-bar");
   }
 
+  function packageNames() {
+    return pack.map(function (slug) { return I.tr(T.find(function (tour) { return tour.slug === slug; }), "name"); });
+  }
+
+  function paintPackLink() {
+    var lines = [copy("Olá! Quero consultar datas e valor para este pacote:", "¡Hola! Quiero consultar fechas y precio para este paquete:")]
+      .concat(packageNames().map(function (name) { return "• " + name; }));
+    if (packDate.value) lines.push(copy("Data de referência: ", "Fecha de referencia: ") + dateLabel(packDate.value));
+    lines.push(text.packagePeople + ": " + packPeople.value);
+    var pickup = packPickup.value.trim();
+    if (pickup) lines.push(copy("Bairro do embarque: ", "Barrio de embarque: ") + pickup);
+    if (coupon) lines.push(copy("Cupom: ", "Cupón: ") + coupon.code);
+    lines.push(copy("Referência: ", "Referencia: ") + packCode);
+    var origin = typeof U.attributionRef === "function" ? U.attributionRef() : "";
+    if (origin) lines.push(copy("Origem: ", "Origen: ") + origin);
+    packGo.href = D.waLink(S.whatsapp, lines.join("\n")) || "#";
+  }
+
+  document.getElementById("packReview").addEventListener("click", function () {
+    if (!packCode) packCode = "MT-P-" + Array.from(crypto.getRandomValues(new Uint8Array(5)), function (b) { return b.toString(16).padStart(2, "0"); }).join("").toUpperCase();
+    document.getElementById("packItems").innerHTML = packageNames().map(function (name) { return "<li>" + esc(name) + "</li>"; }).join("");
+    if (!packDate.value) packDate.value = w.value;
+    paintPackLink();
+    packDialog.showModal();
+  });
+  document.getElementById("packBack").addEventListener("click", function () { packDialog.close(); });
+  packForm.addEventListener("input", paintPackLink);
+  packForm.addEventListener("submit", function (e) { e.preventDefault(); packGo.click(); });
+  packGo.addEventListener("click", function (e) {
+    if (!packForm.reportValidity() || packGo.getAttribute("href") === "#") {
+      e.preventDefault();
+      if (packGo.getAttribute("href") === "#") U.toast(t_("wa.missing"));
+    }
+  });
   document.getElementById("search").addEventListener("submit", function (e) { e.preventDefault(); dest = sel.value; cat = "todos"; render(); document.getElementById("passeios").scrollIntoView(); });
-  w.addEventListener("change", function () { render(); paintPack(); });
+  w.addEventListener("change", function () { packDate.value = w.value; render(); paintPack(); });
   function goPack() { cat = "todos"; dest = ""; sel.value = ""; render(); document.getElementById("passeios").scrollIntoView(); U.toast(t_("pack.hint")); }
   document.getElementById("packOpen").addEventListener("click", goPack);
   document.getElementById("packCta").addEventListener("click", goPack);
