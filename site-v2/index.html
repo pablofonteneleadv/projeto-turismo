@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
 <link rel="stylesheet" href="assets/app.css?v=36036b969833">
 <link rel="stylesheet" href="assets/experience.css?v=2e5ac6c5e437">
+<link rel="stylesheet" href="assets/catalog.css?v=de4c254f9f53">
 <style>
 #packDialog{margin:auto;padding:0;width:min(440px,calc(100% - 24px));max-height:calc(100dvh - 24px);border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--ink)}
 #packDialog::backdrop{background:var(--shade)}
@@ -49,8 +50,8 @@
       <a class="rating" href="#reviewsSection" hidden><span class="stars" aria-hidden="true">★★★★★</span><b id="ratingValue"></b><span id="ratingCount"></span></a>
     </div>
     <form class="search" id="search" aria-label="Buscar passeio">
-      <label for="dest">Destino<select id="dest"><option value="">Todos os destinos</option></select></label>
-      <label for="when">Data do passeio<input type="date" id="when"></label>
+      <label for="dest"><span data-home-text="destination">Destino</span><select id="dest"><option value="">Todos os destinos</option></select></label>
+      <label for="when"><span data-home-text="dateLabel">Data do passeio (opcional)</span><input type="date" id="when"></label>
       <button class="btn btn-sol" type="submit">Ver passeios</button>
       <button class="btn btn-ghost" type="button" id="packOpen">Montar pacote com vários passeios</button>
     </form>
@@ -59,10 +60,19 @@
 
 <main>
   <section class="band" id="passeios"><div class="wrap">
-    <div class="sec-head"><span class="eyebrow">Passeios</span><h2 id="listTitle">Escolha seu dia de praia</h2></div>
-    <div class="filters" id="filters" role="group" aria-label="Categorias"></div>
+    <div class="sec-head"><span class="eyebrow" data-home-text="origin">Saídas de Fortaleza</span><h2 id="listTitle">Passeios e transfers</h2></div>
+    <div class="catalog-toolbar" id="catalogToolbar" hidden>
+      <div class="catalog-destination">
+        <label for="catalogDest" data-home-text="destination">Destino</label>
+        <select id="catalogDest"><option value="">Todos os destinos</option></select>
+      </div>
+      <div class="catalog-types">
+        <span id="filterLabel" data-home-text="type">Tipo de oferta</span>
+        <div class="filters" id="filters" role="group" aria-labelledby="filterLabel"></div>
+      </div>
+    </div>
     <p class="catalog-status muted" id="catalogStatus" role="status" hidden></p>
-    <div class="cards" id="cards" aria-busy="true"><div class="empty" data-home-text="loading">Carregando passeios…</div></div>
+    <div class="catalog-groups" id="cards" aria-busy="true"><div class="empty" data-home-text="loading">Carregando passeios…</div></div>
     <noscript><p><a href="passeio-cumbuco.html">Cumbuco</a> · <a href="passeio-3praias.html">3 Praias em 1 dia</a> · <a href="passeio-jeri-economy.html">Jericoacoara em 1 dia</a></p></noscript>
   </div></section>
 
@@ -160,6 +170,7 @@
 <script src="assets/paginas.js?v=75743fa3b779" defer></script>
 <script src="assets/i18n.js?v=3ec49ab9efc4" defer></script>
 <script src="assets/ui.js?v=368ca4dd636e" defer></script>
-<script src="assets/home.js?v=acd671f626fb" defer></script>
+<script src="assets/catalog.js?v=6acc4c73c129" defer></script>
+<script src="assets/home.js?v=d020cc1543ea" defer></script>
 </body>
 </html>
