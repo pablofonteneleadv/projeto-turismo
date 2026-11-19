@@ -76,7 +76,7 @@
   var TOOLS = {
     reservas: { search: "Buscar nome, telefone, código, hotel…", filters: [{ k: "status", label: "Status", opts: STATUS_OPTS, def: "_open" }, { k: "date", label: "Período", type: "period", opts: [["", "Qualquer data"], ["next", "Próximos"], ["today", "Hoje"], ["tomorrow", "Amanhã"], ["week", "Próximos 7 dias"], ["past", "Já passaram"]] }, { k: "tour", label: "Passeio", dyn: true }, { k: "sup", label: "Empresa", dyn: true }],
       sorts: [["date", "Data do passeio ↑", "date", "s", 1], ["date_d", "Data do passeio ↓", "date", "s", -1], ["created_d", "Mais recentes", "created", "s", -1], ["value_d", "Maior valor", "value", "n", -1]].concat(SORT_NAME) },
-    passeios: { search: "Buscar passeio…", filters: [{ k: "status", label: "Situação", opts: [["", "Todos"], ["on", "No ar"], ["off", "Ocultos"]] }, { k: "cat", label: "Categoria", opts: [["", "Todas"], ["passeios", "Passeios"], ["pacotes", "Pacotes"], ["transfers", "Transfers"]] }],
+    passeios: { search: "Buscar passeio…", filters: [{ k: "status", label: "Situação", emptyLabel: "Situação", opts: [["", "Todos"], ["on", "No ar"], ["off", "Ocultos"]] }, { k: "cat", label: "Categoria", emptyLabel: "Categoria", opts: [["", "Todas"], ["passeios", "Passeios"], ["pacotes", "Pacotes"], ["transfers", "Transfers"]] }, { k: "net", label: "Net", opts: [["", "Todos"], ["com", "Com net"], ["sem", "Sem net"]] }],
       sorts: [["sort", "Ordem do site", "sort", "n", 1]].concat(SORT_NAME, [["price", "Menor preço", "price", "n", 1], ["price_d", "Maior preço", "price", "n", -1]]) },
     precos: { search: "Buscar passeio…", filters: [{ k: "status", label: "Situação", opts: [["", "Todos"], ["on", "No ar"], ["off", "Ocultos"]], def: "on" }, { k: "cat", label: "Categoria", opts: [["", "Todas"], ["passeios", "Passeios"], ["pacotes", "Pacotes"], ["transfers", "Transfers"]] }],
       sorts: [["sort", "Ordem do site", "sort", "n", 1]].concat(SORT_NAME, [["price", "Menor preço", "price", "n", 1], ["price_d", "Maior preço", "price", "n", -1]]) },
@@ -96,14 +96,15 @@
     var cnt = document.getElementById("pcount");
     if (!c || !rows.length) { box.innerHTML = ""; if (cnt) cnt.textContent = rows.length ? rows.length + " itens" : ""; return; }
     var st = toolState(tab);
+    function filterDisabled(k) { return k === "net" && p.dataset.netUnavailable === "true"; }
     function opts(fl) {
-      if (!fl.dyn) return fl.opts.map(function (o) { return o[0] === "" ? ["", fl.label + ": " + o[1].toLowerCase()] : o; });
+      if (!fl.dyn) return fl.opts.map(function (o) { return o[0] === "" ? ["", fl.emptyLabel || (fl.label + ": " + o[1].toLowerCase())] : o; });
       var seen = {}, o = [["", fl.label + ": todos"]];
       rows.forEach(function (r) { var v = r.dataset[fl.k], l = r.dataset[fl.k + "Label"] || v; if (v && !seen[v]) { seen[v] = 1; o.push([v, l]); } });
       return o.slice(0, 1).concat(o.slice(1).sort(function (a, b) { return a[1].localeCompare(b[1], "pt-BR"); }));
     }
-    box.innerHTML = '<div class="tools"><input type="search" id="tq" placeholder="' + esc(c.search) + '" value="' + esc(st.q) + '" aria-label="Buscar">' +
-      c.filters.map(function (fl) { return '<select data-fk="' + fl.k + '" aria-label="' + esc(fl.label) + '">' + opts(fl).map(function (o) { return '<option value="' + esc(o[0]) + '"' + (st.f[fl.k] === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select>"; }).join("") +
+    box.innerHTML = '<div class="tools' + (tab === "passeios" ? " tools-tours" : "") + '"><input type="search" id="tq" placeholder="' + esc(c.search) + '" value="' + esc(st.q) + '" aria-label="Buscar">' +
+      c.filters.map(function (fl) { var disabled = filterDisabled(fl.k), selected = disabled ? "" : st.f[fl.k]; return '<select data-fk="' + fl.k + '" aria-label="' + esc(fl.label) + '"' + (disabled ? ' disabled' : '') + '>' + opts(fl).map(function (o) { return '<option value="' + esc(o[0]) + '"' + (selected === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>"; }).join("") + "</select>"; }).join("") +
       '<select id="tsort" aria-label="Ordenar">' + c.sorts.map(function (o) { return '<option value="' + o[0] + '"' + (st.sort === o[0] ? " selected" : "") + ">↕ " + esc(o[1]) + "</option>"; }).join("") + "</select>" +
       '<button class="btn btn-ghost" type="button" id="tclear">Limpar</button></div>';
     function apply() {
@@ -112,7 +113,7 @@
       rows.forEach(function (r) {
         var ok = !q || (r.dataset.search || r.textContent).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").indexOf(q) > -1;
         c.filters.forEach(function (fl) {
-          var v = st.f[fl.k]; if (!ok || !v) return; var d = r.dataset[fl.k] || "";
+          var v = st.f[fl.k]; if (!ok || !v || filterDisabled(fl.k)) return; var d = r.dataset[fl.k] || "";
           if (fl.type === "period") ok = v === "next" ? d >= t0 : v === "today" ? d === t0 : v === "tomorrow" ? d === addDays(t0, 1) : v === "week" ? d >= t0 && d <= addDays(t0, 7) : v === "past" ? d < t0 : true;
           else if (v === "_open") ok = ["cancelado", "realizado"].indexOf(d) < 0;
           else ok = d === v;
@@ -269,21 +270,56 @@
   };
 
   VIEWS.passeios = async function (p) {
-    var r = await sb.from("tours").select("*").order("sort");
+    if (cache.editTour === null) return tourForm(p, null);
+    if (cache.editTour !== undefined) {
+      var edit = await sb.from("tours").select("*").eq("slug", cache.editTour).single();
+      if (!fail(edit)) return tourForm(p, edit.data);
+      return;
+    }
+    var [r, rateResult, BZ] = await Promise.all([
+      sb.from("tours").select("*").order("sort"),
+      sb.from("tour_rates").select("tour_slug,net_adult,preferred,active"),
+      bizData()
+    ]);
     if (fail(r)) return;
-    if (cache.editTour !== undefined) return tourForm(p, cache.editTour ? r.data.filter(function (x) { return x.slug === cache.editTour; })[0] : null);
-    var rx = await Promise.all([sb.from("tour_rates").select("tour_slug,net_adult,preferred,active"), bizData()]);
-    var RATES = rx[0].data || [], BZ = rx[1] || {}, AD = Number(BZ.ad_cost_per_pax || 0), MM = Number(BZ.min_margin_per_pax || 0), FEE = Number(BZ.card_fee_pct || 0);
-    function floorOf(slug) { var tr = RATES.filter(function (r) { return r.tour_slug === slug && r.active; }); var pr = tr.filter(function (r) { return r.preferred; })[0] || tr.sort(function (a, b) { return a.net_adult - b.net_adult; })[0]; return pr ? { net: Number(pr.net_adult), pix: Math.ceil(Number(pr.net_adult) + AD + MM), card: Math.ceil((Number(pr.net_adult) + AD + MM) / (1 - FEE / 100)) } : null; }
-    p.innerHTML = '<div class="row"><button class="btn btn-mar" type="button" id="newTour">+ Novo passeio</button><button class="btn btn-ghost" type="button" id="allPrices">Tabela com todos os preços</button></div>' +
+    var netUnavailable = !!rateResult.error;
+    p.dataset.netUnavailable = String(netUnavailable);
+    var AD = Number(BZ.ad_cost_per_pax || 0), MM = Number(BZ.min_margin_per_pax || 0), FEE = Number(BZ.card_fee_pct || 0);
+    var ratesByTour = new Map();
+    (rateResult.data || []).forEach(function (rate) {
+      if (!rate.active) return;
+      var current = ratesByTour.get(rate.tour_slug);
+      if (!current || (rate.preferred && !current.preferred) || (!rate.preferred && !current.preferred && Number(rate.net_adult) < Number(current.net_adult))) ratesByTour.set(rate.tour_slug, rate);
+    });
+    function floorOf(slug) {
+      var rate = ratesByTour.get(slug);
+      if (!rate) return null;
+      var net = Number(rate.net_adult), base = net + AD + MM;
+      return { net: net, pix: Math.ceil(base), card: Math.ceil(base / (1 - FEE / 100)) };
+    }
+    p.innerHTML = '<div class="row tour-toolbar"><button class="btn btn-mar" type="button" id="newTour">+ Novo passeio</button><button class="btn btn-ghost" type="button" id="allPrices">Tabela de preços</button></div>' +
+      (netUnavailable ? '<p class="warn" role="status">Não foi possível carregar os nets. Abra a seção novamente para tentar.</p>' : '') +
       r.data.map(function (t) {
-        return '<div class="item trow" data-row data-name="' + esc(t.name) + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '"><div class="item-head"><div style="display:flex;gap:12px;align-items:center">' + ((t.photos || [])[0] ? '<img class="thumb" src="' + esc(t.photos[0].url) + '" alt="" loading="lazy">' : '<span class="thumb"></span>') + "<div><h3>" + esc(t.name) + '</h3><p class="small muted">' + esc(t.category) + " · " + D.brl(t.price_pix) + " no Pix · " + D.brl(t.price_card) + " cartão</p></div></div>" +
-          '<span class="st ' + (t.active ? "st-pago" : "st-cancelado") + '">' + (t.active ? "No ar" : "Oculto") + "</span></div>" +
-          (function () { var fl = floorOf(t.slug); return fl ? '<p class="small muted">Net ' + D.brl(fl.net) + " · mínimo " + D.brl(fl.pix) + " Pix / " + D.brl(fl.card) + " cartão · sobra por pessoa " + D.brl(Number(t.price_pix) - fl.net - AD) + "</p>" : '<p class="small muted">Sem net cadastrado (Empresas e net)</p>'; })() +
-          '<p class="small">' + (t.sales_mode === "booking" ? "Reserva online configurada" : "Disponibilidade sob consulta") + '</p><div class="row"><button class="btn btn-mar" type="button" data-prices="' + esc(t.slug) + '">Preços</button><button class="btn btn-ghost" type="button" data-sales-nav="' + esc(t.slug) + '">Operadora e vagas</button><button class="btn btn-ghost" type="button" data-edit="' + esc(t.slug) + '">Editar</button><button class="btn btn-ghost" type="button" data-toggle="' + esc(t.slug) + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver</a></div></div>';
+        var slug = esc(t.slug), extraId = "tour-actions-" + slug, fl = floorOf(t.slug);
+        var netLabel = fl ? "Net " + D.brl(fl.net) : netUnavailable ? "Net indisponível" : "Sem net";
+        var margin = fl ? '<span>Sobra ' + D.brl(Number(t.price_pix) - fl.net - AD) + (t.per_vehicle ? "/veículo" : "/pessoa") + '</span>' : "";
+        return '<article class="item tour-catalog-card" data-row data-slug="' + slug + '" data-name="' + esc(t.name) + '" data-net="' + (netUnavailable ? "" : fl ? "com" : "sem") + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '">' +
+          '<div class="tour-card-intro">' + ((t.photos || [])[0] ? '<img class="thumb" src="' + esc(t.photos[0].url) + '" alt="" loading="lazy" decoding="async">' : '') +
+          '<div><h3>' + esc(t.name) + '</h3><p class="tour-card-prices"><span>Pix ' + D.brl(t.price_pix) + '</span><span>Cartão ' + D.brl(t.price_card) + '</span></p></div></div>' +
+          '<div class="tour-card-meta"><span class="st ' + (t.active ? "st-pago" : "st-cancelado") + '">' + (t.active ? "No ar" : "Oculto") + '</span>' +
+          '<span>' + (t.sales_mode === "booking" ? "Reserva online" : "Sob consulta") + '</span><strong class="' + (fl ? "" : "tour-net-missing") + '">' + netLabel + '</strong>' + margin + '</div>' +
+          '<div class="tour-card-actions"><button class="btn btn-mar" type="button" data-prices="' + slug + '" aria-expanded="false">Preços</button>' +
+          '<button class="btn btn-ghost" type="button" data-edit="' + slug + '">Editar</button><button class="btn btn-ghost" type="button" data-more-tour aria-label="Mais ações" aria-expanded="false" aria-controls="' + extraId + '">Mais</button></div>' +
+          '<div class="row tour-card-extra" id="' + extraId + '" hidden><button class="btn btn-ghost" type="button" data-sales-nav="' + slug + '">Operadora e vagas</button>' +
+          '<button class="btn btn-ghost" type="button" data-toggle="' + slug + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver passeio</a></div></article>';
       }).join("");
     document.getElementById("newTour").addEventListener("click", function () { cache.editTour = null; render(); });
     document.getElementById("allPrices").addEventListener("click", function () { tab = "precos"; render(); });
+    p.querySelectorAll("[data-more-tour]").forEach(function (button) { button.addEventListener("click", function () {
+      var actions = document.getElementById(button.getAttribute("aria-controls"));
+      actions.hidden = !actions.hidden;
+      button.setAttribute("aria-expanded", String(!actions.hidden));
+    }); });
     p.querySelectorAll("[data-prices]").forEach(function (b) { b.addEventListener("click", function () {
       var card = b.closest(".item"), open = card.querySelector(".pedit");
       if (open) { open.remove(); b.setAttribute("aria-expanded", "false"); return; }
@@ -295,7 +331,7 @@
         f(id + "_card", "Cartão (R$)", t.price_card, "", 'type="number" step="0.01" min="0" inputmode="decimal"') +
         (t.per_vehicle ? "" : f(id + "_priv", "Privativo por veículo (vazio = não oferece)", t.price_private == null ? "" : t.price_private, "", 'type="number" step="0.01" min="0" inputmode="decimal"')) +
         (bug ? f(id + "_bug", "Buggy por carro (R$)", bug.price, "", 'type="number" step="0.01" min="0" inputmode="decimal"') : "") + "</div>" +
-        '<p class="small muted" data-hint>' + (fl ? "Não aceita abaixo de " + D.brl(fl.pix) + " no Pix e " + D.brl(fl.card) + " no cartão." : "Sem net: não há trava de mínimo para este passeio.") + "</p>" +
+        '<p class="small muted" data-hint>' + (fl ? "Não aceita abaixo de " + D.brl(fl.pix) + " no Pix e " + D.brl(fl.card) + " no cartão." : netUnavailable ? "A conferência do preço mínimo será feita ao salvar." : "Sem net: não há trava de mínimo para este passeio.") + "</p>" +
         '<div class="row"><button class="btn btn-ghost" type="button" data-card5>Cartão = Pix + ' + (FEE || 5) + '%</button><button class="btn btn-mar" type="button" data-psave>Salvar preços</button><button class="btn btn-ghost" type="button" data-pcancel>Fechar</button></div>';
       card.appendChild(box); b.setAttribute("aria-expanded", "true");
       var g = function (k) { var el = document.getElementById(id + "_" + k); return el ? el.value.trim() : null; };
