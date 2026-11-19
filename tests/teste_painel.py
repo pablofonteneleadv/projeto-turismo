@@ -330,10 +330,10 @@ with sync_playwright() as pw:
     public_link = coupon_card.locator("[data-copy]").get_attribute("data-copy")
     public = urllib.parse.urlparse(public_link)
     query = urllib.parse.parse_qs(public.query)
-    check(public_link == first_link and public.path == "/" and query == {
+    check(public_link == first_link and public.scheme == "https" and public.netloc == "maretur.com.br" and public.path == "/" and query == {
         "cupom": ["POUSADA1"], "utm_source": ["parceiro"], "utm_medium": ["indicacao"],
         "utm_campaign": ["indicacoes"], "utm_content": ["pousada1"],
-    }, "link do agente abre a vitrine com o mesmo rastreio em /admin e /admin.html")
+    }, "link do agente usa o domínio oficial com o mesmo rastreio em /admin e /admin.html")
     check(not errs, "sem erro de JavaScript: " + "; ".join(errs[:3]))
     b.close()
 

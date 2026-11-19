@@ -3,7 +3,7 @@
 **Resultado:** 7 posts prontos (3 carrosséis, 2 reels, 2 fotos), um por dia, de segunda a domingo. Nada foi publicado.
 
 ## Base usada (dos arquivos do projeto)
-- Marca: **Maré Tur**, receptivo em Fortaleza, guia com **Cadastur**. Site: maretur.onrender.com
+- Marca: **Maré Tur**, receptivo em Fortaleza, guia com **Cadastur**. Site: maretur.com.br
 - Preços (catálogo Enseada, por pessoa, **Pix / cartão**): 3 Praias R$ 120 / 126 · 3 Praias com buggy R$ 210 / 221 · Cumbuco R$ 80 / 84 · Lagoinha R$ 90 / 95 · Combo Lagoinha R$ 200 / 210 · Paracuru R$ 100 / 105 · Águas Belas R$ 80 / 84 · Beach Park (transfer, ingresso à parte) R$ 80 / 84 · Jeri 1 dia Economy R$ 250 / 263, Premium R$ 300 / 315, VIP R$ 350 / 368.
 - Regras do site: busca no hotel, Pix com desconto, cartão em 4x, sinal de 20%, restante no embarque, cancelamento grátis até 24 h.
 - Público: turistas hospedados em Fortaleza (Beira-Mar e Praia de Iracema), brasileiros de outros estados; casais, famílias e grupos de amigos.

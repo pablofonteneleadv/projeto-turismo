@@ -1,6 +1,6 @@
 ---
 name: operar-mare-tur
-description: Opera vendas de passeios e transfers da Maré Tur em Fortaleza. Use para a primeira reserva paga, funil, site maretur.onrender.com, catálogo, landing pages, Meta Ads, Google Ads, criativos, SEO, WhatsApp, Pix, reservas, voucher, afiliados, métricas ou entrada de um operador parceiro.
+description: Opera vendas de passeios e transfers da Maré Tur em Fortaleza. Use para a primeira reserva paga, funil, site maretur.com.br, catálogo, landing pages, Meta Ads, Google Ads, criativos, SEO, WhatsApp, Pix, reservas, voucher, afiliados, métricas ou entrada de um operador parceiro.
 ---
 
 # Maré Tur — Operação Comercial
@@ -12,6 +12,8 @@ Levar a Maré Tur da fase sem vendas até reservas pagas, passeios realizados e 
 Tratar **conseguir e fechar parcerias com operadores** como a atividade manual de rotina. Automatizar o trabalho comercial pós-parceria e preservar a responsabilidade da operadora pelo transporte e passeio. Enquanto a integração de disponibilidade, operação e acerto estiver em implantação, apoiar o coordenador operacional humano com fila, mensagens e alertas. Encaminhar exceções que exigem decisão, acesso ou responsabilidade. Reutilizar autorizações registradas dentro dos limites acordados.
 
 ## Como trabalhar
+
+Usar [maretur.com.br](https://maretur.com.br/) para todo link da Maré Tur entregue ao Pablo ou ao público, inclusive links do painel, dos passeios, das campanhas e de afiliados. Verificar as publicações no domínio oficial.
 
 1. Inspecionar o site e o painel da Maré Tur, ler AGENTS.md, CLAUDE.md e docs/alma-do-negocio.md no repositório privado e conferir a fonte publicada no repositório do site. Usar contas, credenciais, contexto e dados dedicados à Maré Tur, separados da TENKiTER. Distinguir o que foi observado, confirmado, assumido para um teste ou ainda está em aberto. Consultar o contexto inicial, mapa do código e prioridades em [Operação Maré Tur](references/operacao.md).
 2. Escolher o menor trabalho que muda um resultado de venda. Com volume zero, começar por **uma oferta com tarifa líquida validada, vaga confirmável, margem calculada e uma jornada rastreável**. Comparar Cumbuco, 3 Praias e Jeri Economy, mais qualquer oferta com tarifa já comprovada. Uma página publicada ou uma tarifa cadastrada é só um candidato. Preferir operação de custo zero e canais orgânicos até validar a oferta e ter orçamento aprovado.

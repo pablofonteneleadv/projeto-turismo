@@ -88,7 +88,7 @@ Marque quem vai com você! Reserve no WhatsApp (88) 9374-2748. Link na bio.
 
 Reservar com a Maré Tur é simples. ✅
 
-1. Escolha o passeio no site maretur.onrender.com ou no WhatsApp
+1. Escolha o passeio no site maretur.com.br ou no WhatsApp
 2. Pague 20% de sinal no Pix (ou o total no Pix ou no cartão em até 4x)
 3. A confirmação chega no seu WhatsApp, e o horário da busca chega na véspera
 4. Embarque no hotel e pague o restante ao guia

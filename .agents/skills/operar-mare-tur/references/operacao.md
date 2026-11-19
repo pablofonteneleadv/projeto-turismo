@@ -2,15 +2,15 @@
 
 ## Contexto inicial observado
 
-- Em 18/11/2026, horário de Fortaleza, a [Maré Tur](https://maretur.onrender.com/) apresentou 21 ofertas no catálogo público após carregar. Recontar os cartões e ler as categorias atuais antes de usar números em campanhas.
+- Em 18/11/2026, horário de Fortaleza, a [Maré Tur](https://maretur.com.br/) apresentou 21 ofertas no catálogo público após carregar. Recontar os cartões e ler as categorias atuais antes de usar números em campanhas.
 - O portfólio observado inclui Jericoacoara em 1 dia (Economy, Premium e Blue Day), 3 Praias em 1 dia (base, buggy e buggy com pôr do sol), Cumbuco, Lagoinha, Combo Lagoinha, Flexaú, Águas Belas, Paracuru, Combo Paracuru, Beach Park (transfer), Lagoa Encantada do Alchymist, Leste Oeste (Economy e VIP) e quatro opções de transfer para Jericoacoara. O site tem seletor PT/ES, busca por destino/data, cupons, montagem de pacotes e links de WhatsApp. A home anunciava sinal de 20% no Pix, saldo no embarque e 5% para dois passeios ou mais. Confirmar por oferta.
-- A página de [Cumbuco](https://maretur.onrender.com/passeio-cumbuco.html?data=2026-11-20) exibiu R$ 80 por pessoa no Pix, R$ 84 no cartão, busca no hotel e opcionais pagos à parte. Com dois adultos, mostrou R$ 160 no Pix, R$ 32 de sinal e R$ 128 no embarque. O preço de 5 a 10 anos era resolvido no WhatsApp, enquanto a simulação usava o preço de adulto. No teste público, o clique em “Reservar agora” manteve a página e abriu uma aba que ainda apareceu em branco na verificação. O destino final, a criação da reserva e a conciliação ficaram sem confirmação. O próximo teste controlado deve identificar se o comportamento vem do navegador, do link externo ou da integração.
+- A página de [Cumbuco](https://maretur.com.br/passeio-cumbuco.html?data=2026-11-20) exibiu R$ 80 por pessoa no Pix, R$ 84 no cartão, busca no hotel e opcionais pagos à parte. Com dois adultos, mostrou R$ 160 no Pix, R$ 32 de sinal e R$ 128 no embarque. O preço de 5 a 10 anos era resolvido no WhatsApp, enquanto a simulação usava o preço de adulto. No teste público, o clique em “Reservar agora” manteve a página e abriu uma aba que ainda apareceu em branco na verificação. O destino final, a criação da reserva e a conciliação ficaram sem confirmação. O próximo teste controlado deve identificar se o comportamento vem do navegador, do link externo ou da integração.
 - A seção de indicação oferece cupom a hotéis, pousadas, motoristas e criadores e condiciona comissão a passeio realizado. O dono informou que a empresa está começando e ainda não fez a primeira venda. Checar a origem e a autorização de qualquer avaliação, foto de passageiros ou credencial antes de usar. O texto sobre guia cadastrado e a existência de páginas públicas precisam ser conferidos contra os documentos e acordos da operação; o cadastro de um guia não comprova o cadastro da empresa.
 - A política exibida para Cumbuco restringe reembolso e trata não comparecimento. Verificar as regras aplicáveis à modalidade de venda com fontes oficiais e validação profissional quando a questão exigir, incluindo direitos do consumidor, Cadastur conforme papel, privacidade, consentimento e tratamento de dados. Preservar condições públicas e checkout consistentes. Nunca copiar políticas de outra empresa como se fossem da Maré Tur.
 
 ## Painel administrativo observado
 
-Inspeção de leitura, sem alterar registros. [Painel da Maré Tur](https://maretur.onrender.com/admin)
+Inspeção de leitura, sem alterar registros. [Painel da Maré Tur](https://maretur.com.br/admin)
 
 | Tela | O que existe | Evolução e teste |
 | --- | --- | --- |
@@ -93,7 +93,7 @@ Ao receber uma parceria, converter mensagens, PDFs ou planilhas em ficha e lista
 ### Exemplo de entrega para Search, condicionado à oferta validada
 
 - Produto e anúncio sem preço até confirmação da ficha. Grupo “Cumbuco saindo de Fortaleza”. Entre as palavras-chave candidatas, usar correspondência de frase para “passeio cumbuco saindo de fortaleza” e exata para [passeio cumbuco fortaleza]. Avaliar “passagem aérea” e “emprego” para negativas. Escolher geografia e dias conforme oferta e objetivo do teste.
-- Textos iniciais para adaptar e expandir no rascunho. Títulos “Passeio para Cumbuco”, “Saída de Fortaleza” e “Consulte Datas e Embarque”. Descrição “Veja o que está incluso no passeio de Cumbuco e consulte datas e embarque.” URL candidata sem data fixa no anúncio, a validar antes do uso, `https://maretur.onrender.com/passeio-cumbuco.html?utm_source=google&utm_medium=cpc&utm_campaign=cumbuco_primeira_reserva&utm_content=search_a`.
+- Textos iniciais para adaptar e expandir no rascunho. Títulos “Passeio para Cumbuco”, “Saída de Fortaleza” e “Consulte Datas e Embarque”. Descrição “Veja o que está incluso no passeio de Cumbuco e consulte datas e embarque.” URL candidata sem data fixa no anúncio, a validar antes do uso, `https://maretur.com.br/passeio-cumbuco.html?utm_source=google&utm_medium=cpc&utm_campaign=cumbuco_primeira_reserva&utm_content=search_a`.
 - Transformar a amostra em campanha com todas as peças exigidas no formato vigente, destino testado, evento de conversão, orçamento e regras aprovados quando aplicáveis. Para Meta, exportar a peça final e incluir mídia licenciada, texto final e o mesmo vínculo com a oferta. Se a reserva estiver com defeito e houver um caminho oficial verificado de consulta, produzir a variante de consulta e explicitar o que ela mede.
 
 ## Decisões que o painel ou registro precisa suportar

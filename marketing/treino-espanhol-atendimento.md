@@ -114,7 +114,7 @@ Formato: **Cliente** → **Resposta ideal (curta)** → **Por quê**. Respostas 
 **Cliente:** Es seguro pagar por acá? No los conozco.
 
 **Resposta:**
-> Es una duda totalmente lógica. Somos Maré Tur, trabajamos con guía habilitado en Cadastur (el registro oficial del turismo en Brasil) y la seña es solo el 20%: el resto lo pagás al guía recién al embarcar. Tenés nuestro sitio maretur.onrender.com con todo por escrito, y te confirmamos por WhatsApp. Si querés, te paso el nombre del guía.
+> Es una duda totalmente lógica. Somos Maré Tur, trabajamos con guía habilitado en Cadastur (el registro oficial del turismo en Brasil) y la seña es solo el 20%: el resto lo pagás al guía recién al embarcar. Tenés nuestro sitio maretur.com.br con todo por escrito, y te confirmamos por WhatsApp. Si querés, te paso el nombre del guía.
 
 **Por quê:** reduz o risco do cliente: só 20% antecipado, resto ao embarcar, registro oficial verificável, tudo escrito. Só ofereça "nome do guia" se o Pablo/Bruno puder passar. Não prometa seguro, garantias ou reembolso que não existem.
 
