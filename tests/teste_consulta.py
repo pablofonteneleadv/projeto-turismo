@@ -54,6 +54,8 @@ def fake_catalog(context, flags, calls):
                     t.pop("sales_mode", None)
             if flags.get("package_two") and payload:
                 payload.append(dict(next(t for t in SEED if t["slug"] == "3praias")))
+            if flags.get("all_tours") and not flags.get("empty"):
+                payload = SEED
         elif endpoint == "settings":
             payload = [dict(data=dict(
                 brand="Maré Tur", whatsapp="5588999990000", pix_key="recebimento-anterior",
@@ -173,7 +175,13 @@ with sync_playwright() as pw:
     assert page.evaluate("UI.attribution()") == {
         "source": "instagram", "medium": "organic", "campaign": "consulta-cumbuco", "content": "feed"
     }
-    page.locator("#cards a[href*='passeio-cumbuco.html']").first.click()
+    cumbuco_card = page.locator("#cards .card").filter(has=page.get_by_role("heading", name="Cumbuco", exact=True))
+    links = [cumbuco_card.locator(s).get_attribute("href") for s in (".card-photo-link", ".card-text-link", ".tour-link")]
+    assert len(set(links)) == 1 and "utm_campaign=consulta-cumbuco" in links[0]
+    cumbuco_card.locator(".fav").click()
+    expect(cumbuco_card.locator(".fav")).to_have_attribute("aria-pressed", "true")
+    assert "/passeio-cumbuco.html" not in page.url
+    cumbuco_card.locator(".card-photo-link").click()
     expect(page.get_by_role("heading", name="Cumbuco", exact=True)).to_be_visible()
     assert page.evaluate("UI.attribution().campaign") == "consulta-cumbuco"
     page.locator("#bar [data-open-book]").click()
@@ -235,6 +243,34 @@ with sync_playwright() as pw:
     assert "Meireles" not in json.dumps(booking[0]) and ref not in json.dumps(booking[0])
     assert booking[0]["attribution"]["campaign"] == "consulta-cumbuco"
     print("OK reserva sintética com cotação validada, protocolo, idempotência e campanha")
+
+    flags.update(bookable=False, all_tours=True)
+    all_pages = sorted(SITE.glob("passeio-*.html"))
+    for file in all_pages:
+        page.goto(BASE + file.name + "?lang=pt", wait_until="domcontentloaded")
+        expect(page.get_by_role("heading", name="Sobre o passeio", exact=True)).to_be_visible()
+        assert page.locator(".trip-section h2").all_inner_texts()[:2] == ["Sobre o passeio", "Inclusos e extras"], file.name
+        assert not page.get_by_text("Como é o dia", exact=True).count()
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), file.name
+        expect(page.locator("#bar [data-open-book]")).to_be_enabled()
+    page.goto(BASE + "passeio-jeri-vip.html?lang=pt")
+    expect(page.locator(".trip-highlights")).to_contain_text("Alchymist")
+    expect(page.locator(".trip-inclusions > div").first).not_to_contain_text("Pedra Furada")
+    expect(page.locator(".trip-inclusions > div").nth(1)).to_contain_text("Pedra Furada")
+    expect(page.locator(".trip-inclusions > div").nth(1).get_by_text("Taxa ambiental", exact=False)).to_have_count(1)
+    main_photo = page.locator("#tripPhoto img")
+    first_photo = main_photo.get_attribute("src")
+    second_photo = page.locator('[data-trip-photo="1"]')
+    second_photo.click()
+    expect(second_photo).to_have_attribute("aria-pressed", "true")
+    assert main_photo.get_attribute("src") != first_photo
+    main_photo.evaluate("img => img.decode()")
+    if os.environ.get("TURISMO_LAYOUT_SHOT"):
+        page.screenshot(path=os.environ["TURISMO_LAYOUT_SHOT"], full_page=True, animations="disabled")
+    page.goto(BASE + "passeio-jeri-vip.html?lang=es")
+    expect(page.get_by_role("heading", name="Sobre el paseo")).to_be_visible()
+    expect(page.get_by_role("heading", name="Incluidos y adicionales")).to_be_visible()
+    print(f"OK padrão móvel nas {len(all_pages)} páginas, galeria, opcionais e versão em espanhol")
     assert not errors, errors
     context.close()
     browser.close()

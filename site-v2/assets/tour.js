@@ -15,11 +15,9 @@
   if (!window.TOUR_SLUG && pageUrl.indexOf("?") < 0 && history.replaceState) { qs.delete("p"); var rest = qs.toString(); history.replaceState(null, "", pageUrl + (rest ? "?" + rest : "") + location.hash); }
   document.title = T_("tour.title", tr("name"), S.brand);
   var md = document.querySelector('meta[name="description"]'); if (md) md.content = (tr("summary") || "") + T_("tour.meta");
-  var tr_ = U.tourRating(t, data.reviews), mine = U.tourReviews(t, data.reviews);
-  var shown = mine.concat(data.reviews.filter(function (r) { return mine.indexOf(r) < 0; })).slice(0, 6);
+  var tr_ = U.tourRating(t, data.reviews), shown = U.tourReviews(t, data.reviews).slice(0, 6);
   var noHotel = t.slug === "transfer-jeri-volta";
-  var bring = t.category === "transfers" ? "" : '<section class="block"><h2>' + T_("tour.bring_h") + '</h2><ul class="list"><li>' + T_("tour.bring1") + "</li><li>" + T_("tour.bring2") + "</li><li>" + T_("tour.bring3") + "</li><li>" + T_("tour.bring4") + '</li></ul><p class="note">' + T_("tour.bring_note") + "</p></section>";
-  var day = (t.itinerary || []).length || t.category !== "passeios" ? "" : '<section class="block"><h2>' + T_("tour.day_h") + '</h2><ol class="route"><li>' + T_("tour.day1") + "</li><li>" + T_("tour.day2") + "</li><li>" + T_("tour.day3") + "</li><li>" + T_("tour.day4") + "</li></ol></section>";
+  var bring = t.category === "transfers" ? "" : '<details><summary>' + T_("tour.bring_h") + '</summary><ul><li>' + T_("tour.bring1") + '</li><li>' + T_("tour.bring2") + '</li><li>' + T_("tour.bring3") + '</li><li>' + T_("tour.bring4") + '</li></ul></details>';
   var extras = I.trExtras(t);
   var buggyExtra = extras.filter(function (e) { return e.buggy && typeof e.price === "number"; })[0];
   var hasPriv = !t.per_vehicle && Number(t.price_private) > 0;
@@ -51,39 +49,70 @@
   var coupon = null;
   var referral = referralCode(qs.get("cupom")) || referralCode(stored.referral) || referralCode(D.coupon.get());
 
+  function text(pt, es) { return I.es ? es : pt; }
+  function comparable(value) { return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+  function isAside(value) { return /\b(?:opcional(?:es)?|opcionais|a parte|(?:nao|no) (?:inclus|incluid)[oa]s?)\b/.test(comparable(value)); }
+  function extraKey(value) {
+    var key = comparable(value).replace(/\(.*?\)/g, "").replace(/\s+(?:a parte|(?:nao|no) (?:inclus|incluid)[oa]s?)\b/g, "").trim();
+    return /^(?:taxa|tasa) ambiental\b/.test(key) ? "taxa ambiental" : key;
+  }
+
   var photos = (t.photos || []).slice(0, 3);
-  var galClass = photos.length <= 1 ? "gallery one" : photos.length === 2 ? "gallery two" : "gallery";
-  var gal = photos.length ? photos.map(function (p, i) { return U.photo(p, t.slug + i, U.alt(t, i), i === 0).replace('<div class="photo">', '<div class="photo">' + (i === 0 && t.featured ? '<span class="badge">' + T_("card.featured") + "</span>" : "")); }).join("") : U.photo(null, t.slug);
+  function photoAt(index) { return U.photo(photos[index], t.slug + index, U.alt(t, index), true); }
+  var thumbs = photos.length < 2 ? "" : '<div class="trip-thumbs">' + photos.map(function (photo, index) {
+    var label = "Ver foto " + (index + 1) + " · " + U.alt(t, index);
+    return '<button type="button" data-trip-photo="' + index + '" aria-label="' + esc(label) + '" aria-pressed="' + (index === 0) + '"><img src="' + esc(photo.url || photo) + '" alt="" width="72" height="48" loading="lazy" decoding="async"></button>';
+  }).join("") + '</div>';
 
   var others = data.tours.filter(function (x) { return x.slug !== t.slug; }).sort(function (a, b) { return (b.category === t.category) - (a.category === t.category); }).slice(0, 6);
-
   var revWord = function (n) { return T_(n === 1 ? "tour.rev_one" : "tour.rev_many"); };
-  var pickup = noHotel ? T_("tour.pickup_wa") : t.category === "transfers" ? T_("tour.pickup_door") : T_("tour.pickup_hotel");
-  var included = I.trList(t, "includes");
+  var pickup = noHotel || t.category === "transfers" ? T_("tour.pickup_wa") : text("Hotel ou ponto combinado", "Hotel o punto acordado");
+  var services = I.trList(t, "includes").filter(Boolean);
+  var included = services.filter(function (item) { return !isAside(item); });
+  var optional = extras.map(function (e) { return { name: e.name, detail: D.money(e.price) }; });
+  services.filter(isAside).forEach(function (item) {
+    if (!optional.some(function (e) { return extraKey(e.name) === extraKey(item); })) optional.push({ name: item, detail: "" });
+  });
+  var highlights = included.filter(function (item) { return !/^(transfer|traslado|transporte|guia|busca|ponto de apoio|punto de apoyo)\b/.test(comparable(item)); }).slice(0, 4);
+  var summary = String(tr("summary") || "").trim(), description = String(tr("description") || summary).trim();
+  var paragraphs = description.replace(/([.!?])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇÑ])/g, "$1\n").split("\n").filter(Boolean);
+  var itinerary = (t.itinerary || []).filter(function (r) { return r && r.text; });
+  var facts = [[T_("tour.duration"), tr("duration")], [text("Saídas", "Salidas"), tr("times")], [text("Embarque", "Embarque"), pickup]];
+
+  page.classList.add("trip-page");
   page.innerHTML =
-    '<nav class="crumbs" aria-label="' + T_("tour.crumbs") + '"><a href="./">' + T_("tour.home") + '</a><span aria-hidden="true">›</span><a href="./#passeios">' + T_("tour.tours") + '</a><span aria-hidden="true">›</span><span>' + esc(tr("name")) + "</span></nav>" +
-    '<section class="head"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h1>' + esc(tr("name")) + '</h1><span class="code">#' + esc(t.slug.toUpperCase()) + "</span></div>" +
-    '<div class="meta"><span>📍 ' + esc(tr("location")) + "</span>" + (tr_ ? '<span><span class="stars" aria-hidden="true">★</span> <b>' + tr_.value + "</b> · " + tr_.count + " " + revWord(tr_.count) + "</span>" : "") + "</div>" +
-    '<div class="actions"><button class="btn btn-ghost" type="button" id="share">' + T_("tour.share") + '</button><button class="btn btn-ghost" type="button" id="save" aria-pressed="false">' + T_("tour.save") + "</button></div></section>" +
-    '<section class="' + galClass + '" aria-label="' + T_("tour.photos") + '">' + gal + "</section>" +
-    '<div class="grid"><div class="content">' +
-      '<section class="facts" aria-label="' + T_("tour.summary") + '">' +
-        '<div class="fact"><small>' + T_("tour.duration") + "</small><b>" + esc(tr("duration") || "—") + "</b></div>" +
-        '<div class="fact"><small>' + T_("tour.times") + "</small><b>" + esc(tr("times") || "—") + "</b></div>" +
-        '<div class="fact"><small>' + T_("tour.pickup") + "</small><b>" + pickup + "</b></div>" +
-        '<div class="fact"><small>' + T_("tour.confirm") + "</small><b>" + T_("tour.confirm_wa") + "</b></div></section>" +
-      '<section class="block"><h2>' + T_("tour.about") + "</h2><p>" + esc(tr("description") || tr("summary")) + "</p></section>" +
-      ((t.itinerary || []).length ? '<section class="block"><h2>' + T_("tour.route") + '</h2><ol class="route">' + t.itinerary.map(function (r) { return "<li><time>" + esc(r.time) + "</time> · " + esc(r.text) + "</li>"; }).join("") + "</ol></section>" : day) +
-      '<section class="block"><h2>' + T_("tour.inc_title") + '</h2><div class="two">' +
-        '<ul class="list"><li><h3 style="font-size:1rem">' + T_("tour.included") + "</h3></li>" + included.map(function (i) { return '<li class="yes">' + esc(i) + "</li>"; }).join("") + "</ul>" +
-        '<ul class="list"><li><h3 style="font-size:1rem">' + T_("tour.aside") + "</h3></li>" + (extras.length ? extras.map(function (e) { return '<li><span class="extra"><span>' + esc(e.name) + '</span><span class="num">' + esc(D.money(e.price)) + "</span></span></li>"; }).join("") : '<li class="muted">' + T_("tour.nothing_aside") + "</li>") + "</ul>" +
-      '</div><p class="note">' + T_("tour.inc_note") + "</p></section>" + bring +
-      '<section class="block"><h2>' + T_("tour.consult_payment_h") + '</h2><p>' + T_(canBook ? "tour.online_payment_p" : "tour.consult_payment_p") + "</p></section>" +
-      '<section class="rain"><h2 style="font-size:1.2rem">' + T_("tour.cancel_h") + "</h2><p>" + (canBook && S.cancel_policy ? esc(I.tx(S.cancel_policy)) : T_("tour.consult_policy")) + "</p></section>" +
-      (shown.length ? '<section class="block"><h2>' + T_("tour.reviews_h") + '</h2><div class="reviews">' + shown.map(U.review).join("") + "</div></section>" : "") +
-      '<section class="block"><h2>' + T_("tour.faq_h") + "</h2><div>" + data.faqs.map(function (q) { return "<details><summary>" + esc(I.tx(q.question)) + "</summary><p>" + esc(faqAnswer(q)) + "</p></details>"; }).join("") + "</div></section>" +
-      '<section class="block"><h2>' + T_("tour.more_h") + '</h2><div class="similar">' + others.map(function (o) { return '<a class="sim" href="' + U.tourUrl(o.slug) + '">' + U.photo((o.photos || [])[0], o.slug, U.alt(o, 0)) + '<div class="t"><b>' + esc(I.tr(o, "name")) + '</b><span class="muted">' + (data.live && Number(o.price_pix) > 0 ? T_("tour.from", D.brl(o.price_pix)) : T_("tour.price_consult")) + "</span></div></a>"; }).join("") + "</div></section>" +
-    '</div><aside class="book" id="book" aria-label="' + (I.es ? "Reserva" : "Reserva") + '"></aside></div>';
+    '<nav class="crumbs" aria-label="' + T_("tour.crumbs") + '"><a href="./">' + T_("tour.home") + '</a><span aria-hidden="true">›</span><a href="./#passeios">' + T_("tour.tours") + '</a></nav>' +
+    '<header class="trip-heading"><div class="trip-context"><span>' + esc(tr("location") || "") + '</span><span class="trip-status">' + text(canBook ? "Pedido pelo site" : "Sob consulta", canBook ? "Solicitud por el sitio" : "A consultar") + '</span></div>' +
+      '<h1>' + esc(tr("name")) + '</h1>' +
+      (summary && summary !== description ? '<p class="trip-lead">' + esc(summary) + '</p>' : "") +
+      (tr_ ? '<p class="trip-rating"><span class="stars" aria-hidden="true">★</span> <b>' + tr_.value + "</b> · " + tr_.count + " " + revWord(tr_.count) + '</p>' : "") +
+    '</header>' +
+    '<div class="grid trip-grid"><div class="content trip-content">' +
+      '<section class="trip-gallery" aria-label="' + T_("tour.photos") + '"><div id="tripPhoto">' + photoAt(0) + '</div>' + thumbs + '</section>' +
+      '<section class="trip-section trip-overview" id="sobre"><h2>' + T_("tour.about") + '</h2>' +
+      paragraphs.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join("") +
+      (highlights.length ? '<h3>' + text("Destaques do roteiro", "Puntos destacados") + '</h3><ul class="trip-highlights">' + highlights.map(function (item) { return '<li>' + esc(item) + '</li>'; }).join("") + '</ul>' : "") + '</section>' +
+      '<section class="trip-section" id="inclusos"><h2>' + text("Inclusos e extras", "Incluidos y adicionales") + '</h2><div class="trip-inclusions">' +
+        '<div><h3>' + T_("tour.included") + '</h3><ul class="list">' + (included.length ? included.map(function (item) { return '<li class="yes">' + esc(item) + '</li>'; }).join("") : '<li>' + text("Confirme os inclusos com a equipe.", "Confirmá qué incluye con el equipo.") + '</li>') + '</ul></div>' +
+        '<div><h3>' + T_("tour.aside") + '</h3><ul class="list">' + (optional.length ? optional.map(function (e) { return '<li><span>' + esc(e.name) + '</span>' + (e.detail ? '<small>' + esc(e.detail) + '</small>' : "") + '</li>'; }).join("") : '<li>' + text("Consulte se há despesas extras para a sua data.", "Consultá si hay gastos adicionales para tu fecha.") + '</li>') + '</ul></div></div></section>' +
+      (itinerary.length ? '<section class="trip-section"><h2>' + T_("tour.route") + '</h2><ol class="route">' + itinerary.map(function (stop) { return '<li>' + (stop.time ? '<time>' + esc(stop.time) + '</time> · ' : '') + esc(I.tx(stop.text)) + '</li>'; }).join("") + '</ol></section>' : "") +
+      '<section class="trip-section" id="embarque"><h2>' + text("Embarque e disponibilidade", "Embarque y disponibilidad") + '</h2><dl class="trip-facts">' +
+        facts.filter(function (pair) { return pair[1]; }).map(function (pair) { return '<div><dt>' + esc(pair[0]) + '</dt><dd>' + esc(pair[1]) + '</dd></div>'; }).join("") +
+        '</dl><p>' + T_(canBook ? "tour.online_payment_p" : "tour.consult_payment_p") + '</p></section>' +
+      '<section class="trip-section"><h2>' + text("Antes de ir", "Antes de salir") + '</h2>' +
+        '<details><summary>' + T_("tour.cancel_h") + '</summary><p>' + (canBook && S.cancel_policy ? esc(I.tx(S.cancel_policy)) : T_("tour.consult_policy")) + '</p></details>' + bring +
+        data.faqs.map(function (q) { return "<details><summary>" + esc(I.tx(q.question)) + "</summary><p>" + esc(faqAnswer(q)) + "</p></details>"; }).join("") + '</section>' +
+      (shown.length ? '<section class="trip-section"><h2>' + T_("tour.reviews_h") + '</h2><div class="reviews">' + shown.map(U.review).join("") + '</div></section>' : "") +
+      '<div class="actions trip-actions"><button class="btn btn-ghost" type="button" id="share">' + T_("tour.share") + '</button><button class="btn btn-ghost" type="button" id="save" aria-pressed="false">' + T_("tour.save") + '</button></div>' +
+      (others.length ? '<section class="trip-related"><h2>' + text("Veja também", "Mirá también") + '</h2><div class="similar">' + others.map(function (o) { return '<a class="sim" href="' + esc(U.tourUrl(o.slug)) + '">' + U.photo((o.photos || [])[0], o.slug, U.alt(o, 0)) + '<div class="t"><b>' + esc(I.tr(o, "name")) + '</b><span class="muted">' + (data.live && Number(o.price_pix) > 0 ? T_("tour.from", D.brl(o.price_pix)) : T_("tour.price_consult")) + '</span></div></a>'; }).join("") + '</div></section>' : "") +
+    '</div><aside class="book" id="book" aria-label="Reserva"></aside></div>';
+
+  page.querySelectorAll("[data-trip-photo]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      page.querySelector("#tripPhoto").innerHTML = photoAt(Number(button.dataset.tripPhoto));
+      page.querySelectorAll("[data-trip-photo]").forEach(function (thumb) { thumb.setAttribute("aria-pressed", String(thumb === button)); });
+    });
+  });
 
   document.getElementById("barLabel").textContent = hasReferencePrice ? T_("tour.price_reference") : T_("tour.consult_title");
   document.getElementById("barPrice").textContent = hasReferencePrice ? D.brl(t.price_pix) : T_("tour.price_consult");
