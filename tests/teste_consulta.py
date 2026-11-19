@@ -58,6 +58,9 @@ def fake_catalog(context, flags, calls):
                 pix_name="Recebedor de teste", pix_payment_verified=True, deposit_pct=20
             ))]
         elif endpoint in {"reviews", "faqs", "check_coupon"}:
+            if endpoint in {"reviews", "faqs"} and "pending_extras" in flags:
+                flags["pending_extras"][endpoint] = route
+                return
             payload = []
         elif endpoint == "min_tour_date":
             payload = DATE
@@ -104,6 +107,27 @@ with sync_playwright() as pw:
     page = context.new_page()
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
+
+    pending = flags["pending_extras"] = {}
+    page.goto(BASE, wait_until="domcontentloaded")
+    expect_portal(page)
+    card = page.locator("#cards .card").first
+    expect(card).to_contain_text("Cumbuco")
+    expect(page.locator("#reviewsSection")).to_be_hidden()
+    add = card.locator(".add")
+    add.click()
+    add.focus()
+    expect(page.locator("#packbar")).to_be_visible()
+    assert set(pending) == {"reviews", "faqs"}, pending.keys()
+    pending["reviews"].fulfill(json=[{"name": "Teste", "tour": "Cumbuco", "text": "Avaliação simulada", "stars": 5}])
+    pending["faqs"].fulfill(json=[{"question": "Pergunta simulada", "answer": "Resposta simulada"}])
+    del flags["pending_extras"]
+    expect(page.locator("#reviewsSection")).to_contain_text("Avaliação simulada")
+    expect(page.locator("#faqs")).to_contain_text("Pergunta simulada")
+    expect(card.locator(".tour-rating")).to_contain_text("5,0")
+    expect(add).to_have_attribute("aria-pressed", "true")
+    expect(add).to_be_focused()
+    print("OK vitrine antes de avaliações e FAQ, com seleção e foco preservados")
 
     page.goto(BASE + "?utm_source=instagram&utm_medium=organic&utm_campaign=consulta-cumbuco"
                      "&utm_content=feed&utm_term=example%40example.org")

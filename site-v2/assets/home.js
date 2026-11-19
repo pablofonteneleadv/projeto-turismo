@@ -31,7 +31,7 @@
     reserveFaq: copy("Escolha o passeio e informe a data. Confira a disponibilidade e as condições de pagamento da oferta. Quando a reserva é sob consulta, confirme os detalhes com a equipe pelo WhatsApp.", "Elegí el paseo e indicá la fecha. Consultá la disponibilidad y las condiciones de pago de la oferta. Cuando sea a consultar, confirmá los detalles con el equipo por WhatsApp.")
   };
   document.querySelectorAll("[data-home-text]").forEach(function (el) { el.textContent = text[el.dataset.homeText]; });
-  var data = await D.load();
+  var data = await D.load({ deferExtras: true });
   var S = data.settings, T = data.tours;
   var cat = "todos", dest = "", pack = [], favs = {}, coupon = null;
   var incoming = new URLSearchParams(location.search);
@@ -48,15 +48,6 @@
   document.getElementById("promises").innerHTML = promises.filter(function (p) {
     return !/reserve com|sinal|restante no embarque|pix|cartão|pague/i.test(p);
   }).map(function (p) { return "<li>" + esc(I.tx(p)) + "</li>"; }).join("");
-  // Avaliações: só notas reais. Usa a nota do Google cadastrada no painel ou a média das avaliações publicadas (mínimo 3).
-  var R = U.ratings(S, data.reviews);
-  if (R) {
-    var hr = document.querySelector(".hero .rating"); hr.hidden = false;
-    document.getElementById("ratingValue").textContent = R.value;
-    document.getElementById("ratingCount").textContent = "· " + R.label;
-  }
-  if (!data.reviews.length) document.getElementById("reviewsSection").hidden = true;
-  else document.getElementById("reviewsSummary").textContent = data.reviews.length >= 3 ? t_("home.rating_sum", U.ratings(null, data.reviews).value) : t_("home.rating_sum_few");
   var f = document.getElementById("filters");
   D.CATS.forEach(function (k) {
     var count = k[0] === "todos" ? T.length : T.filter(function (t) { return t.category === k[0]; }).length;
@@ -72,6 +63,7 @@
   var fortalezaToday = new Intl.DateTimeFormat("sv-SE", { timeZone: "America/Fortaleza", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   w.min = fortalezaToday;
   var catalogStatus = document.getElementById("catalogStatus"), box = document.getElementById("cards");
+  var cardRatings = new Map();
   var priceUnit = function (t) { return t_(t.per_vehicle ? "card.from_vehicle" : "card.from_person"); };
   function booking(t) { return data.live && t.sales_mode === "booking" && Number(t.capacity_per_day) > 0 && (t.departure_weekdays || []).length > 0; }
   function leaves(t, weekday) {
@@ -96,6 +88,12 @@
     return parts[0] + (qs ? "?" + qs : "");
   }
 
+  function paintCardRating(target, tour) {
+    var rating = U.tourRating(tour, data.reviews);
+    target.hidden = !rating;
+    target.innerHTML = rating ? '<span class="stars" aria-hidden="true">★</span> ' + rating.value + ' <small class="muted">(' + rating.count + ")</small>" : "";
+  }
+
   function render() {
     f.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.cat === cat); });
     var weekday = w.value ? new Date(w.value + "T12:00:00Z").getUTCDay() || 7 : 0;
@@ -104,6 +102,7 @@
     catalogStatus.textContent = [currentDate ? text.departure + currentDate : "", data.live ? "" : text.offline].filter(Boolean).join(" · ");
     catalogStatus.hidden = !catalogStatus.textContent;
     document.getElementById("listTitle").textContent = dest ? t_("home.your_tour") : (cat === "todos" ? t_("home.pick_day") : t_("cat." + cat));
+    cardRatings.clear();
     box.innerHTML = "";
     box.setAttribute("aria-busy", "false");
     if (!list.length) { box.innerHTML = '<div class="empty">' + esc(weekday && T.length ? text.dateEmpty : t_("home.empty_cat")) + "</div>"; return; }
@@ -120,7 +119,7 @@
         '<div class="tags"><span class="tag">' + (t.category === "transfers" ? copy("Transfer", "Traslado") : copy("Saindo de Fortaleza", "Desde Fortaleza")) + "</span>" + (t.featured ? '<span class="tag hot">' + t_("card.featured") + "</span>" : "") + "</div>" +
         '<button class="fav" type="button" aria-pressed="' + fav + '" aria-label="' + esc(t_("card.save", I.tr(t, "name"))) + '">' + (fav ? "♥" : "♡") + "</button></div>" +
         '<div class="body"><h3>' + esc(I.tr(t, "name")) + "</h3>" +
-        '<div class="where"><span>📍 ' + esc(I.tr(t, "location")) + "</span>" + (function () { var tr = U.tourRating(t, data.reviews); return tr ? '<span><span class="stars" aria-hidden="true">★</span> ' + tr.value + ' <small class="muted">(' + tr.count + ")</small></span>" : ""; })() + "</div>" +
+        '<div class="where"><span>📍 ' + esc(I.tr(t, "location")) + '</span><span class="tour-rating" hidden></span></div>' +
         '<div class="time">' + esc(I.tr(t, "times")) + "</div>" +
         '<span class="offer-mode">' + esc(book ? text.booking : text.consultation) + "</span>" +
         '<div class="price">' + pricing + cardPay + "</div>" +
@@ -128,6 +127,9 @@
         '<button class="btn btn-ghost add" type="button" aria-pressed="' + inPack + '">' + t_(inPack ? "card.in_pack" : "card.add_pack") + "</button></div></div>";
       el.querySelector(".fav").addEventListener("click", function () { favs[t.slug] = !favs[t.slug]; try { localStorage.setItem("site-favs", JSON.stringify(favs)); } catch (e) {} U.toast(t_(favs[t.slug] ? "fav.on" : "fav.off")); render(); });
       el.querySelector(".add").addEventListener("click", function () { var i = pack.indexOf(t.slug); if (i > -1) pack.splice(i, 1); else pack.push(t.slug); render(); paintPack(); });
+      var rating = el.querySelector(".tour-rating");
+      cardRatings.set(t, rating);
+      paintCardRating(rating, t);
       box.appendChild(el);
     });
   }
@@ -155,11 +157,26 @@
   document.getElementById("packOpen").addEventListener("click", goPack);
   document.getElementById("packCta").addEventListener("click", goPack);
 
-  document.getElementById("reviews").innerHTML = data.reviews.map(U.review).join("");
-  document.getElementById("faqs").innerHTML = data.faqs.map(function (q) {
-    var answer = q.question === "Como funciona a reserva?" ? text.reserveFaq : I.tx(q.answer);
-    return "<details><summary>" + esc(I.tx(q.question)) + "</summary><p>" + esc(answer) + "</p></details>";
-  }).join("");
+  function paintExtras() {
+    var rating = U.ratings(S, data.reviews);
+    var heroRating = document.querySelector(".hero .rating");
+    heroRating.hidden = !rating;
+    if (rating) {
+      document.getElementById("ratingValue").textContent = rating.value;
+      document.getElementById("ratingCount").textContent = "· " + rating.label;
+    }
+    var hasReviews = data.reviews.length > 0;
+    document.getElementById("reviewsSection").hidden = !hasReviews;
+    if (hasReviews) {
+      var average = U.ratings(null, data.reviews);
+      document.getElementById("reviewsSummary").textContent = average ? t_("home.rating_sum", average.value) : t_("home.rating_sum_few");
+    }
+    document.getElementById("reviews").innerHTML = data.reviews.map(U.review).join("");
+    document.getElementById("faqs").innerHTML = data.faqs.map(function (q) {
+      var answer = q.question === "Como funciona a reserva?" ? text.reserveFaq : I.tx(q.answer);
+      return "<details><summary>" + esc(I.tx(q.question)) + "</summary><p>" + esc(answer) + "</p></details>";
+    }).join("");
+  }
 
   function phoneOk(v) { return v.replace(/\D/g, "").length >= 10; }
   document.getElementById("newsForm").addEventListener("submit", async function (e) {
@@ -179,6 +196,13 @@
   });
 
   render();
+  paintExtras();
+  if (data.extras) data.extras.then(function (extras) {
+    data.reviews = extras.reviews;
+    data.faqs = extras.faqs;
+    paintExtras();
+    cardRatings.forEach(paintCardRating);
+  });
   U.applyCouponFromUrl().then(function (result) {
     if (!result) return;
     coupon = result;
