@@ -37,7 +37,8 @@ SETTINGS = dict(brand="Maré Tur Teste", pix_key="pix@teste.local", pix_name="Op
 DATA = {
     "bookings": [BOOK],
     "suppliers": [dict(id=7, name="Enseada Teste", whatsapp="5585911112222", contact_name="", pickup_notes="", msg_template="", active=True)],
-    "tour_rates": [dict(id=3, tour_slug="cumbuco", supplier_id=7, net_adult=30, net_child=None, net_vehicle=None, preferred=True, active=True, notes="")],
+    "tour_rates": [dict(id=3, tour_slug="cumbuco", supplier_id=7, net_adult=30, net_child=None, net_vehicle=None, preferred=True, active=True,
+                       updated_at="2025-01-01T01:30:00Z", notes="")],
     "tours": [tour("cumbuco", "Cumbuco", 80, 1), tour("lagoinha", "Lagoinha", 100, 2), tour("aguas", "Águas Belas", 80, 3),
               tour("jeri", "Jeri Economy", 220, 4), tour("jeri-vip", "Jeri VIP", 310, 5), tour("jeri-blue", "Jeri Blue", 350, 6)],
     "settings": [dict(id=1, data=SETTINGS)],
@@ -174,8 +175,11 @@ with sync_playwright() as pw:
             row = 'details[data-tour="cumbuco"]'
             nb = lambda s: p.inner_text(s).replace(" ", " ")
             check("sobra R$ 45" in nb(row + " summary"), "linha fechada do Cumbuco já mostra net e sobra")
+            check("31/12/2024" in nb(row + " summary") and p.is_visible(row + " summary .net-date.bad"),
+                  "resumo usa a data de Fortaleza e sinaliza net antigo")
             check(not p.is_visible(row + " [data-rate]"), "passeios começam fechados (lista curta)")
             p.click(row + " summary")
+            check(p.is_visible(row + " [data-rate-date] time"), "a data fica junto da tarifa da empresa")
             check("R$ 45 Pix" in nb(row + " [data-foot]"), "mínimo do Cumbuco = 30 + 5 + 10 = R$ 45")
             form = '[data-sales="cumbuco"]'
             p.select_option(form + ' [name="sales_mode"]', "booking")
@@ -194,12 +198,15 @@ with sync_playwright() as pw:
             n0 = len(UPDATES); p.fill(row + ' [data-k="net_adult"]', "40"); p.dispatch_event(row + ' [data-k="net_adult"]', "change"); p.wait_for_timeout(500)
             check(any(u[0] == "tour_rates" and u[1] == "PATCH" for u in UPDATES[n0:]), "mudar o net salva sozinho, sem botão")
             check("sobra R$ 35" in nb(row + " summary"), "resumo atualiza na hora (sobra 80 - 40 - 5 = 35)")
+            check(p.get_attribute(row + " [data-rate-date] time", "datetime") == DATA["tour_rates"][0]["updated_at"]
+                  and not p.is_visible(row + " summary .net-date.bad"), "alterar o net atualiza a data e limpa o alerta")
             p.select_option('[data-fk="net"]', "sem"); p.wait_for_timeout(200)
             vis = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => e.dataset.net)")
             check(vis and all(v == "sem" for v in vis), "filtro 'sem net' mostra só passeios sem net")
             p.click("#tclear")
             p.click('[data-mode="tabela"]'); p.wait_for_selector("#tSup")
             check(p.is_disabled("#tSave"), "tabela começa sem nada alterado")
+            check(p.is_visible('.trow:has([data-tnet="cumbuco"]) .net-date time'), "Lançar tabela mostra a data do net salvo")
             p.fill('[data-tnet="lagoinha"]', "60"); p.wait_for_timeout(100)
             check("sobra R$ 35" in nb('[data-live="lagoinha"]'), "tabela calcula a sobra ao digitar (100 - 60 - 5)")
             p.fill('[data-tnet="aguas"]', "90"); p.wait_for_timeout(100)
@@ -261,22 +268,11 @@ with sync_playwright() as pw:
     for item in DATA["tours"]:
         item.pop("sales_mode")
         item.pop("departure_weekdays")
-    go("empresas")
-    p.locator("#brunoNetCard > summary").click()
-    p.get_by_text("Editar tarifas de referência", exact=True).click()
-    n0 = len(UPDATES)
-    p.locator("#brunoNetInput").fill("Cumbuco = 14,50\ncúmbuco = 30")
-    p.get_by_role("button", name="Salvar Contatos Bruno").click()
-    p.wait_for_selector("#brunoNetError:not([hidden])")
-    check(n0 == len(UPDATES), "Contatos Bruno valida modalidade duplicada antes de salvar")
-    p.locator("#brunoNetInput").fill("Roteiro teste A = 14,50\nRoteiro teste B = 30")
-    p.get_by_role("button", name="Salvar Contatos Bruno").click()
-    p.get_by_role("list", name="Tarifas de referência do Bruno").wait_for()
-    check(DATA["biz_settings"][0]["data"]["bruno_contact_net"] == [
-        {"tour": "Roteiro teste A", "amount": 14.5}, {"tour": "Roteiro teste B", "amount": 30}
-    ], "Contatos Bruno guarda os valores em configuração privada")
-    check(DATA["biz_settings"][0]["data"]["ad_cost_per_pax"] == 5, "Contatos Bruno preserva as regras de margem")
-    check([x[0] for x in UPDATES[n0:]] == ["biz_settings"], "Contatos Bruno mantém as tarifas das operadoras intactas")
+    DATA["biz_settings"][0]["data"]["bruno_contact_net"] = [{"tour": "Referência antiga", "amount": 30}]
+    DATA["tour_rates"][0]["updated_at"] = None
+    text = go("empresas")
+    check("Referência antiga" not in text and "tarifa de referência" not in text, "cartão duplicado não aparece com dados legados")
+    check("Net sem data · revisar" in text, "tarifa antiga sem data pede revisão")
     row = 'details[data-tour="cumbuco"]'
     if p.locator(row).get_attribute("open") is None:
         p.click(row + " summary")
