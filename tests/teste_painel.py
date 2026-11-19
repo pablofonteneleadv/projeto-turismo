@@ -82,6 +82,8 @@ def handle(route, req):
                 row.update(patch)
         if req.method == "POST" and table == "settings":
             DATA["settings"][0].update(patch)
+        if req.method == "PATCH" and table == "biz_settings" and "return=representation" in req.headers.get("prefer", ""):
+            return route.fulfill(status=200, content_type="application/json", body=json.dumps([{"id": r["id"]} for r in rows]))
         return route.fulfill(status=204, headers={"content-range": "*/%d" % len(rows)}, body="")
     single = "vnd.pgrst.object" in (req.headers.get("accept") or "")
     return route.fulfill(status=200, content_type="application/json", headers={"content-range": "*/%d" % len(rows)},
@@ -260,6 +262,21 @@ with sync_playwright() as pw:
         item.pop("sales_mode")
         item.pop("departure_weekdays")
     go("empresas")
+    p.locator("#brunoNetCard > summary").click()
+    p.get_by_text("Editar tarifas de referência", exact=True).click()
+    n0 = len(UPDATES)
+    p.locator("#brunoNetInput").fill("Cumbuco = 14,50\ncúmbuco = 30")
+    p.get_by_role("button", name="Salvar Contatos Bruno").click()
+    p.wait_for_selector("#brunoNetError:not([hidden])")
+    check(n0 == len(UPDATES), "Contatos Bruno valida modalidade duplicada antes de salvar")
+    p.locator("#brunoNetInput").fill("Roteiro teste A = 14,50\nRoteiro teste B = 30")
+    p.get_by_role("button", name="Salvar Contatos Bruno").click()
+    p.get_by_role("list", name="Tarifas de referência do Bruno").wait_for()
+    check(DATA["biz_settings"][0]["data"]["bruno_contact_net"] == [
+        {"tour": "Roteiro teste A", "amount": 14.5}, {"tour": "Roteiro teste B", "amount": 30}
+    ], "Contatos Bruno guarda os valores em configuração privada")
+    check(DATA["biz_settings"][0]["data"]["ad_cost_per_pax"] == 5, "Contatos Bruno preserva as regras de margem")
+    check([x[0] for x in UPDATES[n0:]] == ["biz_settings"], "Contatos Bruno mantém as tarifas das operadoras intactas")
     row = 'details[data-tour="cumbuco"]'
     if p.locator(row).get_attribute("open") is None:
         p.click(row + " summary")
