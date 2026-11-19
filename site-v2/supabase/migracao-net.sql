@@ -39,7 +39,7 @@ create table if not exists biz_settings (
 );
 insert into biz_settings (id, data) values (1, jsonb_build_object(
   'ad_cost_per_pax', 5, 'min_margin_per_pax', 10, 'partner_name', 'Bruno', 'partner_split_pct', 50,
-  'card_fee_pct', 5, 'ops_whatsapp', '5585997687598',
+  'card_fee_pct', 5,
   'notify_topic', 'maretur-' || replace(gen_random_uuid()::text, '-', ''),
   'admin_url', 'https://maretur.onrender.com/admin.html'
 )) on conflict (id) do nothing;

@@ -490,32 +490,13 @@
     return { error: { message: "As configurações mudaram durante o salvamento. Tente salvar novamente." } };
   }
 
-  function parseContactNet(text) {
-    var names = new Set();
-    var rows = text.trim().split(/\r?\n/).filter(function (line) { return line.trim(); });
-    if (!rows.length || rows.length > 100) throw Error("Informe entre 1 e 100 tarifas.");
-    return rows.map(function (line, index) {
-      var match = line.trim().match(/^([^=]{1,100})\s*=\s*(?:R\$\s*)?(\d{1,8}(?:[,.]\d{1,2})?)$/i);
-      if (!match) throw Error("Confira a linha " + (index + 1) + ". Use Passeio = valor.");
-      var tour = match[1].trim(), key = tour.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      if (!key || names.has(key)) throw Error("Confira o nome da linha " + (index + 1) + ". Cada modalidade deve aparecer uma vez.");
-      names.add(key);
-      return { tour: tour, amount: Number(match[2].replace(",", ".")) };
-    });
-  }
-
-  function brunoNetCard(data) {
-    var entries = Array.isArray(data.bruno_contact_net) ? data.bruno_contact_net.filter(function (entry) {
-      return entry && typeof entry.tour === "string" && Number.isFinite(entry.amount);
-    }) : [];
-    var rows = entries.map(function (entry) { return '<li class="row" style="justify-content:space-between"><span>' + esc(entry.tour) + '</span><strong class="num">' + D.brl(entry.amount) + '</strong></li>'; }).join("");
-    var input = entries.map(function (entry) { return entry.tour + " = " + String(entry.amount).replace(".", ","); }).join("\n");
-    return '<details class="item nrow" id="brunoNetCard"' + (cache.brunoNetOpen ? " open" : "") + '><summary><span class="nr-name">Contatos Bruno</span><span class="nr-info">' + entries.length + (entries.length === 1 ? " tarifa de referência" : " tarifas de referência") + '</span></summary>' +
-      '<div class="nr-body"><p class="small muted">Net é o valor pago a quem realiza o passeio. Confirme a operadora, a modalidade, a unidade de cobrança e a vigência antes de cadastrar a tarifa para reservas.</p>' +
-      (rows ? '<ul class="list" aria-label="Tarifas de referência do Bruno">' + rows + '</ul>' : '<p class="small muted">Registre aqui os valores informados por Bruno.</p>') +
-      '<details><summary>Editar tarifas de referência</summary><form id="brunoNetForm"><div class="formgrid">' +
-      ta("brunoNetInput", "Valores net do Bruno", input) + '<p class="small muted full">Uma linha por modalidade, no formato Passeio = valor.</p>' +
-      '<p class="warn small full" id="brunoNetError" role="alert" hidden></p><div class="row full"><button type="submit" class="btn btn-mar">Salvar Contatos Bruno</button></div></div></form></details></div></details>';
+  var netDateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Fortaleza" });
+  function rateDate(rate) {
+    var updated = Date.parse(rate.updated_at);
+    if (!Number.isFinite(updated)) return '<span class="net-date bad">Net sem data · revisar</span>';
+    var days = Math.floor((Date.now() - updated) / 864e5);
+    return '<span class="net-date' + (days >= 30 ? ' bad' : '') + '">Net atualizado em <time datetime="' + new Date(updated).toISOString() + '">' + netDateFormat.format(updated) + '</time>' +
+      (days >= 30 ? " · revisar (" + days + " dias)" : "") + '</span>';
   }
   function pax(x) { return x.adults + " adulto(s)" + (x.children ? ", " + x.children + " criança(s)" : "") + (x.seniors ? ", " + x.seniors + " idoso(s)" : ""); }
   function people(x) { return (x.adults || 0) + (x.children || 0) + (x.seniors || 0); }
@@ -682,7 +663,7 @@
       var r = prefOf(t.slug), c = r && calc(t, r.net_adult);
       var mode = t.sales_mode === "booking" ? (salesIssues(t).length ? "reserva precisa de revisão" : "reserva online") : "sob consulta";
       if (!c) return '<span class="bad">sem net</span> · ' + mode + ' · site ' + brl(t.price_pix);
-      return mode + " · net " + brl(r.net_adult) + " (" + esc(supName(r.supplier_id)) + ") · site " + brl(t.price_pix) + ' · <b class="' + (c.ok ? "ok" : "bad") + '">' + (c.ok ? "sobra " + brl(c.sobra) : "abaixo do mínimo " + brl(c.floor)) + "</b>";
+      return mode + " · net " + brl(r.net_adult) + " (" + esc(supName(r.supplier_id)) + ") · site " + brl(t.price_pix) + ' · <b class="' + (c.ok ? "ok" : "bad") + '">' + (c.ok ? "sobra " + brl(c.sobra) : "abaixo do mínimo " + brl(c.floor)) + "</b>" + rateDate(r);
     }
     function footHtml(t) {
       var r = prefOf(t.slug), c = r && calc(t, r.net_adult);
@@ -727,9 +708,9 @@
         var tr = rates.filter(function (r) { return r.tour_slug === t.slug; }), pr = prefOf(t.slug), c = pr && calc(t, pr.net_adult);
         var free = sups.filter(function (s) { return !tr.some(function (r) { return r.supplier_id === s.id; }); });
         return '<details class="nrow" data-tour="' + esc(t.slug) + '"' + rowAttrs(t, pr, c && c.sobra) + (openT === t.slug ? " open" : "") + '><summary><span class="nr-name">' + esc(t.name) + (t.active ? "" : ' <span class="muted">(oculto)</span>') + '</span><span class="nr-info">' + sumHtml(t) + "</span></summary>" +
-          '<div class="nr-body">' + 
+          '<div class="nr-body">' +
           tr.map(function (r) {
-            return '<div class="nr-rate" data-rate="' + r.id + '"><span class="nr-sup">' + esc(supName(r.supplier_id)) + (r.active ? "" : " (pausado)") + '</span><label class="nr-f">Net adulto<input type="number" inputmode="decimal" step="0.01" min="0" value="' + r.net_adult + '" data-k="net_adult"></label><label class="nr-f">Net criança<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_child == null ? "" : r.net_child) + '" placeholder="= adulto" data-k="net_child"></label>' +
+            return '<div class="nr-rate" data-rate="' + r.id + '"><span class="nr-sup">' + esc(supName(r.supplier_id)) + (r.active ? "" : " (pausado)") + '<span data-rate-date>' + rateDate(r) + '</span></span><label class="nr-f">Net adulto<input type="number" inputmode="decimal" step="0.01" min="0" value="' + r.net_adult + '" data-k="net_adult"></label><label class="nr-f">Net criança<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_child == null ? "" : r.net_child) + '" placeholder="= adulto" data-k="net_child"></label>' +
               (t.per_vehicle || t.price_private != null ? '<label class="nr-f">Net veículo<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_vehicle == null ? "" : r.net_vehicle) + '" data-k="net_vehicle"></label>' : "") +
               '<button type="button" class="star' + (r.preferred ? " on" : "") + '" data-pref="' + r.id + '" title="Recebe as reservas">★</button><button type="button" class="xbtn" data-rdel="' + r.id + '" title="Excluir">✕</button></div>';
           }).join("") +
@@ -741,7 +722,7 @@
         '<select id="tSup" class="tsup">' + sups.map(function (s) { return '<option value="' + s.id + '"' + (String(s.id) === String(cache.empSup) ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("") + "</select>" +
         '<div class="tlist">' + tours.map(function (t) {
           var r = rates.filter(function (x) { return x.tour_slug === t.slug && String(x.supplier_id) === String(cache.empSup); })[0], c = r && calc(t, r.net_adult);
-          return '<div class="trow"' + rowAttrs(t, r, c && c.sobra) + '><div><b>' + esc(t.name) + (t.active ? "" : ' <span class="muted">(oculto)</span>') + "</b><small>site " + brl(t.price_pix) + ' · <span data-live="' + esc(t.slug) + '">' + (c ? (c.ok ? "sobra " + brl(c.sobra) : '<span class="bad">abaixo do mínimo ' + brl(c.floor) + "</span>") : "sem net") + '</span></small></div><input type="number" inputmode="decimal" step="0.01" min="0" placeholder="net" value="' + (r ? r.net_adult : "") + '" data-orig="' + (r ? r.net_adult : "") + '" data-tnet="' + esc(t.slug) + '" data-rid="' + (r ? r.id : "") + '" aria-label="Net de ' + esc(t.name) + '"></div>';
+          return '<div class="trow"' + rowAttrs(t, r, c && c.sobra) + '><div><b>' + esc(t.name) + (t.active ? "" : ' <span class="muted">(oculto)</span>') + "</b><small>site " + brl(t.price_pix) + ' · <span data-live="' + esc(t.slug) + '">' + (c ? (c.ok ? "sobra " + brl(c.sobra) : '<span class="bad">abaixo do mínimo ' + brl(c.floor) + "</span>") : "sem net") + '</span></small>' + (r ? rateDate(r) : '') + '</div><input type="number" inputmode="decimal" step="0.01" min="0" placeholder="net" value="' + (r ? r.net_adult : "") + '" data-orig="' + (r ? r.net_adult : "") + '" data-tnet="' + esc(t.slug) + '" data-rid="' + (r ? r.id : "") + '" aria-label="Net de ' + esc(t.name) + '"></div>';
         }).join("") + '</div><div class="savebar"><button type="button" class="btn btn-mar" id="tSave" disabled>Nada alterado</button></div>'
         : '<p class="small muted">Cadastre a empresa primeiro, na aba Empresas.</p>';
     } else {
@@ -756,30 +737,7 @@
             '<div class="row"><button class="btn btn-mar" type="button" data-ssave="' + s.id + '">Salvar</button><button class="btn btn-ghost" type="button" data-snet="' + s.id + '">Lançar tabela</button><button class="btn btn-danger" type="button" data-sdel="' + s.id + '">Excluir</button></div></div></details>';
         }).join("");
     }
-    p.innerHTML = brunoNetCard(B) + '<div class="item emp">' + seg + body + "</div>";
-
-    var brunoCard = p.querySelector("#brunoNetCard");
-    brunoCard.addEventListener("toggle", function () { cache.brunoNetOpen = brunoCard.open; });
-    p.querySelector("#brunoNetForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      var button = e.currentTarget.querySelector("button[type=submit]"), error = p.querySelector("#brunoNetError"), rows;
-      function showError(message) { error.textContent = message; error.hidden = false; }
-      error.hidden = true;
-      try { rows = parseContactNet(p.querySelector("#brunoNetInput").value); }
-      catch (problem) { return showError(problem.message); }
-      button.disabled = true;
-      try {
-        var result = await saveBizFields({ bruno_contact_net: rows }, B);
-        if (result.error) return showError(result.error.message);
-        cache.brunoNetOpen = true;
-        U.toast("Contatos Bruno salvos.");
-        await render();
-      } catch (problem) {
-        showError("Não foi possível salvar agora. Tente novamente.");
-      } finally {
-        button.disabled = false;
-      }
-    });
+    p.innerHTML = '<div class="item emp">' + seg + body + "</div>";
 
     async function again(keep) { var y = window.scrollY; Object.keys(keep || {}).forEach(function (k) { cache[k] = keep[k]; }); await render(); window.scrollTo(0, y); }
     function repaint(slug) { var t = tourOf(slug), d = p.querySelector('details[data-tour="' + slug + '"]'); if (!d || !t) return; d.querySelector(".nr-info").innerHTML = sumHtml(t); d.querySelector("[data-foot]").innerHTML = footHtml(t); var pr = prefOf(slug), c = pr && calc(t, pr.net_adult); d.dataset.net = pr ? "com" : "sem"; d.dataset.margin = c ? c.sobra : -1; }
@@ -788,12 +746,14 @@
 
     // Por passeio: muda e salva na hora
     p.querySelectorAll("[data-rate] input").forEach(function (inp) { inp.addEventListener("change", async function () {
-      var id = Number(inp.closest("[data-rate]").dataset.rate), r = rates.filter(function (x) { return x.id === id; })[0], k = inp.dataset.k;
+      var row = inp.closest("[data-rate]"), id = Number(row.dataset.rate), r = rates.filter(function (x) { return x.id === id; })[0], k = inp.dataset.k;
       var v = inp.value === "" ? null : Number(inp.value);
       if (k === "net_adult" && (v == null || v < 0)) { inp.value = r.net_adult; return U.toast("Digite o net."); }
       var upd = { updated_at: new Date().toISOString() }; upd[k] = v;
       var u = await sb.from("tour_rates").update(upd).eq("id", id); if (fail(u)) return;
-      r[k] = v; repaint(r.tour_slug); U.toast("Salvo.");
+      Object.assign(r, upd);
+      row.querySelector("[data-rate-date]").innerHTML = rateDate(r);
+      repaint(r.tour_slug); U.toast("Salvo.");
     }); });
     p.querySelectorAll("[data-pref]").forEach(function (b) { b.addEventListener("click", async function () {
       var id = Number(b.dataset.pref), r = rates.filter(function (x) { return x.id === id; })[0];
