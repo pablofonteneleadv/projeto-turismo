@@ -26,6 +26,14 @@ Falta (depende do Pablo ou do Bruno):
 - [ ] Bruno: tarifas líquidas por escrito, regra de criança, horários de busca, fotos próprias, primeiras avaliações reais
 - [ ] Apagar o serviço antigo `passeios-fortaleza.onrender.com` (marca de terceiros) no painel do Render
 
+## Reserva sob consulta e liberação por passeio
+
+- O site mostra consulta de disponibilidade enquanto a oferta não estiver pronta para receber uma reserva. O contato leva data, viajantes e referência de origem ao WhatsApp.
+- Aplicar `site-v2/supabase/migracao-vendas.sql` no projeto Supabase da Maré Tur após validar a migração em homologação. O script é incremental sobre `migracao-net.sql` e mantém as ofertas existentes em consulta.
+- Para liberar uma oferta, conferir o net vigente com a operadora, selecionar a tarifa preferida, registrar os dias de saída e a capacidade no painel. Conferir o recebedor e o sinal percentual nas configurações. Usar os valores de Contatos Bruno com a operadora, a unidade e a vigência confirmadas.
+- O recebimento e a vaga têm conferências separadas no painel. O provedor de pagamento e o WhatsApp oficial são dependências para automatizar conciliação e entrega de mensagens. O cartão passa pelo atendimento até haver um link autorizado.
+- Testar a consulta e o checkout com dados sintéticos antes de habilitar a primeira oferta. Os materiais de consulta para Cumbuco ficam em `marketing/cumbuco-primeira-reserva/`.
+
 ## Ferramentas da TENKiTER candidatas a reaproveitamento (copiar o padrão)
 
 - Portões de CI (verificação de HTML, padrões, versão de assets, segredos)

@@ -96,5 +96,70 @@
     return '<article class="review"><span class="stars" aria-label="' + I.t("stars.label", n) + '">' + "★★★★★".slice(0, n) + "</span>" + (r.tour ? '<span class="trip">' + D.esc(r.tour) + "</span>" : "") + "<p>" + D.esc(r.text) + "</p><footer><span>" + D.esc(r.name) + (r.origin ? " · " + D.esc(r.origin) : "") + "</span><span>" + D.esc(r.month) + "</span></footer></article>";
   }
   function tourUrl(slug) { return (window.MT_PAGES || []).indexOf(slug) >= 0 ? "passeio-" + slug + ".html" : "passeio.html?p=" + encodeURIComponent(slug); }
-  window.UI = { tourUrl: tourUrl, toast: toast, photo: photo, brand: brand, chat: chat, applyCouponFromUrl: applyCouponFromUrl, alt: alt, ratings: ratings, tourRating: tourRating, tourReviews: tourReviews, review: review };
+
+  var attributionFields = ["source", "medium", "campaign", "content", "term"];
+  var attributionKey = "maretur-attribution";
+  var touch;
+
+  function campaignValue(value) {
+    var text = String(value || "").trim();
+    if (!text || text.length > 120 || /[@+]|\d{10,}/.test(text)) return "";
+    return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")
+      .replace(/[^a-zA-Z0-9._-]/g, "").toLowerCase();
+  }
+
+  function attribution() {
+    if (touch) return Object.assign({}, touch);
+    var params = new URLSearchParams(location.search), incoming = {}, previous = {};
+    attributionFields.forEach(function (key) {
+      var value = campaignValue(params.get("utm_" + key));
+      if (value) incoming[key] = value;
+    });
+    if (!incoming.source) {
+      var origin = campaignValue(params.get("origem"));
+      if (origin) incoming.source = origin;
+    }
+    try {
+      var stored = JSON.parse(sessionStorage.getItem(attributionKey) || "{}") || {};
+      attributionFields.forEach(function (key) {
+        var value = campaignValue(stored[key]);
+        if (value) previous[key] = value;
+      });
+    } catch (e) {}
+    touch = Object.keys(incoming).length ? incoming : previous;
+    if (!touch.source && document.referrer) {
+      try {
+        var ref = new URL(document.referrer);
+        if (ref.origin !== location.origin) touch.source = campaignValue(ref.hostname);
+      } catch (e) {}
+    }
+    if (!touch.source) touch.source = "direto";
+    try { sessionStorage.setItem(attributionKey, JSON.stringify(touch)); } catch (e) {}
+    return Object.assign({}, touch);
+  }
+
+  function attributionRef() {
+    var source = attribution();
+    if (source.source === "direto" && !source.campaign) return "";
+    var label = [source.source, source.campaign, source.content].filter(Boolean).join("-").toUpperCase();
+    var key = attributionFields.map(function (field) { return source[field] || ""; }).join("|");
+    var hash = 2166136261;
+    for (var i = 0; i < key.length; i++) hash = Math.imul(hash ^ key.charCodeAt(i), 16777619);
+    return "MT-" + label.slice(0, 31) + "-" + (hash >>> 0).toString(36).toUpperCase();
+  }
+
+  function track(name, details) {
+    if (!/^[a-z][a-z0-9_]{1,47}$/.test(name)) return;
+    var fields = {};
+    ["slug", "status", "mode", "reason", "channel"].forEach(function (key) {
+      var value = campaignValue(details && details[key]);
+      if (value) fields[key] = value;
+    });
+    window.dispatchEvent(new CustomEvent("maretur:analytics", {
+      detail: { event: name, attribution: attribution(), details: fields }
+    }));
+  }
+
+  attribution();
+  window.UI = { tourUrl: tourUrl, toast: toast, photo: photo, brand: brand, chat: chat, applyCouponFromUrl: applyCouponFromUrl, alt: alt, ratings: ratings, tourRating: tourRating, tourReviews: tourReviews, review: review, attribution: attribution, attributionRef: attributionRef, track: track };
 })();

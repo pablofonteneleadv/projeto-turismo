@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Maré Tur · Passeios em Fortaleza com busca no hotel</title>
-<meta name="description" content="Passeios saindo de Fortaleza com busca no hotel: Jericoacoara, Cumbuco, Canoa Quebrada, Lagoinha, 3 Praias e transfers. Guia cadastrado no Cadastur, reserve com 20% de sinal e pague o resto no embarque.">
+<meta name="description" content="Passeios saindo de Fortaleza para Jericoacoara, Cumbuco, as 3 Praias do Litoral Leste e outros destinos. Veja roteiros, datas e pontos de embarque.">
 <link rel="canonical" href="https://maretur.onrender.com/">
 <meta property="og:title" content="Maré Tur · Passeios em Fortaleza com busca no hotel">
-<meta property="og:description" content="Jericoacoara, Cumbuco, Canoa Quebrada e mais. Reserve em 2 minutos com 20% de sinal no Pix.">
+<meta property="og:description" content="Compare passeios e transfers com saída de Fortaleza. Veja os roteiros e consulte datas, valores e pontos de embarque.">
 <meta property="og:image" content="https://maretur.onrender.com/fotos/hero-2.jpg">
 <meta property="og:url" content="https://maretur.onrender.com/">
 <meta property="og:locale" content="pt_BR">
@@ -16,26 +16,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
-<link rel="stylesheet" href="assets/app.css">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","name":"Maré Tur","url":"https://maretur.onrender.com/","areaServed":"Fortaleza, Ceará, Brasil","address":{"@type":"PostalAddress","addressLocality":"Fortaleza","addressRegion":"CE","addressCountry":"BR"}}</script>
+<link rel="stylesheet" href="assets/app.css?v=36036b969833">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"Maré Tur","url":"https://maretur.onrender.com/","areaServed":"Fortaleza, Ceará, Brasil"}</script>
 </head>
-<body>
+<body class="home-page">
 <header class="top"><div class="wrap">
   <a class="logo" href="./"><b data-brand>Maré Tur</b><small data-brand-sub>Passeios em Fortaleza</small></a>
-  <a class="btn btn-sol" href="#passeios">Reservar passeio</a>
+  <a class="btn btn-sol" href="#passeios" data-home-text="browse">Ver passeios</a>
 </div></header>
 
-<div class="coupon-band" id="couponBand" hidden><div class="wrap"><b id="couponTxt"></b><span>O desconto já entra em qualquer passeio que você reservar.</span></div></div>
+<div class="coupon-band" id="couponBand" hidden><div class="wrap"><b id="couponTxt"></b><span data-home-text="couponHelp">Confira a aplicação do cupom na sua consulta ou pedido.</span></div></div>
 
 <section class="hero" id="inicio">
-  <div class="photo" id="heroPhoto"></div>
+  <div class="photo"><img src="fotos/hero-2.jpg" alt="" width="1200" height="675" fetchpriority="high" decoding="async"><span class="credit" data-home-text="heroCredit">Foto: MTur Destinos · Domínio público</span></div>
   <div class="wrap">
     <div class="hero-copy">
       <span class="chip-dark" id="heroEyebrow">Guia de turismo cadastrado no Cadastur</span>
-      <h1 id="heroTitle">Jericoacoara, Cumbuco e Canoa Quebrada saindo do seu hotel em Fortaleza</h1>
+      <h1 id="heroTitle" data-home-text="heroTitle">Passeios de Fortaleza para Jericoacoara, Cumbuco e o Litoral Leste</h1>
       <ul class="promises" id="promises"></ul>
-      <p class="hero-price">a partir de <b class="num" id="fromPrice">R$ 80,00</b> por pessoa no Pix</p>
-      <p class="hero-note" data-es-only hidden>Pagás en reales (R$): aceptamos Pix, tarjeta o efectivo.</p>
+      <p class="hero-note" data-home-text="heroDescription">Veja o roteiro, o que está incluso e como consultar sua data.</p>
       <a class="rating" href="#reviewsSection" hidden><span class="stars" aria-hidden="true">★★★★★</span><b id="ratingValue"></b><span id="ratingCount"></span></a>
     </div>
     <form class="search" id="search" aria-label="Buscar passeio">
@@ -51,21 +50,23 @@
   <section class="band" id="passeios"><div class="wrap">
     <div class="sec-head"><span class="eyebrow">Passeios</span><h2 id="listTitle">Escolha seu dia de praia</h2></div>
     <div class="filters" id="filters" role="group" aria-label="Categorias"></div>
-    <div class="cards" id="cards"><div class="empty">Carregando passeios…</div></div>
+    <p class="catalog-status muted" id="catalogStatus" role="status" hidden></p>
+    <div class="cards" id="cards" aria-busy="true"><div class="empty" data-home-text="loading">Carregando passeios…</div></div>
+    <noscript><p><a href="passeio-cumbuco.html">Cumbuco</a> · <a href="passeio-3praias.html">3 Praias em 1 dia</a> · <a href="passeio-jeri-economy.html">Jericoacoara em 1 dia</a></p></noscript>
   </div></section>
 
   <section class="band" style="padding-top:0"><div class="wrap">
-    <div class="sec-head"><span class="eyebrow">Como funciona</span><h2>Reservar leva 2 minutos</h2></div>
+    <div class="sec-head"><span class="eyebrow">Como funciona</span><h2 data-home-text="stepsTitle">Da escolha ao embarque</h2></div>
     <div class="steps">
       <div class="step"><span class="n">1</span><h3>Escolha o passeio</h3><p class="muted">Veja o que está incluso e o que é opcional. Dúvidas? Chame no WhatsApp.</p></div>
-      <div class="step"><span class="n">2</span><h3>Garanta a vaga com 20%</h3><p class="muted">Pague 20% de sinal no Pix. O restante é pago no embarque, em dinheiro, Pix ou cartão.</p></div>
-      <div class="step"><span class="n">3</span><h3>Embarque no hotel</h3><p class="muted">A confirmação chega no WhatsApp, e o horário da busca chega na véspera.</p></div>
+      <div class="step"><span class="n">2</span><h3 data-home-text="stepsDate">Informe a data e o grupo</h3><p class="muted" data-home-text="stepsDateBody">Confira a disponibilidade, o valor e a forma de pagamento do passeio escolhido.</p></div>
+      <div class="step"><span class="n">3</span><h3 data-home-text="stepsPickup">Combine o embarque</h3><p class="muted" data-home-text="stepsPickupBody">Confirme o horário e o local de saída antes da viagem.</p></div>
     </div>
   </div></section>
 
   <section class="band" style="padding-top:0"><div class="wrap">
     <div class="pack-cta">
-      <div><h3>Vai ficar mais dias? Monte um pacote</h3><p style="opacity:.85">Escolha 2 passeios ou mais e ganhe <span id="packPct">5</span>% de desconto em tudo, numa reserva só.</p></div>
+      <div><h3>Vai ficar mais dias? Monte um pacote</h3><p data-home-text="packageDescription" style="opacity:.85">Selecione os passeios que quer combinar e consulte as datas e o valor do roteiro.</p></div>
       <button class="btn btn-sol" type="button" id="packCta">Montar meu pacote</button>
     </div>
   </div></section>
@@ -75,8 +76,8 @@
     <div class="diffs">
       <div class="diff"><h3>Opcionais por escrito</h3><p class="muted">Cada passeio mostra o que está incluso e o que é opcional, como buggy, jangada e almoço. Você confirma o valor do dia no WhatsApp antes de pagar.</p></div>
       <div class="diff"><h3>Gente de verdade no WhatsApp</h3><p class="muted">Você fala direto com quem organiza o seu passeio, antes e durante a viagem.</p></div>
-      <div class="diff"><h3>Reserve com 20%</h3><p class="muted">Garanta a vaga com um sinal no Pix e pague o restante no embarque.</p></div>
-      <div class="diff"><h3>Guia credenciado</h3><p class="muted">Todos os passeios com guia de turismo credenciado no Cadastur.</p></div>
+      <div class="diff"><h3 data-home-text="termsTitle">Condições por passeio</h3><p class="muted" data-home-text="termsBody">Confira o preço e as condições do seu roteiro antes de pagar.</p></div>
+      <div class="diff"><h3 data-home-text="pickupTitle">Embarque combinado</h3><p class="muted" data-home-text="pickupBody">Confira onde o passeio começa e combine a busca para o seu roteiro.</p></div>
     </div>
   </div></section>
 
@@ -124,17 +125,16 @@
 
 <div class="packbar" id="packbar" hidden><div class="in">
   <div class="info"><span id="packCount"></span><br><small id="packSave"></small></div>
-  <b class="num" id="packTotal"></b>
-  <a class="btn btn-sol" id="packGo" href="#">Reservar pacote</a>
+  <a class="btn btn-sol" id="packGo" href="#" rel="noopener" data-home-text="packageConsult">Consultar pacote</a>
 </div></div>
 <a class="chat" id="chat" href="#" aria-label="Falar no WhatsApp"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18a8 8 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8 8 0 1 1 12 20Zm4.4-5.6c-.2-.1-1.4-.7-1.6-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3a.4.4 0 0 0 0-.4l-.7-1.7c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.8 2.8 0 0 0-.9 2.1 4.9 4.9 0 0 0 1 2.6 11.2 11.2 0 0 0 4.3 3.8c1.6.7 2.2.7 3 .6a2.6 2.6 0 0 0 1.7-1.2 2.1 2.1 0 0 0 .1-1.2c0-.1-.2-.2-.4-.3Z"/></svg></a>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
-<script src="assets/data.js"></script>
-<script src="assets/paginas.js"></script>
-<script src="assets/i18n.js"></script>
-<script src="assets/ui.js"></script>
-<script src="assets/home.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" defer></script>
+<script src="config.js?v=11a70e234192" defer></script>
+<script src="assets/data.js?v=d9cdcdf19e09" defer></script>
+<script src="assets/paginas.js?v=75743fa3b779" defer></script>
+<script src="assets/i18n.js?v=6cd8930c6fc2" defer></script>
+<script src="assets/ui.js?v=85828f1352bd" defer></script>
+<script src="assets/home.js?v=00d566ee0b01" defer></script>
 </body>
 </html>
