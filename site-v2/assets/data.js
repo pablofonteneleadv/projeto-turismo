@@ -60,40 +60,52 @@
     return { settings: SETTINGS, tours: withI18n(tours), reviews: REVIEWS, faqs: FAQS, live: false, catalogLive: false };
   }
 
-  async function load() {
+  async function load(options) {
     var c = client();
     if (!c) return fallbackCatalog();
     var abort = new AbortController();
-    var timer = setTimeout(function () { abort.abort(); }, 5000);
-    function read(query) {
-      return typeof query.abortSignal === "function" ? query.abortSignal(abort.signal) : query;
+    var timer;
+    var deadline = new Promise(function (resolve) {
+      timer = setTimeout(function () { resolve(null); abort.abort(); }, 5000);
+    });
+    function read(buildQuery) {
+      var request = Promise.resolve().then(function () {
+        var query = buildQuery();
+        return typeof query.abortSignal === "function" ? query.abortSignal(abort.signal) : query;
+      }).catch(function () { return null; });
+      return Promise.race([request, deadline]);
     }
-    try {
-      var r = await Promise.all([
-        read(c.from("settings").select("data").eq("id", 1).maybeSingle()),
-        read(c.from("tours").select("*").eq("active", true).order("sort")),
-        read(c.from("reviews").select("*").eq("published", true).order("sort")),
-        read(c.from("faqs").select("*").eq("published", true).order("sort"))
-      ]);
-      if (r[1].error || !Array.isArray(r[1].data)) return fallbackCatalog();
-      var tours = r[1].data;
-      try {
-        sessionStorage.setItem(activeCatalogKey, JSON.stringify(tours.map(function (t) { return t.slug; })));
-      } catch (e) {}
-      var remote = r[0].data && r[0].data.data;
+    var catalog = Promise.all([
+      read(function () { return c.from("settings").select("data").eq("id", 1).maybeSingle(); }),
+      read(function () { return c.from("tours").select("*").eq("active", true).order("sort"); })
+    ]);
+    var extras = Promise.all([
+      read(function () { return c.from("reviews").select("*").eq("published", true).order("sort"); }),
+      read(function () { return c.from("faqs").select("*").eq("published", true).order("sort"); })
+    ]).then(function (results) {
+      var reviews = results[0], faqs = results[1];
       return {
-        settings: Object.assign({}, SETTINGS, remote || {}),
-        tours: withI18n(tours),
-        reviews: r[2].data || [],
-        faqs: Array.isArray(r[3].data) ? r[3].data : FAQS,
-        live: Boolean(!r[0].error && remote),
-        catalogLive: true
+        reviews: reviews && !reviews.error && Array.isArray(reviews.data) ? reviews.data : [],
+        faqs: faqs && !faqs.error && Array.isArray(faqs.data) ? faqs.data : FAQS
       };
-    } catch (e) {
-      return fallbackCatalog();
-    } finally {
-      clearTimeout(timer);
-    }
+    });
+    Promise.all([catalog, extras]).then(function () { clearTimeout(timer); });
+
+    var results = await catalog;
+    var settingsResult = results[0], toursResult = results[1];
+    if (!toursResult || toursResult.error || !Array.isArray(toursResult.data)) return fallbackCatalog();
+    var tours = toursResult.data;
+    try {
+      sessionStorage.setItem(activeCatalogKey, JSON.stringify(tours.map(function (t) { return t.slug; })));
+    } catch (e) {}
+    var remote = settingsResult && !settingsResult.error && settingsResult.data && settingsResult.data.data;
+    var data = {
+      settings: Object.assign({}, SETTINGS, remote || {}),
+      tours: withI18n(tours),
+      live: Boolean(remote),
+      catalogLive: true
+    };
+    return Object.assign(data, options && options.deferExtras ? { reviews: [], faqs: [], extras: extras } : await extras);
   }
 
   async function checkCoupon(code) {
