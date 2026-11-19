@@ -23,6 +23,10 @@ Pablo trabalha pelo celular, sem teclado/mouse no computador: resolva acessos so
 
 Começar de graça ou quase: planos grátis (Cloudflare, etc.), código aberto maduro e comprovado, canais orgânicos e comissão só sobre venda. Gasto pago só na fase de escala, quando houver receita, e com o gatilho que o justifica.
 
+## Skill da Maré Tur
+
+Antes de executar tarefas de site, painel, catálogo, vendas, campanhas, atendimento, reservas ou operação da Maré Tur, leia e aplique [operar-mare-tur](.agents/skills/operar-mare-tur/SKILL.md). No Claude Code, a skill também pode ser chamada com `/operar-mare-tur`. Para preço, divisão de lucro e responsabilidades, use as regras vigentes em `docs/alma-do-negocio.md`.
+
 ## Estado atual
 
 Marca Maré Tur, site no ar (maretur.onrender.com). Modelo de negócio em `docs/alma-do-negocio.md`; situação e pendências em `docs/decisoes.md`.
