@@ -306,6 +306,34 @@ with sync_playwright() as pw:
     txt = go("reservas")
     check("Prazo expirado" in txt and p.locator('[data-booking-action="paid"]').count() == 0, "prazo expirado impede registro de pagamento por engano")
     check("Abrir confirmação no WhatsApp" not in txt, "reserva pendente não envia confirmação ao cliente")
+
+    DATA["coupons"] = [dict(code="POUSADA1", agent_name="Pousada de Teste", active=True, discount_pct=5, commission_pct=25,
+                             leader="Líder de Teste", leader_pct=3)]
+    DATA["bookings"] = [
+        dict(id=i, coupon="pousada1", status=status, total=total, commission=commission, no_show=no_show)
+        for i, (status, total, commission, no_show) in enumerate([
+            ("pago", 100, 8, False), ("confirmado", 180, 12, False), ("realizado", 300, 17.5, False),
+            ("realizado", 60, None, False), ("cancelado", 400, 35, False), ("realizado", 500, 40, True),
+            ("pendente", 600, 50, False),
+        ], start=10)
+    ]
+    go("cupons")
+    coupon_card = p.locator('[data-row][data-name="POUSADA1"]')
+    numbers = coupon_card.inner_text().replace("\xa0", " ")
+    check("2 aguardando passeio · 2 realizados · R$ 640,00 em reservas" in numbers, "cupons excluem cancelamentos, pendentes e não comparecimentos")
+    check("Comissão estimada R$ 20,00 · elegível R$ 17,50" in numbers, "cupons usam a comissão registrada e só liberam passeios realizados")
+    check("reserva sem comissão registrada" in numbers and "estimativa pela taxa atual R$ 10,80" in numbers, "dados legados e comissão do líder têm indicação própria")
+    first_link = coupon_card.locator("[data-copy]").get_attribute("data-copy")
+    p.route(BASE + "admin", lambda route: route.fulfill(path=Path(__file__).resolve().parents[1] / "site-v2/admin.html", content_type="text/html"))
+    p.goto(BASE + "admin")
+    coupon_card.wait_for()
+    public_link = coupon_card.locator("[data-copy]").get_attribute("data-copy")
+    public = urllib.parse.urlparse(public_link)
+    query = urllib.parse.parse_qs(public.query)
+    check(public_link == first_link and public.path == "/" and query == {
+        "cupom": ["POUSADA1"], "utm_source": ["parceiro"], "utm_medium": ["indicacao"],
+        "utm_campaign": ["indicacoes"], "utm_content": ["pousada1"],
+    }, "link do agente abre a vitrine com o mesmo rastreio em /admin e /admin.html")
     check(not errs, "sem erro de JavaScript: " + "; ".join(errs[:3]))
     b.close()
 
