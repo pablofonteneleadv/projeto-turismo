@@ -38,10 +38,12 @@
   updateDateBounds();
   var stored = {};
   try { stored = JSON.parse(sessionStorage.getItem(storageKey) || "{}") || {}; } catch (error) {}
+  var consultCode = /^MT-C-[A-F0-9]{10}$/.test(stored.consultCode || "") ? stored.consultCode : "MT-C-" + uuid().replace(/-/g, "").slice(0, 10).toUpperCase();
   var st = {
     date: qs.has("data") ? (validDate(qs.get("data")) ? qs.get("data") : "") : (validDate(stored.date) && stored.date >= minDate ? stored.date : nextDeparture(minDate)),
     kind: t.per_vehicle || (hasPriv && stored.kind === "priv") ? "priv" : "grupo",
     adults: travelers(stored.adults, 2), children: travelers(stored.children, 0), seniors: travelers(stored.seniors, 0),
+    pickupArea: String(stored.pickupArea || "").slice(0, 80),
     buggy: !!buggyExtra && stored.buggy === true,
     pay: stored.pay === "card" || !pixConfigured() ? "card" : "pix"
   };
@@ -175,10 +177,13 @@
       issue ? T_("tour.wa_no_date") : fmtDate(st.date),
       T_("tour.wa_pax", st.adults, st.children, st.seniors)
     ];
+    var area = st.pickupArea.trim();
+    if (area) lines.push(T_("tour.consult_pickup_wa", area));
     if (hasPriv) lines.push(T_(st.kind === "priv" ? "tour.wa_priv" : "tour.wa_group"));
     if (st.buggy) lines.push(T_("tour.wa_extra"));
     if (referral) lines.push(T_("tour.wa_coupon", referral));
-    if (attributionRef) lines.push(T_("tour.wa_ref", attributionRef));
+    lines.push(T_("tour.wa_ref", consultCode));
+    if (attributionRef) lines.push(T_("tour.consult_source", attributionRef));
     return D.waLink(S.whatsapp, lines.join("\n"));
   }
 
@@ -233,6 +238,15 @@
     var consult = target.querySelector("[data-consult]");
     consult.textContent = T_("tour.consult_cta");
     consult.addEventListener("click", function () { track("tour_consult_click", { mode: canBook ? "booking_fallback" : "consultation" }); });
+    var pickupId = "consultPickup" + suffix;
+    target.querySelector("[data-quote-status]").insertAdjacentHTML("beforebegin",
+      '<div class="field" data-pickup-field hidden><label class="label" for="' + pickupId + '">' + T_("tour.consult_pickup_label") +
+      '</label><input type="text" id="' + pickupId + '" maxlength="80" autocomplete="off" placeholder="' + T_("tour.consult_pickup_hint") + '"></div>');
+    target.querySelector("[data-pickup-field] input").addEventListener("input", function (e) {
+      st.pickupArea = e.target.value.slice(0, 80);
+      storeSelection();
+      paint();
+    });
     var retry = target.querySelector("[data-quote-retry]");
     retry.textContent = T_("tour.quote_retry");
     retry.addEventListener("click", sync);
@@ -290,9 +304,13 @@
     return T_(fallback);
   }
 
+  function storeSelection() {
+    try { sessionStorage.setItem(storageKey, JSON.stringify(Object.assign({ referral: referral, consultCode: consultCode }, st))); } catch (error) {}
+  }
+
   async function sync() {
     updateDateBounds();
-    try { sessionStorage.setItem(storageKey, JSON.stringify(Object.assign({ referral: referral }, st))); } catch (error) {}
+    storeSelection();
     var sequence = ++quoteSeq;
     quote = null;
     quoteStatus = "";
@@ -359,6 +377,10 @@
       reserve.disabled = !quote || !!issue;
       box.querySelector("[data-quote-retry]").hidden = !canBook || !quoteStatus || !!issue;
       var contact = box.querySelector("[data-consult]");
+      var pickupField = box.querySelector("[data-pickup-field]");
+      pickupField.hidden = !link;
+      var pickupInput = pickupField.querySelector("input");
+      if (document.activeElement !== pickupInput) pickupInput.value = st.pickupArea;
       contact.hidden = !link;
       if (link) contact.href = link; else contact.removeAttribute("href");
     });
