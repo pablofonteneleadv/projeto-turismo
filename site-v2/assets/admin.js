@@ -425,23 +425,47 @@
   function ta(id, label, val) { return '<div class="field full"><label class="label" for="' + id + '">' + label + '</label><textarea id="' + id + '">' + esc(val || "") + "</textarea></div>"; }
 
   VIEWS.cupons = async function (p) {
-    var r = await sb.from("coupons").select("*").order("created_at");
-    var b = await sb.from("bookings").select("coupon,total,status").not("coupon", "is", null);
+    var [r, b] = await Promise.all([
+      sb.from("coupons").select("*").order("created_at"),
+      sb.from("bookings").select("coupon,total,status,commission,no_show", { count: "exact" }).not("coupon", "is", null).in("status", ["pago", "confirmado", "realizado"]).order("id", { ascending: false })
+    ]);
     if (fail(r) || fail(b)) return;
-    var stats = {};
-    b.data.forEach(function (x) { if (["pago", "confirmado", "realizado"].indexOf(x.status) < 0) return; var k = String(x.coupon || "").toUpperCase(); stats[k] = stats[k] || { n: 0, v: 0 }; stats[k].n++; stats[k].v += Number(x.total || 0); });
-    var site = location.origin + location.pathname.replace(/admin\.html$/, "");
+    function emptyStats() { return { scheduled: 0, completed: 0, bookedTotal: 0, completedTotal: 0, estimated: 0, eligible: 0, missing: 0 }; }
+    var stats = Object.create(null);
+    b.data.forEach(function (booking) {
+      if (booking.no_show) return;
+      var code = booking.coupon.trim().toUpperCase();
+      if (!code) return;
+      var s = stats[code] || (stats[code] = emptyStats());
+      var total = Number(booking.total || 0);
+      var amount = booking.commission == null ? 0 : Number(booking.commission);
+      if (booking.commission == null) s.missing++;
+      s.bookedTotal += total;
+      if (booking.status === "realizado") {
+        s.completed++;
+        s.completedTotal += total;
+        s.eligible += amount;
+      } else {
+        s.scheduled++;
+        s.estimated += amount;
+      }
+    });
     p.innerHTML = '<div class="item"><h3>Novo cupom</h3><form id="cf" class="formgrid">' +
       f("c_code", "Código (ex.: BRUNO)", "") + f("c_agent", "Nome do agente", "") +
       f("c_disc", "Desconto do cliente (%)", 5, "", 'type="number" step="0.5" min="0" max="50"') + f("c_comm", "Comissão do agente (%)", 8, "", 'type="number" step="0.5" min="0" max="50"') +
       f("c_leader", "Líder (opcional)", "") + f("c_lpct", "Comissão do líder (%)", 0, "", 'type="number" step="0.5" min="0" max="20"') +
-      '<div class="row full"><button class="btn btn-mar" type="submit">Criar cupom</button></div></form><p class="note">Comissões são calculadas só sobre reservas pagas, confirmadas ou realizadas.</p></div>' +
+      '<div class="row full"><button class="btn btn-mar" type="submit">Criar cupom</button></div></form><p class="note">A comissão do agente fica elegível quando o passeio é realizado. Os valores vêm das reservas.</p></div>' +
+      (b.count > b.data.length ? '<p class="warn">Resumo parcial com as ' + b.data.length + ' reservas mais recentes de ' + b.count + '.</p>' : '') +
       r.data.map(function (c) {
-        var s = stats[c.code.toUpperCase()] || { n: 0, v: 0 };
-        var link = site + "?cupom=" + encodeURIComponent(c.code);
-        return '<div class="item" data-row data-name="' + esc(c.code) + '" data-search="' + esc(c.code + " " + c.agent_name + " " + (c.leader || "")) + '" data-status="' + (c.active ? "on" : "off") + '" data-value="' + s.v + '"><div class="item-head"><div><h3>' + esc(c.code) + " · " + esc(c.agent_name) + '</h3><p class="small muted">Cliente ganha ' + c.discount_pct + "% · agente ganha " + c.commission_pct + "%" + (c.leader ? " · líder " + esc(c.leader) + " ganha " + c.leader_pct + "%" : "") + '</p></div><span class="st ' + (c.active ? "st-pago" : "st-cancelado") + '">' + (c.active ? "Ativo" : "Pausado") + "</span></div>" +
-          '<p class="small"><b>' + s.n + "</b> vendas · " + D.brl(s.v) + " vendido · comissão do agente <b>" + D.brl(s.v * c.commission_pct / 100) + "</b>" + (c.leader ? " · do líder <b>" + D.brl(s.v * c.leader_pct / 100) + "</b>" : "") + "</p>" +
-          '<div class="row"><button class="btn btn-ghost" type="button" data-copy="' + esc(link) + '">Copiar link do agente</button><button class="btn btn-ghost" type="button" data-ctoggle="' + esc(c.code) + '">' + (c.active ? "Pausar" : "Ativar") + '</button><button class="btn btn-danger" type="button" data-cdel="' + esc(c.code) + '">Excluir</button></div></div>';
+        var s = stats[c.code.toUpperCase()] || emptyStats();
+        var link = new URL("/", location.origin);
+        link.search = new URLSearchParams({ cupom: c.code, utm_source: "parceiro", utm_medium: "indicacao", utm_campaign: "indicacoes", utm_content: c.code.toLowerCase() });
+        return '<div class="item" data-row data-name="' + esc(c.code) + '" data-search="' + esc(c.code + " " + c.agent_name + " " + (c.leader || "")) + '" data-status="' + (c.active ? "on" : "off") + '" data-value="' + s.bookedTotal + '"><div class="item-head"><div><h3>' + esc(c.code) + " · " + esc(c.agent_name) + '</h3><p class="small muted">Cliente ganha ' + c.discount_pct + "% · agente ganha " + c.commission_pct + "%" + (c.leader ? " · líder " + esc(c.leader) + " ganha " + c.leader_pct + "%" : "") + '</p></div><span class="st ' + (c.active ? "st-pago" : "st-cancelado") + '">' + (c.active ? "Ativo" : "Pausado") + "</span></div>" +
+          '<p class="small">' + s.scheduled + " aguardando passeio · " + s.completed + " realizados · " + D.brl(s.bookedTotal) + " em reservas</p>" +
+          '<p class="small">Comissão estimada <b>' + D.brl(s.estimated) + '</b> · elegível <b>' + D.brl(s.eligible) + '</b></p>' +
+          (c.leader ? '<p class="small muted">Líder em passeios realizados · estimativa pela taxa atual ' + D.brl(s.completedTotal * c.leader_pct / 100) + '</p>' : '') +
+          (s.missing ? '<p class="small muted">' + s.missing + (s.missing === 1 ? " reserva sem comissão registrada" : " reservas sem comissão registrada") + '</p>' : '') +
+          '<div class="row"><button class="btn btn-ghost" type="button" data-copy="' + esc(link.href) + '">Copiar link do agente</button><button class="btn btn-ghost" type="button" data-ctoggle="' + esc(c.code) + '">' + (c.active ? "Pausar" : "Ativar") + '</button><button class="btn btn-danger" type="button" data-cdel="' + esc(c.code) + '">Excluir</button></div></div>';
       }).join("");
     document.getElementById("cf").addEventListener("submit", async function (e) {
       e.preventDefault();
