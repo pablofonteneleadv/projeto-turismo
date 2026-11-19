@@ -71,7 +71,7 @@
     // passeio
     "tour.not_found": ["Passeio não encontrado.", "Paseo no encontrado."], "tour.see_all": ["Ver todos os passeios", "Ver todos los paseos"],
     "tour.title": ["{0} saindo de Fortaleza | {1}", "{0} saliendo de Fortaleza | {1}"],
-    "tour.meta": [" Busca no hotel, guia cadastrado no Cadastur e reserva com 20% de sinal.", " Te buscamos en tu hotel, guía habilitado en Cadastur y reserva con una seña del 20%."],
+    "tour.meta": [" Confira o que está incluso e consulte datas e condições de embarque.", " Mirá qué incluye y consultá las fechas y las condiciones de embarque."],
     "tour.wa_doubt": ["Olá! Tenho uma dúvida sobre o passeio {0}.", "¡Hola! Tengo una duda sobre el paseo {0}."],
     "tour.crumbs": ["Caminho", "Ruta de navegación"], "tour.home": ["Início", "Inicio"], "tour.tours": ["Passeios", "Paseos"],
     "tour.rev_one": ["avaliação", "reseña"], "tour.rev_many": ["avaliações", "reseñas"],
@@ -141,7 +141,48 @@
     "tour.send_receipt": ["Enviar comprovante no WhatsApp", "Enviar comprobante por WhatsApp"], "tour.notify_wa": ["Avisar no WhatsApp", "Avisar por WhatsApp"],
     "tour.name_phone": ["Preencha nome e WhatsApp com DDD.", "Completá tu nombre y tu WhatsApp con código de área."],
     "tour.link_copied": ["Link copiado. É só colar no WhatsApp.", "Link copiado. Pegalo en WhatsApp."],
-    "tour.close_x": ["Fechar", "Cerrar"]
+    "tour.close_x": ["Fechar", "Cerrar"],
+    "tour.consult_open": ["Consultar datas", "Consultar fechas"],
+    "tour.booking_open": ["Ver disponibilidade", "Ver disponibilidad"],
+    "tour.consult_title": ["Disponibilidade", "Disponibilidad"],
+    "tour.booking_title": ["Datas e valores", "Fechas y precios"],
+    "tour.consult_cta": ["Consultar no WhatsApp", "Consultar por WhatsApp"],
+    "tour.booking_cta": ["Continuar reserva", "Continuar reserva"],
+    "tour.price_reference": ["Valor de referência no Pix", "Precio de referencia en Pix"],
+    "tour.price_consult": ["Valor sob consulta", "Precio a consultar"],
+    "tour.from_vehicle": ["Por veículo a partir de", "Por vehículo desde"],
+    "tour.consult_note": ["Confirme disponibilidade, valor final e formas de pagamento pelo WhatsApp.", "Confirmá disponibilidad, precio final y medios de pago por WhatsApp."],
+    "tour.consult_payment_h": ["Disponibilidade e pagamento", "Disponibilidad y pago"],
+    "tour.consult_payment_p": ["Após confirmar a disponibilidade e o valor final, a equipe informa as condições de pagamento.", "Después de confirmar la disponibilidad y el precio final, el equipo te informa las condiciones de pago."],
+    "tour.online_payment_p": ["Confira a cotação da data escolhida. As orientações de pagamento aparecem após o registro do pedido.", "Mirá la cotización de la fecha elegida. Las instrucciones de pago aparecen después de registrar la solicitud."],
+    "tour.consult_policy": ["Peça ao atendimento as condições de alteração e cancelamento do roteiro escolhido.", "Pedile al equipo las condiciones para cambiar o cancelar el itinerario que elijas."],
+    "tour.date_prompt": ["Escolha uma data para continuar.", "Elegí una fecha para continuar."],
+    "tour.date_min": ["Para este pedido, escolha uma data a partir de {0}.", "Para este pedido, elegí una fecha desde el {0}."],
+    "tour.date_max": ["Escolha uma data até {0}.", "Elegí una fecha hasta el {0}."],
+    "tour.date_no_departure": ["Escolha uma das datas com saída para este passeio.", "Elegí una de las fechas con salida para este paseo."],
+    "tour.pax_note": ["Confirme o preço e as regras de embarque das crianças com a equipe antes de pagar.", "Confirmá el precio y las reglas de embarque para los niños con el equipo antes de pagar."],
+    "tour.wa_consult": ["Olá! Quero consultar disponibilidade, embarque e valor para este passeio.", "¡Hola! Quiero consultar disponibilidad, embarque y precio para este paseo."],
+    "tour.wa_ref": ["Referência: {0}", "Referencia: {0}"],
+    "tour.wa_no_date": ["Quero ajuda para escolher outra data.", "Quiero ayuda para elegir otra fecha."],
+    "tour.wa_extra": ["Quero incluir o buggy.", "Quiero incluir el buggy."],
+    "tour.wa_booking_pending": ["Olá! Quero atendimento sobre o pedido de reserva {0}.", "¡Hola! Quiero consultar por la solicitud de reserva {0}."],
+    "tour.referral": ["Código incluído na consulta: {0}", "Código incluido en la consulta: {0}"],
+    "tour.coupon_invalid_format": ["Use um código com até 32 letras, números, hífens ou sublinhados.", "Usá un código de hasta 32 letras, números, guiones o guiones bajos."],
+    "tour.quote_loading": ["Consultando a cotação da data…", "Consultando la cotización de la fecha…"],
+    "tour.quote_unavailable": ["Não conseguimos confirmar a cotação agora. Tente novamente ou consulte no WhatsApp.", "No pudimos confirmar la cotización ahora. Probá de nuevo o consultá por WhatsApp."],
+    "tour.quote_retry": ["Tentar cotação novamente", "Volver a intentar la cotización"],
+    "tour.quote_changed": ["Os valores mudaram. Feche esta janela e revise a cotação antes de enviar.", "Los precios cambiaron. Cerrá esta ventana y revisá la cotización antes de enviar."],
+    "tour.quote_expired": ["Atualize a cotação antes de continuar.", "Actualizá la cotización antes de continuar."],
+    "tour.form_title": ["Seus dados para a reserva", "Tus datos para la reserva"],
+    "tour.request_received": ["Pedido de reserva recebido", "Solicitud de reserva recibida"],
+    "tour.pending_with_time": ["Pedido {0}. A vaga está em retenção até {1}, no horário de Fortaleza. A confirmação depende da validação do pagamento.", "Solicitud {0}. Tu lugar queda retenido hasta las {1}, hora de Fortaleza. La confirmación depende de la validación del pago."],
+    "tour.pending_review": ["Pedido {0}. Fale com a equipe para verificar disponibilidade e pagamento.", "Solicitud {0}. Escribile al equipo para verificar la disponibilidad y el pago."],
+    "tour.pending_expired": ["A retenção do pedido {0} venceu. Fale com a equipe para consultar uma nova disponibilidade.", "La retención de la solicitud {0} venció. Escribile al equipo para volver a consultar disponibilidad."],
+    "tour.payment_support": ["Use o protocolo para pedir as instruções de pagamento no canal oficial.", "Usá el número de solicitud para pedir las instrucciones de pago por el canal oficial."],
+    "tour.payment_contact": ["Falar com atendimento no WhatsApp", "Hablar con atención por WhatsApp"],
+    "tour.buggy_interest": ["Quero consultar a opção de buggy.", "Quiero consultar la opción de buggy."],
+    "tour.phone_international": ["WhatsApp com código do país ou DDD", "WhatsApp con código de país o de área"],
+    "tour.wa_point": ["Endereço da busca ou ponto de encontro", "Dirección de búsqueda o punto de encuentro"]
   };
 
   /* ---------- HTML fixo: texto em português -> espanhol (aplicado ao carregar) ---------- */
@@ -191,7 +232,7 @@
     "Idosos": "Adultos mayores", "60 anos ou mais · preço de adulto": "60 años o más · precio de adulto", "Menos idosos": "Menos adultos mayores", "Mais idosos": "Más adultos mayores",
     "Até 4 anos: no colo, grátis. De 5 a 10 anos: o valor é confirmado no WhatsApp; o total abaixo usa o preço de adulto.": "Hasta 4 años: en brazos, gratis. De 5 a 10 años: el valor se confirma por WhatsApp; el total de abajo usa el precio de adulto.",
     "Cupom": "Cupón", "Código de quem te indicou": "Código de quien te lo pasó", "Aplicar": "Aplicar",
-    "Pagamento": "Pago", "Forma de pagamento": "Forma de pago", "Pix": "Pix", "Cartão 4x": "Tarjeta en 4 cuotas",
+    "Pagamento": "Pago", "Forma de pagamento": "Forma de pago", "Pix": "Pix", "Cartão": "Tarjeta", "Cartão 4x": "Tarjeta en 4 cuotas",
     "Guia Cadastur": "Guía Cadastur", "Sinal de": "Seña del", "Restante no embarque": "Resto al embarcar",
     "Reservar agora": "Reservar ahora", "Dúvidas? Fale com a gente": "¿Dudas? Escribinos",
     "Pagás en reales (R$): aceptamos Pix, tarjeta o efectivo.": "Pagás en reales (R$): aceptamos Pix, tarjeta o efectivo."
@@ -259,7 +300,8 @@
     [/^Data muito distante\.?$/, "Fecha demasiado lejana."],
     [/^Restam (\d+) vagas nesta data\.?$/, "Quedan $1 lugares en esta fecha."],
     [/^Informe seu nome\.?$/, "Indicá tu nombre."],
-    [/^Informe o WhatsApp com DDD\.?$/, "Indicá tu WhatsApp con código de área."]
+    [/^Informe o WhatsApp com DDD\.?$/, "Indicá tu WhatsApp con código de área."],
+    [/^A cotação mudou\. Atualize os valores antes de reservar\.?$/, "La cotización cambió. Actualizá los valores antes de reservar."]
   ];
   function err(m) {
     if (!ES || !m) return m;

@@ -147,7 +147,12 @@
   async function render() {
     shell('<div class="empty">Carregando…</div>'); try { localStorage.setItem("adm-tab", tab); } catch (e) {}
     var p = document.getElementById("panel");
-    try { await VIEWS[tab](p); if (p.innerHTML.indexOf("Carregando…") > -1 && p.children.length === 1) p.innerHTML = '<div class="warn">Não foi possível carregar agora. Confira a internet e toque na seção de novo.</div>'; mountTools(p); } catch (e) { p.innerHTML = '<div class="warn">Erro ao carregar: ' + esc(e.message || e) + "</div>"; }
+    try {
+      await VIEWS[tab](p);
+      if (!p.isConnected) return;
+      if (p.innerHTML.indexOf("Carregando…") > -1 && p.children.length === 1) p.innerHTML = '<div class="warn">Não foi possível carregar agora. Confira a internet e toque na seção de novo.</div>';
+      mountTools(p);
+    } catch (e) { p.innerHTML = '<div class="warn">Erro ao carregar: ' + esc(e.message || e) + "</div>"; }
   }
 
   var VIEWS = {};
@@ -155,13 +160,13 @@
   VIEWS.inicio = async function (p) {
     var r = await sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(500);
     if (fail(r)) return;
-    var b = r.data, today = new Date().toISOString().slice(0, 10), month = today.slice(0, 7);
+    var b = r.data, today = TODAY(), month = today.slice(0, 7);
     var paid = b.filter(function (x) { return ["pago", "confirmado", "realizado"].indexOf(x.status) > -1; });
     var monthPaid = paid.filter(function (x) { return String(x.created_at).slice(0, 7) === month; });
     var sum = monthPaid.reduce(function (a, x) { return a + Number(x.total || 0); }, 0);
     var t = await sb.from("tours").select("slug", { count: "exact", head: true });
     p.innerHTML = '<div class="kpis">' +
-      '<div class="kpi"><b class="num">' + b.filter(function (x) { return x.status === "pendente"; }).length + "</b><span>reservas esperando pagamento</span></div>" +
+      '<div class="kpi"><b class="num">' + b.filter(function (x) { return x.status === "pendente" && !holdExpired(x); }).length + "</b><span>reservas esperando pagamento</span></div>" +
       '<div class="kpi"><b class="num">' + b.filter(function (x) { return x.tour_date === today && x.status !== "cancelado"; }).length + "</b><span>passeios hoje</span></div>" +
       '<div class="kpi"><b class="num">' + D.brl(sum) + "</b><span>vendido no mês (pagas)</span></div>" +
       '<div class="kpi"><b class="num">' + (t.count || 0) + "</b><span>passeios cadastrados</span></div></div>" +
@@ -195,27 +200,33 @@
       (list.map(function (x) {
         var people = x.adults + " ad., " + x.children + " cri., " + x.seniors + " ido.";
         var wa = D.waLink(x.phone, "Olá, " + x.customer_name.split(" ")[0] + "! Sobre sua reserva de " + x.tour_name + " em " + ddmm(x.tour_date) + ":");
-        var conf = D.waLink(x.phone, ["✅ Reserva confirmada · " + S.brand + " Passeios", "", "Passeio: " + x.tour_name, "Data: " + ddmm(x.tour_date), "Pessoas: " + people + (x.buggy_cars ? " · Buggy: " + x.buggy_cars : ""), "Busca: " + (x.hotel || "a confirmar"), "Valor: " + D.brl(x.total) + " (" + (x.status === "pendente" ? "a pagar" : "pago") + ")", "Código: #" + x.id, "", "O horário exato da busca vai na véspera. " + (S.cancel_policy || "")].join("\n"));
-        var sup = sups.filter(function (z) { return z.id === x.supplier_id; })[0], sl = supLink(x, sup, S);
-        var opts = sups.filter(function (z) { return rts.some(function (rt) { return rt.tour_slug === x.tour_slug && rt.supplier_id === z.id && rt.active; }); });
+        var conf = x.status === "confirmado" ? D.waLink(x.phone, ["✅ Reserva confirmada · " + S.brand + " Passeios", "", "Passeio: " + x.tour_name, "Data: " + ddmm(x.tour_date), "Pessoas: " + people + (x.buggy_cars ? " · Buggy: " + x.buggy_cars : ""), "Busca: " + (x.hotel || "a confirmar"), "Valor total: " + D.brl(x.total), "Saldo no embarque: " + D.brl(x.collect_at_boarding), "Código: " + (x.code || "#" + x.id), "", "O horário exato da busca vai na véspera. " + (S.cancel_policy || "")].join("\n")) : "";
+        var sup = sups.find(function (z) { return z.id === x.supplier_id; });
+        var sl = canDispatch(x) ? supLink(x, sup, S) : "";
+        var vl = (x.status === "pendente" || x.status === "pago") && !holdExpired(x) && sup && sup.active && sup.whatsapp
+          ? D.waLink(sup.whatsapp, "Olá! Pode confirmar a disponibilidade de " + x.tour_name + " em " + ddmm(x.tour_date) + " para " + pax(x) + "? Referência: " + (x.code || "#" + x.id)) : "";
+        var opts = sups.filter(function (z) { return z.active && rts.some(function (rt) { return rt.tour_slug === x.tour_slug && rt.supplier_id === z.id && rt.active; }); });
         var fin = x.net_total == null ? '<p class="small" style="color:var(--ruim)">Sem net: escolha a empresa (o net precisa estar cadastrado em Empresas e net).</p>' :
           '<p class="small muted">Net ' + D.brl(x.net_total) + " · sinal " + D.brl(x.deposit) + " · receber no embarque " + D.brl(x.collect_at_boarding) + " · acerto " + (Number(x.supplier_settlement) >= 0 ? "empresa devolve " : "pagar à empresa ") + D.brl(Math.abs(x.supplier_settlement)) + " · <b>lucro " + D.brl(x.profit) + "</b>" + (x.floor_applied ? " · desconto limitado pelo mínimo" : "") + (x.source ? " · origem " + esc(x.source) : "") + "</p>";
         return '<div class="item" data-row data-name="' + esc(x.customer_name) + '" data-search="' + esc([x.code, x.customer_name, x.phone, x.hotel, x.tour_name, x.coupon, sup ? sup.name : ""].join(" ")) + '" data-status="' + x.status + '" data-date="' + x.tour_date + '" data-created="' + esc(x.created_at) + '" data-value="' + x.total + '" data-tour="' + esc(x.tour_slug) + '" data-tour-label="' + esc(x.tour_name) + '" data-sup="' + (x.supplier_id || "") + '" data-sup-label="' + esc(sup ? sup.name : "") + '"><div class="item-head"><div><h3>' + esc(x.tour_name) + " · " + ddmm(x.tour_date) + '</h3><p class="small muted">' + esc(x.code || "#" + x.id) + " · feita em " + ddmm(x.created_at) + (x.lang && x.lang !== "pt" ? " · idioma " + esc(x.lang.toUpperCase()) : "") + "</p></div><span class=\"st st-" + x.status + '">' + STATUS_TXT[x.status] + "</span></div>" +
           '<p class="small"><b>' + esc(x.customer_name) + "</b> · " + esc(x.phone) + (x.hotel ? " · Busca: " + esc(x.hotel) : "") + "</p>" +
           '<p class="small">' + (x.kind === "priv" ? "Privativo" : "Em grupo") + " · " + people + (x.buggy_cars ? " · Buggy: " + x.buggy_cars : "") + (x.coupon ? " · Cupom " + esc(x.coupon) : "") + " · <b>" + D.brl(x.total) + "</b> " + (x.pay_method === "pix" ? "Pix" : "cartão") + "</p>" +
-          fin + '<div class="row small"><label for="sup' + x.id + '">Empresa</label><select id="sup' + x.id + '" data-sup="' + x.id + '" style="width:auto"><option value="">' + (opts.length ? "Escolher…" : "Nenhuma com net") + "</option>" + opts.map(function (z) { return '<option value="' + z.id + '"' + (z.id === x.supplier_id ? " selected" : "") + ">" + esc(z.name) + "</option>"; }).join("") + "</select>" +
-          (sl ? '<a class="btn btn-mar" href="' + sl + '" target="_blank" rel="noopener" data-sent="' + x.id + '">Enviar à empresa</a>' : "") + (x.sent_to_supplier_at ? "<span>✓ enviada</span>" : "") + "</div>" +
-          (x.status === "realizado" ? '<div class="row small"><a class="btn btn-ghost" href="' + reviewLink(x, S) + '" target="_blank" rel="noopener" data-review="' + x.id + '">Pedir avaliação</a><a class="btn btn-ghost" href="' + offerLink(x, S, allTours) + '" target="_blank" rel="noopener" data-offer="' + x.id + '">Oferecer próximo passeio</a>' + (x.review_asked_at ? "<span>✓ avaliação pedida</span>" : "") + (x.offer_sent_at ? "<span>✓ oferta enviada</span>" : "") + "</div>" : "") +
-          '<div class="row"><select data-status="' + x.id + '" style="width:auto">' + STATUS.map(function (s) { return '<option value="' + s + '"' + (s === x.status ? " selected" : "") + ">" + STATUS_TXT[s] + "</option>"; }).join("") + "</select>" +
-          (conf ? '<a class="btn btn-mar" href="' + conf + '" target="_blank" rel="noopener">Mandar confirmação</a>' : "") +
+          fin + attributionLine(x) + (holdExpired(x) ? '<p class="warn small">Prazo expirado. Confira eventual pagamento antes de tratar esta reserva.</p>' : "") +
+          (x.boarded_at ? '<p class="small"><strong>Embarque registrado</strong></p>' : "") +
+          '<div class="row small"><label for="sup' + x.id + '">Empresa</label><select id="sup' + x.id + '" data-sup="' + x.id + '" style="width:auto"><option value="">' + (opts.length ? "Escolher…" : "Nenhuma com net") + "</option>" + opts.map(function (z) { return '<option value="' + z.id + '"' + (z.id === x.supplier_id ? " selected" : "") + ">" + esc(z.name) + "</option>"; }).join("") + "</select>" +
+          (vl ? '<a class="btn btn-ghost" href="' + vl + '" target="_blank" rel="noopener">Consultar vaga com a empresa</a>' : "") +
+          messageAction(x, sl, "sent", "Abrir WhatsApp da empresa", "Registrar envio à empresa", "Envio à empresa registrado") + "</div>" +
+          (x.status === "realizado" && !x.no_show ? '<div class="row small">' +
+            messageAction(x, reviewLink(x, S), "review", "Abrir pedido de avaliação", "Registrar pedido enviado", "Pedido de avaliação registrado") +
+            messageAction(x, offerLink(x, S, allTours), "offer", "Abrir oferta com consentimento", "Registrar oferta enviada", "Envio da oferta registrado") + "</div>" : "") +
+          '<div class="row">' + bookingActions(x, true, !!(sup && sup.active && x.net_total != null)) +
+          (conf ? '<a class="btn btn-mar" href="' + conf + '" target="_blank" rel="noopener">Abrir confirmação no WhatsApp</a>' : "") +
           (wa ? '<a class="btn btn-ghost" href="' + wa + '" target="_blank" rel="noopener">WhatsApp do cliente</a>' : "") +
           '<button class="btn btn-ghost" type="button" data-note="' + x.id + '">Anotação</button></div>' + (x.notes ? '<p class="small muted">📝 ' + esc(x.notes) + "</p>" : "") + "</div>";
       }).join("") || '<div class="empty">Nenhuma reserva aqui.</div>');
     p.querySelectorAll("[data-sup]").forEach(function (sl) { sl.addEventListener("change", async function () { if (!sl.value) return; var u = await sb.rpc("assign_supplier", { p_booking: Number(sl.dataset.sup), p_supplier: Number(sl.value) }); if (!fail(u)) { U.toast("Empresa definida e acerto recalculado."); render(); } }); });
-    p.querySelectorAll("[data-sent]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.sent, { sent_to_supplier_at: new Date().toISOString() }).then(function () { setTimeout(render, 400); }); }); });
-    p.querySelectorAll("[data-review]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.review, { review_asked_at: new Date().toISOString() }); }); });
-    p.querySelectorAll("[data-offer]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.offer, { offer_sent_at: new Date().toISOString() }); }); });
-    p.querySelectorAll("[data-status]").forEach(function (s) { s.addEventListener("change", async function () { var u = await sb.from("bookings").update({ status: s.value }).eq("id", s.dataset.status); if (!fail(u)) { U.toast("Status atualizado."); render(); } }); });
+    bindMessageActions(p, list);
+    bindBookingActions(p, list);
     p.querySelectorAll("[data-note]").forEach(function (b) { b.addEventListener("click", async function () {
       var x = r.data.filter(function (y) { return String(y.id) === b.dataset.note; })[0];
       var box = document.createElement("div"); box.className = "field"; box.innerHTML = '<textarea aria-label="Anotação">' + esc(x.notes || "") + '</textarea><button class="btn btn-mar" type="button">Salvar anotação</button>';
@@ -269,7 +280,7 @@
         return '<div class="item trow" data-row data-name="' + esc(t.name) + '" data-status="' + (t.active ? "on" : "off") + '" data-cat="' + esc(t.category) + '" data-price="' + t.price_pix + '" data-sort="' + t.sort + '"><div class="item-head"><div style="display:flex;gap:12px;align-items:center">' + ((t.photos || [])[0] ? '<img class="thumb" src="' + esc(t.photos[0].url) + '" alt="" loading="lazy">' : '<span class="thumb"></span>') + "<div><h3>" + esc(t.name) + '</h3><p class="small muted">' + esc(t.category) + " · " + D.brl(t.price_pix) + " no Pix · " + D.brl(t.price_card) + " cartão</p></div></div>" +
           '<span class="st ' + (t.active ? "st-pago" : "st-cancelado") + '">' + (t.active ? "No ar" : "Oculto") + "</span></div>" +
           (function () { var fl = floorOf(t.slug); return fl ? '<p class="small muted">Net ' + D.brl(fl.net) + " · mínimo " + D.brl(fl.pix) + " Pix / " + D.brl(fl.card) + " cartão · sobra por pessoa " + D.brl(Number(t.price_pix) - fl.net - AD) + "</p>" : '<p class="small muted">Sem net cadastrado (Empresas e net)</p>'; })() +
-          '<div class="row"><button class="btn btn-mar" type="button" data-prices="' + esc(t.slug) + '">Preços</button><button class="btn btn-ghost" type="button" data-edit="' + esc(t.slug) + '">Editar</button><button class="btn btn-ghost" type="button" data-toggle="' + esc(t.slug) + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver</a></div></div>';
+          '<p class="small">' + (t.sales_mode === "booking" ? "Reserva online configurada" : "Disponibilidade sob consulta") + '</p><div class="row"><button class="btn btn-mar" type="button" data-prices="' + esc(t.slug) + '">Preços</button><button class="btn btn-ghost" type="button" data-sales-nav="' + esc(t.slug) + '">Operadora e vagas</button><button class="btn btn-ghost" type="button" data-edit="' + esc(t.slug) + '">Editar</button><button class="btn btn-ghost" type="button" data-toggle="' + esc(t.slug) + '">' + (t.active ? "Ocultar" : "Publicar") + '</button><a class="btn btn-ghost" href="passeio.html?p=' + encodeURIComponent(t.slug) + '" target="_blank" rel="noopener">Ver</a></div></div>';
       }).join("");
     document.getElementById("newTour").addEventListener("click", function () { cache.editTour = null; render(); });
     document.getElementById("allPrices").addEventListener("click", function () { tab = "precos"; render(); });
@@ -300,6 +311,11 @@
       });
     }); });
     p.querySelectorAll("[data-edit]").forEach(function (b) { b.addEventListener("click", function () { cache.editTour = b.dataset.edit; render(); }); });
+    p.querySelectorAll("[data-sales-nav]").forEach(function (b) { b.addEventListener("click", function () {
+      tab = "empresas"; cache.netTour = b.dataset.salesNav;
+      var st = toolState(tab); st.q = ""; st.f.status = ""; st.f.net = "";
+      render();
+    }); });
     p.querySelectorAll("[data-toggle]").forEach(function (b) { b.addEventListener("click", async function () { var t = r.data.filter(function (x) { return x.slug === b.dataset.toggle; })[0]; var u = await sb.from("tours").update({ active: !t.active }).eq("slug", t.slug); if (!fail(u)) render(); }); });
   };
 
@@ -460,9 +476,9 @@
       pessoas: pax(x), cobrar: D.brl(x.collect_at_boarding == null ? x.total : x.collect_at_boarding), total: D.brl(x.total), obs: x.notes || "—" };
     return String(tpl || DEFAULT_TPL).replace(/\{(\w+)\}/g, function (m, k) { return v[k] != null ? v[k] : m; });
   }
-  function supLink(x, sup, S) { return sup && sup.whatsapp ? D.waLink(sup.whatsapp, fillTpl(sup.msg_template, x, S)) : ""; }
+  function supLink(x, sup, S) { return sup && sup.active && sup.whatsapp ? D.waLink(sup.whatsapp, fillTpl(sup.msg_template, x, S)) : ""; }
   function remindLink(x, S) {
-    return D.waLink(x.phone, ["Olá, " + x.customer_name.split(" ")[0] + "! Amanhã é dia de " + x.tour_name + " 🌊", "", "Reserva: " + (x.code || "#" + x.id),
+    return D.waLink(x.phone, ["Olá, " + x.customer_name.split(" ")[0] + "! Seu passeio de " + x.tour_name + " é em " + ddmm(x.tour_date) + " 🌊", "", "Reserva: " + (x.code || "#" + x.id),
       "Busca: " + (x.hotel || "confirme seu hotel respondendo esta mensagem"), "O horário exato da busca chega por aqui. Leve protetor solar, roupa de banho e documento com foto.",
       x.collect_at_boarding ? "No embarque: " + D.brl(x.collect_at_boarding) + " (dinheiro, Pix ou cartão)." : "", "", "Qualquer dúvida é só responder. " + (S.brand || "")].filter(function (l, i, a) { return l || a[i - 1]; }).join("\n"));
   }
@@ -475,7 +491,81 @@
     var cup = S.followup_coupon ? "?cupom=" + encodeURIComponent(S.followup_coupon) : "";
     return D.waLink(x.phone, ["Olá, " + x.customer_name.split(" ")[0] + "! Que bom ter você com a gente no " + x.tour_name + ". Para os próximos dias em Fortaleza:", ""].concat(picks.map(function (t) { return "• " + t.name + " · " + D.brl(t.price_pix) + " no Pix\n  " + site + U.tourUrl(t.slug) + cup; })).concat(S.followup_coupon ? ["", "Com o cupom " + S.followup_coupon + " você tem desconto de cliente da casa."] : []).join("\n"));
   }
-  async function stamp(id, patch) { var u = await sb.from("bookings").update(patch).eq("id", id); return !fail(u); }
+  function holdExpired(x) {
+    return x.status === "pendente" && !!x.reservation_expires_at && Date.parse(x.reservation_expires_at) <= Date.now();
+  }
+  function canDispatch(x) { return (x.status === "confirmado" || x.status === "realizado") && !x.no_show; }
+  function attributionLine(x) {
+    var a = x.attribution && typeof x.attribution === "object" ? x.attribution : {};
+    var parts = [a.source, a.medium, a.campaign, a.content, a.term].filter(Boolean);
+    return parts.length ? '<p class="small muted">Campanha · ' + esc(parts.join(" · ")) + "</p>" : "";
+  }
+  var MESSAGE_FIELDS = { sent: "sent_to_supplier_at", remind: "reminder_sent_at", review: "review_asked_at", offer: "offer_sent_at" };
+  function messageAction(x, href, kind, openLabel, registerLabel, sentLabel) {
+    var id = x.id, sent = x[MESSAGE_FIELDS[kind]];
+    return (href ? '<a class="btn btn-ghost" href="' + esc(href) + '" target="_blank" rel="noopener" data-' + kind + '="' + id + '">' + openLabel + "</a>" : "") +
+      (sent ? '<span class="small">✓ ' + sentLabel + "</span>" : href ? '<button class="btn btn-ghost" type="button" data-record-message="' + kind + '" data-booking="' + id + '">' + registerLabel + "</button>" : "");
+  }
+  function bindMessageActions(p, list) {
+    p.querySelectorAll("[data-record-message]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var field = MESSAGE_FIELDS[b.dataset.recordMessage], x = list.find(function (r) { return String(r.id) === b.dataset.booking; });
+        b.disabled = true;
+        if (await stamp(x.id, { [field]: new Date().toISOString() }, { [field]: null, status: x.status })) {
+          U.toast("Envio registrado."); render();
+        } else b.disabled = false;
+      });
+    });
+  }
+  var BOOKING_ACTIONS = {
+    paid: { label: "Registrar pagamento conferido", verify: "Confirmar que recebi o valor exigido" },
+    confirmed: { label: "Confirmar vaga e reserva", verify: "Registrar confirmação da operadora" },
+    boarded: { label: "Registrar embarque" },
+    completed: { label: "Marcar passeio realizado", verify: "Confirmar que o passeio aconteceu" },
+    noShow: { label: "Registrar não comparecimento", verify: "Confirmar não comparecimento" },
+    canceled: { label: "Cancelar reserva", verify: "Confirmar cancelamento e acerto de valores" }
+  };
+  function bookingActions(x, showCommercial, assigned) {
+    var buttons = [];
+    if (showCommercial && x.status === "pendente" && !holdExpired(x)) buttons.push("paid");
+    if (showCommercial && x.status === "pago" && assigned) buttons.push("confirmed");
+    if (x.status === "confirmado" && !x.no_show && x.tour_date <= TODAY()) {
+      if (x.boarded_at) buttons.push("completed");
+      else buttons.push("boarded", "noShow");
+    }
+    if (showCommercial && STATUS.slice(0, 3).includes(x.status) && !x.boarded_at) buttons.push("canceled");
+    return buttons.map(function (action) { return '<button class="btn btn-ghost" type="button" data-booking-action="' + action + '" data-booking="' + x.id + '">' + BOOKING_ACTIONS[action].label + "</button>"; }).join("");
+  }
+  function bindBookingActions(p, list) {
+    p.querySelectorAll("[data-booking-action]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var action = b.dataset.bookingAction, confirm = BOOKING_ACTIONS[action].verify;
+        if (confirm && b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = confirm; return; }
+        var x = list.find(function (r) { return String(r.id) === b.dataset.booking; });
+        if (action === "paid" && holdExpired(x)) { U.toast("Prazo expirado. Confira eventual pagamento para tratar este caso."); render(); return; }
+        var updates = {
+          paid: { status: "pago" }, confirmed: { status: "confirmado" }, completed: { status: "realizado" },
+          boarded: { boarded_at: new Date().toISOString(), no_show: false }, noShow: { no_show: true }, canceled: { status: "cancelado" }
+        };
+        var match = { status: x.status };
+        if (["boarded", "completed", "noShow", "canceled"].includes(action)) {
+          match.boarded_at = x.boarded_at || null;
+          match.no_show = x.no_show == null ? null : x.no_show;
+        }
+        b.disabled = true;
+        if (await stamp(x.id, updates[action], match)) { U.toast("Registro atualizado."); render(); }
+        else b.disabled = false;
+      });
+    });
+  }
+  async function stamp(id, patch, match) {
+    var q = sb.from("bookings").update(patch, { count: "exact" }).eq("id", id);
+    Object.entries(match || {}).forEach(function (entry) { q = entry[1] === null ? q.is(entry[0], null) : q.eq(entry[0], entry[1]); });
+    var u = await q;
+    if (fail(u)) return false;
+    if (u.count === 0) { U.toast("A reserva mudou. Atualize a seção antes de registrar."); render(); return false; }
+    return true;
+  }
 
   VIEWS.operacao = async function (p) {
     var tz = new Date(Date.now() - 3 * 3600e3), today = tz.toISOString().slice(0, 10), tmr = new Date(tz.getTime() + 864e5).toISOString().slice(0, 10);
@@ -484,38 +574,53 @@
     var res = await Promise.all([sb.from("bookings").select("*").eq("tour_date", day).neq("status", "cancelado").order("tour_name"), sb.from("suppliers").select("*").order("name")]);
     if (fail(res[0]) || fail(res[1])) return;
     var sups = {}; res[1].data.forEach(function (s) { sups[s.id] = s; });
-    var groups = {}; res[0].data.forEach(function (x) { var k = x.supplier_id || 0; (groups[k] = groups[k] || []).push(x); });
-    var total = res[0].data.reduce(function (a, x) { return a + people(x); }, 0);
-    p.innerHTML = '<div class="row"><button class="btn ' + (day === today ? "btn-mar" : "btn-ghost") + '" type="button" data-day="' + today + '">Hoje</button><button class="btn ' + (day === tmr ? "btn-mar" : "btn-ghost") + '" type="button" data-day="' + tmr + '">Amanhã</button><input type="date" id="opDay" value="' + day + '" style="width:auto"><span class="muted small">' + res[0].data.length + " reservas · " + total + " pessoas</span></div>" +
-      '<p class="note">Fluxo do dia: 1) enviar cada reserva (ou a lista) à empresa; 2) lembrete ao cliente na véspera; 3) de manhã, marcar quem embarcou. Depois do embarque, o passeio é com a empresa.</p>' +
+    var allBookings = res[0].data.filter(function (x) { return x.tour_date === day && x.status !== "cancelado"; });
+    var queue = allBookings.filter(function (x) { return canDispatch(x) || x.no_show; });
+    var awaiting = allBookings.filter(function (x) { return x.status === "pago" || (x.status === "pendente" && !holdExpired(x)); }).length;
+    var groups = {}, batch = {};
+    queue.forEach(function (x) { var k = x.supplier_id || 0; (groups[k] = groups[k] || []).push(x); });
+    var total = queue.reduce(function (a, x) { return a + people(x); }, 0);
+    p.innerHTML = '<div class="row"><button class="btn ' + (day === today ? "btn-mar" : "btn-ghost") + '" type="button" data-day="' + today + '">Hoje</button><button class="btn ' + (day === tmr ? "btn-mar" : "btn-ghost") + '" type="button" data-day="' + tmr + '">Amanhã</button><input type="date" id="opDay" aria-label="Data da operação" value="' + esc(day) + '" style="width:auto"><span class="muted small">' + queue.length + " no roteiro · " + total + " pessoas</span></div>" +
+      '<p class="note">Abra o WhatsApp para enviar por lá e registre o envio no painel. Registre o embarque na saída e a realização quando a empresa confirmar a conclusão.</p>' +
+      (awaiting ? '<p class="warn small">' + awaiting + " aguardando pagamento ou confirmação. Confira em Reservas.</p>" : "") +
       (Object.keys(groups).map(function (k) {
         var sup = sups[k], list = groups[k];
-        var all = sup && sup.whatsapp ? D.waLink(sup.whatsapp, ["Lista " + (S.brand || "") + " · " + ddmm(day), ""].concat(list.map(function (x, i) { return (i + 1) + ") " + fillTpl("{codigo} · {passeio} · {cliente} {telefone} · {hotel} · {pessoas} · receber {cobrar}", x, S); })).join("\n")) : "";
+        var pending = list.filter(function (x) { return canDispatch(x) && x.status === "confirmado" && !x.sent_to_supplier_at; });
+        batch[k] = pending.map(function (x) { return x.id; });
+        var all = sup && sup.active && sup.whatsapp && pending.length ? D.waLink(sup.whatsapp, ["Lista " + (S.brand || "") + " · " + ddmm(day), ""].concat(pending.map(function (x, i) { return (i + 1) + ") " + fillTpl("{codigo} · {passeio} · {cliente} {telefone} · {hotel} · {pessoas} · receber {cobrar}", x, S); })).join("\n")) : "";
         return '<div class="item"><div class="item-head"><h3>' + (sup ? esc(sup.name) : "⚠ Sem empresa definida") + '</h3><span class="muted small">' + list.length + " reservas</span></div>" +
-          (all ? '<div class="row"><a class="btn btn-ghost" href="' + all + '" target="_blank" rel="noopener" data-sendall="' + k + '">Enviar lista do dia à empresa</a></div>' : sup ? '<p class="warn small">Cadastre o WhatsApp de ' + esc(sup.name) + " em Empresas e net.</p>" : '<p class="warn small">Defina a empresa de cada reserva em Reservas.</p>') +
+          (all ? '<div class="row"><a class="btn btn-ghost" href="' + esc(all) + '" target="_blank" rel="noopener" data-sendall="' + k + '">Abrir lista de envios pendentes</a><button type="button" class="btn btn-ghost" data-record-list="' + k + '">Registrar envio da lista (' + pending.length + ')</button></div>' :
+            !sup || !sup.active ? '<p class="warn small">Defina uma empresa ativa para cada reserva em Reservas.</p>' :
+            !sup.whatsapp ? '<p class="warn small">Cadastre o WhatsApp de ' + esc(sup.name) + " em Empresas e net.</p>" : "") +
           list.map(function (x) {
-            var sl = supLink(x, sup, S), rl = remindLink(x, S);
+            var sl = canDispatch(x) && x.status === "confirmado" ? supLink(x, sup, S) : "";
+            var rl = canDispatch(x) && x.status === "confirmado" && !x.boarded_at ? remindLink(x, S) : "";
             return '<div class="item" style="background:var(--bg)"><div class="item-head"><div><b>' + esc(x.code || "#" + x.id) + " · " + esc(x.tour_name) + '</b><p class="small">' + esc(x.customer_name) + " · " + esc(x.phone) + " · " + esc(x.hotel || "sem hotel") + " · " + pax(x) + '</p><p class="small muted">Receber no embarque: <b>' + D.brl(x.collect_at_boarding == null ? x.total : x.collect_at_boarding) + "</b> · " + STATUS_TXT[x.status] + "</p></div>" +
-              '<div class="small">' + (x.sent_to_supplier_at ? "✓ enviada à empresa<br>" : "") + (x.reminder_sent_at ? "✓ lembrete enviado<br>" : "") + (x.boarded_at ? "<b style=\"color:var(--bom)\">✓ embarcou</b>" : x.no_show ? '<b style="color:var(--ruim)">não apareceu</b>' : "") + "</div></div>" +
-              '<div class="row">' + (sl ? '<a class="btn btn-mar" href="' + sl + '" target="_blank" rel="noopener" data-sent="' + x.id + '">Enviar à empresa</a>' : "") +
-              (rl ? '<a class="btn btn-ghost" href="' + rl + '" target="_blank" rel="noopener" data-remind="' + x.id + '">Lembrete ao cliente</a>' : "") +
-              '<button class="btn btn-ghost" type="button" data-board="' + x.id + '">Embarcou</button><button class="btn btn-ghost" type="button" data-noshow="' + x.id + '">Não apareceu</button></div></div>';
+              '<div class="small">' + (x.boarded_at ? "<b>✓ Embarcou</b>" : x.no_show ? '<b style="color:var(--ruim)">Não compareceu</b>' : "") + "</div></div>" +
+              '<div class="row">' + messageAction(x, sl, "sent", "Abrir WhatsApp da empresa", "Registrar envio à empresa", "Envio à empresa registrado") +
+              messageAction(x, rl, "remind", "Abrir lembrete ao cliente", "Registrar lembrete enviado", "Lembrete registrado") +
+              bookingActions(x, false, false) + "</div></div>";
           }).join("") + "</div>";
       }).join("") || '<div class="empty">Nenhuma reserva para ' + ddmm(day) + ".</div>");
     p.querySelectorAll("[data-day]").forEach(function (b) { b.addEventListener("click", function () { cache.opDay = b.dataset.day; render(); }); });
     document.getElementById("opDay").addEventListener("change", function (e) { cache.opDay = e.target.value; render(); });
-    p.querySelectorAll("[data-sent]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.sent, { sent_to_supplier_at: new Date().toISOString() }).then(function () { setTimeout(render, 400); }); }); });
-    p.querySelectorAll("[data-sendall]").forEach(function (a) { a.addEventListener("click", function () { var ids = (groups[a.dataset.sendall] || []).map(function (x) { return x.id; }); sb.from("bookings").update({ sent_to_supplier_at: new Date().toISOString() }).in("id", ids).then(function () { setTimeout(render, 400); }); }); });
-    p.querySelectorAll("[data-remind]").forEach(function (a) { a.addEventListener("click", function () { stamp(a.dataset.remind, { reminder_sent_at: new Date().toISOString() }).then(function () { setTimeout(render, 400); }); }); });
-    p.querySelectorAll("[data-board]").forEach(function (b) { b.addEventListener("click", async function () { if (await stamp(b.dataset.board, { boarded_at: new Date().toISOString(), no_show: false, status: "realizado" })) { U.toast("Embarque confirmado."); render(); } }); });
-    p.querySelectorAll("[data-noshow]").forEach(function (b) { b.addEventListener("click", async function () { if (await stamp(b.dataset.noshow, { no_show: true, boarded_at: null })) { U.toast("Marcado como não compareceu."); render(); } }); });
+    bindMessageActions(p, queue);
+    bindBookingActions(p, queue);
+    p.querySelectorAll("[data-record-list]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        b.disabled = true;
+        var u = await sb.from("bookings").update({ sent_to_supplier_at: new Date().toISOString() }, { count: "exact" }).in("id", batch[b.dataset.recordList]).eq("status", "confirmado").is("sent_to_supplier_at", null);
+        if (fail(u)) { b.disabled = false; return; }
+        U.toast(u.count === 0 ? "Não há envios pendentes nessa lista." : "Envios da lista registrados."); render();
+      });
+    });
   };
 
   VIEWS.empresas = async function (p) {
-    var res = await Promise.all([sb.from("suppliers").select("*").order("name"), sb.from("tour_rates").select("*"), sb.from("tours").select("slug,name,price_pix,price_card,active,sort,capacity_per_day").order("sort"), bizData()]);
+    var res = await Promise.all([sb.from("suppliers").select("*").order("name"), sb.from("tour_rates").select("*"), sb.from("tours").select("*").order("sort"), bizData(), sb.from("settings").select("data").eq("id", 1).maybeSingle()]);
     if (fail(res[0]) || fail(res[1]) || fail(res[2])) return;
-    var sups = res[0].data, rates = res[1].data, tours = res[2].data, B = res[3];
-    var AD = Number(B.ad_cost_per_pax || 0), MM = Number(B.min_margin_per_pax || 0), FEE = Number(B.card_fee_pct || 0), SPLIT = Number(B.partner_split_pct || 50);
+    var sups = res[0].data, rates = res[1].data, tours = res[2].data, B = res[3], settings = res[4].data && res[4].data.data || {};
+    var AD = Number(B.ad_cost_per_pax || 0), MM = Number(B.min_margin_per_pax || 0), FEE = Number(B.card_fee_pct || 0), SPLIT = Number(B.partner_split_pct == null ? 50 : B.partner_split_pct);
     if (cache.netTour) { cache.empView = "passeios"; cache.empOpenT = cache.netTour; cache.netTour = ""; }
     var mode = cache.empView || "passeios", openT = cache.empOpenT, openSup = cache.supOpen;
     cache.empOpenT = null; cache.supOpen = null;
@@ -527,11 +632,44 @@
     function calc(t, net) { if (net === "" || net == null || isNaN(Number(net))) return null; net = Number(net); var base = net + AD + MM; return { floor: Math.ceil(base), floorCard: Math.ceil(base / (1 - FEE / 100)), sobra: Number(t.price_pix) - net - AD, ok: Number(t.price_pix) >= Math.ceil(base) }; }
     function sumHtml(t) {
       var r = prefOf(t.slug), c = r && calc(t, r.net_adult);
-      if (!c) return '<span class="bad">sem net · site sem trava de mínimo</span> · site ' + brl(t.price_pix);
-      return "net " + brl(r.net_adult) + " (" + esc(supName(r.supplier_id)) + ") · site " + brl(t.price_pix) + ' · <b class="' + (c.ok ? "ok" : "bad") + '">' + (c.ok ? "sobra " + brl(c.sobra) : "abaixo do mínimo " + brl(c.floor)) + "</b>";
+      var mode = t.sales_mode === "booking" ? (salesIssues(t).length ? "reserva precisa de revisão" : "reserva online") : "sob consulta";
+      if (!c) return '<span class="bad">sem net</span> · ' + mode + ' · site ' + brl(t.price_pix);
+      return mode + " · net " + brl(r.net_adult) + " (" + esc(supName(r.supplier_id)) + ") · site " + brl(t.price_pix) + ' · <b class="' + (c.ok ? "ok" : "bad") + '">' + (c.ok ? "sobra " + brl(c.sobra) : "abaixo do mínimo " + brl(c.floor)) + "</b>";
     }
-    function footHtml(t) { var r = prefOf(t.slug), c = r && calc(t, r.net_adult); return c ? "Mínimo no site: <b>" + brl(c.floor) + " Pix · " + brl(c.floorCard) + " cartão</b> · cada sócio " + brl(c.sobra * SPLIT / 100) : "Lance um net para travar o preço mínimo."; }
+    function footHtml(t) {
+      var r = prefOf(t.slug), c = r && calc(t, r.net_adult);
+      if (!c) return "Lance um net para calcular o preço mínimo.";
+      var share = c.sobra * SPLIT / 100;
+      return "Mínimo no site: <b>" + brl(c.floor) + " Pix · " + brl(c.floorCard) + " cartão</b> · divisão estimada " + esc(B.partner_name || "Sócio") + " " + brl(share) + " / " + esc(B.owner_name || "Maré Tur") + " " + brl(c.sobra - share);
+    }
     function rowAttrs(t, net, margin) { return ' data-row data-name="' + esc(t.name) + '" data-net="' + (net ? "com" : "sem") + '" data-status="' + (t.active ? "on" : "off") + '" data-sort="' + t.sort + '" data-margin="' + (margin == null ? -1 : margin) + '"'; }
+    function salesIssues(t) {
+      var selected = rates.find(function (r) { return r.tour_slug === t.slug && r.preferred && r.active; });
+      var supplier = selected && sups.find(function (s) { return String(s.id) === String(selected.supplier_id) && s.active; });
+      var net = selected && (t.per_vehicle ? selected.net_vehicle : selected.net_adult);
+      var floor = net == null ? null : calc(t, net);
+      var issues = [];
+      if (!supplier || net == null || !Number.isFinite(Number(net)) || Number(net) < 0) issues.push(t.per_vehicle ? "defina a operadora ativa com net por veículo" : "defina a operadora ativa com net preferido");
+      if (!Number.isInteger(t.capacity_per_day) || t.capacity_per_day < 1) issues.push("informe vagas garantidas por dia");
+      if (!Array.isArray(t.departure_weekdays) || !t.departure_weekdays.length) issues.push("selecione os dias de saída");
+      if (settings.pix_payment_verified !== true || !String(settings.pix_key || "").trim() || !String(settings.pix_name || "").trim()) issues.push("verifique o destinatário e a chave Pix em Configurações");
+      if (floor && (!floor.ok || Number(t.price_card) < floor.floorCard)) issues.push("revise o preço mínimo");
+      return issues;
+    }
+    function salesSetup(t) {
+      var id = "sales-" + esc(t.slug), capacity = t.capacity_per_day == null ? "" : t.capacity_per_day;
+      if (!Object.prototype.hasOwnProperty.call(t, "sales_mode") || !Object.prototype.hasOwnProperty.call(t, "departure_weekdays")) {
+        return '<label>Vagas/dia <input type="number" min="0" value="' + capacity + '" data-cap="' + esc(t.slug) + '"></label><p class="small muted">Reserva online disponível após a migração do banco.</p>';
+      }
+      var issues = salesIssues(t), current = t.sales_mode === "booking", days = t.departure_weekdays || [];
+      return '<form class="formgrid" data-sales="' + esc(t.slug) + '">' +
+        '<div class="field"><label class="label" for="' + id + '">Modo de venda</label><select id="' + id + '" name="sales_mode"><option value="consultation">Sob consulta</option><option value="booking"' + (current ? " selected" : "") + '>Reserva online</option></select></div>' +
+        '<div class="field"><label class="label" for="' + id + '-capacity">Vagas garantidas por dia</label><input id="' + id + '-capacity" type="number" min="0" step="1" value="' + capacity + '" name="capacity_per_day" inputmode="numeric"></div>' +
+        '<fieldset class="full"><legend>Dias de saída</legend><div class="row">' + ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(function (label, i) {
+          return '<label class="check"><input type="checkbox" name="day" value="' + (i + 1) + '"' + (days.includes(i + 1) ? " checked" : "") + "> " + label + "</label>";
+        }).join("") + '</div></fieldset><p class="small full ' + (issues.length ? "muted" : "ok") + '" data-sales-summary>' + (issues.length ? "Para habilitar a reserva online, " + issues.join(", ") + "." : "Dados de venda preenchidos. Confirme tarifa, calendário e vagas com a operadora antes de ativar.") + '</p>' +
+        '<div class="row full"><button class="btn btn-mar" type="submit">Salvar modo e vagas</button></div></form>';
+    }
 
     var seg = '<div class="seg">' + [["passeios", "Por passeio"], ["tabela", "Lançar tabela"], ["empresas", "Empresas (" + sups.length + ")"]].map(function (o) { return '<button type="button" data-mode="' + o[0] + '"' + (mode === o[0] ? ' class="on"' : "") + ">" + o[1] + "</button>"; }).join("") + "</div>";
     var body = "";
@@ -543,10 +681,12 @@
         return '<details class="nrow" data-tour="' + esc(t.slug) + '"' + rowAttrs(t, pr, c && c.sobra) + (openT === t.slug ? " open" : "") + '><summary><span class="nr-name">' + esc(t.name) + (t.active ? "" : ' <span class="muted">(oculto)</span>') + '</span><span class="nr-info">' + sumHtml(t) + "</span></summary>" +
           '<div class="nr-body">' + 
           tr.map(function (r) {
-            return '<div class="nr-rate" data-rate="' + r.id + '"><span class="nr-sup">' + esc(supName(r.supplier_id)) + (r.active ? "" : " (pausado)") + '</span><label class="nr-f">Net adulto<input type="number" inputmode="decimal" step="0.01" min="0" value="' + r.net_adult + '" data-k="net_adult"></label><label class="nr-f">Net criança<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_child == null ? "" : r.net_child) + '" placeholder="= adulto" data-k="net_child"></label><button type="button" class="star' + (r.preferred ? " on" : "") + '" data-pref="' + r.id + '" title="Recebe as reservas">★</button><button type="button" class="xbtn" data-rdel="' + r.id + '" title="Excluir">✕</button></div>';
+            return '<div class="nr-rate" data-rate="' + r.id + '"><span class="nr-sup">' + esc(supName(r.supplier_id)) + (r.active ? "" : " (pausado)") + '</span><label class="nr-f">Net adulto<input type="number" inputmode="decimal" step="0.01" min="0" value="' + r.net_adult + '" data-k="net_adult"></label><label class="nr-f">Net criança<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_child == null ? "" : r.net_child) + '" placeholder="= adulto" data-k="net_child"></label>' +
+              (t.per_vehicle || t.price_private != null ? '<label class="nr-f">Net veículo<input type="number" inputmode="decimal" step="0.01" min="0" value="' + (r.net_vehicle == null ? "" : r.net_vehicle) + '" data-k="net_vehicle"></label>' : "") +
+              '<button type="button" class="star' + (r.preferred ? " on" : "") + '" data-pref="' + r.id + '" title="Recebe as reservas">★</button><button type="button" class="xbtn" data-rdel="' + r.id + '" title="Excluir">✕</button></div>';
           }).join("") +
           (free.length ? '<div class="nr-add"><select data-newsup="' + esc(t.slug) + '" aria-label="Empresa">' + free.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + "</option>"; }).join("") + '</select><input type="number" inputmode="decimal" step="0.01" min="0" placeholder="Net" data-newnet="' + esc(t.slug) + '" aria-label="Net adulto"><button type="button" class="btn btn-mar" data-radd="' + esc(t.slug) + '">+</button></div>' : (sups.length ? "" : '<p class="small muted">Cadastre a empresa na aba Empresas.</p>')) +
-          '<div class="nr-foot"><span data-foot>' + footHtml(t) + '</span><label>Vagas/dia <input type="number" min="0" placeholder="∞" value="' + (t.capacity_per_day == null ? "" : t.capacity_per_day) + '" data-cap="' + esc(t.slug) + '"></label></div></div></details>';
+          '<div class="nr-foot"><span data-foot>' + footHtml(t) + "</span></div>" + salesSetup(t) + "</div></details>";
       }).join("");
     } else if (mode === "tabela") {
       body = sups.length ? '<p class="small muted hint">Chegou a tabela de uma empresa? Escolha a empresa e digite o net de cada passeio. Só os campos alterados são salvos.</p>' +
@@ -607,6 +747,28 @@
       U.toast("Net salvo."); again({ empOpenT: slug });
     }); });
     p.querySelectorAll("[data-cap]").forEach(function (inp) { inp.addEventListener("change", async function () { var v = inp.value === "" ? null : Math.max(0, parseInt(inp.value, 10) || 0); var u = await sb.from("tours").update({ capacity_per_day: v }).eq("slug", inp.dataset.cap); if (!fail(u)) U.toast(v == null ? "Sem limite de vagas." : v + " vagas por dia."); }); });
+    p.querySelectorAll("[data-sales]").forEach(function (form) {
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var t = tourOf(form.dataset.sales), input = new FormData(form);
+        var fields = {
+          sales_mode: input.get("sales_mode"),
+          capacity_per_day: input.get("capacity_per_day") === "" ? null : Number(input.get("capacity_per_day")),
+          departure_weekdays: input.getAll("day").map(Number)
+        };
+        if (!fields.departure_weekdays.length) fields.departure_weekdays = null;
+        var issues = salesIssues(Object.assign({}, t, fields));
+        if (fields.sales_mode === "booking" && issues.length) {
+          form.querySelector("[data-sales-summary]").textContent = "Para habilitar a reserva online, " + issues.join(", ") + ".";
+          return U.toast("Confira os dados pendentes da venda.");
+        }
+        var btn = form.querySelector("button[type=submit]");
+        btn.disabled = true;
+        var u = await sb.from("tours").update(fields).eq("slug", t.slug);
+        if (fail(u)) { btn.disabled = false; return; }
+        U.toast("Modo de venda e vagas salvos."); again({ empOpenT: t.slug });
+      });
+    });
 
     // Lançar tabela
     var tSup = document.getElementById("tSup");
@@ -648,7 +810,7 @@
     var month = cache.finMonth || new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 7);
     var y = +month.slice(0, 4), m = +month.slice(5, 7), end = (m === 12 ? (y + 1) + "-01" : y + "-" + String(m + 1).padStart(2, "0")) + "-01";
     var res = await Promise.all([sb.from("bookings").select("*").gte("tour_date", month + "-01").lt("tour_date", end).neq("status", "cancelado"), sb.from("suppliers").select("id,name"), bizData(),
-      sb.from("bookings").select("*").is("settlement_done_at", null).not("boarded_at", "is", null).neq("supplier_settlement", 0)]);
+      sb.from("bookings").select("*").is("settlement_done_at", null).not("boarded_at", "is", null).neq("supplier_settlement", 0).in("status", ["confirmado", "realizado"])]);
     if (fail(res[0]) || fail(res[1]) || fail(res[3])) return;
     var B = res[2], partner = B.partner_name || "Sócio", owner = B.owner_name || "Pablo";
     var sname = {}; res[1].data.forEach(function (s) { sname[s.id] = s.name; });
@@ -658,7 +820,7 @@
     var profit = sum("profit"), share = sum("partner_share");
     var open = res[3].data, byS = {};
     open.forEach(function (x) { var k = x.supplier_id || 0; (byS[k] = byS[k] || []).push(x); });
-    p.innerHTML = '<div class="row"><label class="label" for="finM">Mês dos passeios</label><input type="month" id="finM" value="' + month + '" style="width:auto"><span class="muted small">' + sold.length + " vendas pagas · " + res[0].data.filter(function (x) { return x.status === "pendente"; }).length + " esperando pagamento</span></div>" +
+    p.innerHTML = '<div class="row"><label class="label" for="finM">Mês dos passeios</label><input type="month" id="finM" value="' + month + '" style="width:auto"><span class="muted small">' + sold.length + " vendas pagas · " + res[0].data.filter(function (x) { return x.status === "pendente" && !holdExpired(x); }).length + " esperando pagamento</span></div>" +
       '<div class="kpis"><div class="kpi"><b class="num">' + D.brl(sum("total")) + '</b><span>vendido</span></div><div class="kpi"><b class="num">' + D.brl(sum("net_total")) + '</b><span>net das empresas</span></div>' +
       '<div class="kpi"><b class="num">' + D.brl(sum("ad_cost")) + '</b><span>anúncio (estimado)</span></div><div class="kpi"><b class="num">' + D.brl(sum("commission") + sum("card_fee")) + "</b><span>comissões e taxa de cartão</span></div></div>" +
       '<div class="kpis"><div class="kpi"><b class="num">' + D.brl(profit) + '</b><span>lucro</span></div><div class="kpi"><b class="num">' + D.brl(share) + "</b><span>" + esc(partner) + '</span></div><div class="kpi"><b class="num">' + D.brl(profit - share) + "</b><span>" + esc(owner) + '</span></div><div class="kpi"><b class="num">' + sum("adults") + "/" + (sum("adults") + sum("children") + sum("seniors")) + "</b><span>adultos / passageiros</span></div></div>" +
@@ -676,30 +838,72 @@
   VIEWS.config = async function (p) {
     var r = await sb.from("settings").select("data").eq("id", 1).maybeSingle();
     if (fail(r)) return;
-    var s = Object.assign({}, D.SEED.settings, (r.data && r.data.data) || {});
+    var stored = r.data && r.data.data || {};
+    var s = Object.assign({}, D.SEED.settings, stored, {
+      deposit_pct: stored.deposit_pct == null ? 20 : stored.deposit_pct,
+      reservation_hold_minutes: stored.reservation_hold_minutes == null ? 30 : stored.reservation_hold_minutes,
+      pix_key: stored.pix_key || "", pix_name: stored.pix_name || ""
+    });
     var F = [["brand", "Nome da marca"], ["brand_sub", "Linha abaixo do nome"], ["whatsapp", "WhatsApp de atendimento (com 55 e DDD)"], ["instagram", "Instagram (sem @)"],
       ["pix_key", "Chave Pix"], ["pix_name", "Nome que aparece no Pix"], ["hero_eyebrow", "Selo da capa"], ["hero_title", "Título da capa"],
-      ["rating_value", "Nota real do Google (deixe vazio até ter)"], ["rating_count", "Quantidade real de avaliações (vazio esconde as notas)"], ["pack_discount_pct", "Desconto de pacote (%)", "n"], ["deposit_per_person", "Sinal por pessoa (R$)", "n"],
+      ["rating_value", "Nota real do Google (deixe vazio até ter)"], ["rating_count", "Quantidade real de avaliações (vazio esconde as notas)"], ["pack_discount_pct", "Desconto de pacote (%)", "n"],
+      ["deposit_pct", "Sinal sobre o total (%)", "n", 'type="number" min="0" max="100" step="0.01" required'],
+      ["reservation_hold_minutes", "Prazo para pagamento da reserva (min)", "n", 'type="number" min="5" max="120" step="1" required'],
       ["child_factor", "Criança paga (0,5 = meia)", "n"], ["footer_note", "Rodapé"],
       ["cutoff_hour", "Horário de corte das saídas do dia seguinte (0 a 23)", "n"], ["google_review_url", "Link de avaliação no Google"], ["followup_coupon", "Cupom para cliente da casa (pós-venda)"]];
     var BZ = await bizData();
     var BF = [["partner_name", "Nome do sócio operador"], ["owner_name", "Seu nome"], ["partner_split_pct", "Parte do sócio no lucro (%)", "n"], ["ad_cost_per_pax", "Custo de anúncio por passageiro (R$)", "n"],
       ["min_margin_per_pax", "Margem mínima por passageiro (R$)", "n"], ["card_fee_pct", "Taxa do cartão (%)", "n"], ["ops_whatsapp", "WhatsApp do sócio operador"], ["notify_topic", "Canal de aviso no celular (ntfy)"], ["admin_url", "Endereço do painel"]];
     p.innerHTML = '<div class="item"><h3>Configurações do site</h3><form id="sf" class="formgrid">' +
-      F.map(function (x) { return f("s_" + x[0], x[1], s[x[0]], "", x[2] === "n" ? 'type="number" step="0.01"' : ""); }).join("") +
+      F.map(function (x) { return f("s_" + x[0], x[1], s[x[0]], "", x[3] || (x[2] === "n" ? 'type="number" step="0.01"' : "")); }).join("") +
+      '<label class="check full"><input type="checkbox" id="s_pix_payment_verified"' + (stored.pix_payment_verified === true ? " checked" : "") + '> Conferi a chave Pix e o nome do destinatário para receber reservas</label><p class="small muted full">Salve a chave e o nome primeiro. Depois de conferir os dados, marque a verificação e salve novamente.</p>' +
       ta("s_hero_promises", "Promessas da capa (uma por linha)", (s.hero_promises || []).join("\n")) + ta("s_cancel_policy", "Regra de cancelamento e chuva", s.cancel_policy) +
       '<div class="row full"><button class="btn btn-mar" type="submit">Salvar configurações</button></div></form></div>' +
       '<div class="item"><h3>Regras do negócio (só administradores veem)</h3><p class="small muted">Base do preço mínimo e da divisão do lucro. Aviso de nova reserva: instale o app ntfy no celular e assine o canal abaixo (grátis, sem cadastro). O aviso não leva nome nem telefone do cliente.</p><form id="bf" class="formgrid">' +
       BF.map(function (x) { return f("b_" + x[0], x[1], BZ[x[0]], "", x[2] === "n" ? 'type="number" step="0.01"' : ""); }).join("") +
       '<div class="row full"><button class="btn btn-mar" type="submit">Salvar regras</button>' + (BZ.notify_topic ? '<a class="btn btn-ghost" href="https://ntfy.sh/' + encodeURIComponent(BZ.notify_topic) + '" target="_blank" rel="noopener">Abrir canal de aviso</a>' : "") + '<button class="btn btn-ghost" type="button" id="ntest">Mandar aviso de teste</button></div></form></div>' +
       '<div class="item"><h3>Administradores</h3><p class="small muted">E-mails que podem entrar neste painel.</p><div id="admins"></div><form id="af" class="row"><input id="newAdmin" type="email" placeholder="email@exemplo.com" style="flex:1;min-width:200px"><button class="btn btn-ghost" type="submit">Adicionar</button></form></div>';
+    function readSiteFields() {
+      var values = {};
+      F.forEach(function (x) {
+        var value = document.getElementById("s_" + x[0]).value.trim();
+        values[x[0]] = x[2] === "n" ? Number(value.replace(",", ".")) : value;
+      });
+      values.whatsapp = values.whatsapp.replace(/\D/g, "");
+      values.hero_promises = document.getElementById("s_hero_promises").value.split("\n").map(function (z) { return z.trim(); }).filter(Boolean);
+      values.cancel_policy = document.getElementById("s_cancel_policy").value.trim();
+      return values;
+    }
+    var originalFields = readSiteFields(), verified = document.getElementById("s_pix_payment_verified");
     document.getElementById("sf").addEventListener("submit", async function (e) {
-      e.preventDefault(); var d = {};
-      F.forEach(function (x) { var v = document.getElementById("s_" + x[0]).value.trim(); d[x[0]] = x[2] === "n" ? Number(v.replace(",", ".")) || 0 : v; });
-      d.whatsapp = d.whatsapp.replace(/\D/g, "");
-      d.hero_promises = document.getElementById("s_hero_promises").value.split("\n").map(function (z) { return z.trim(); }).filter(Boolean);
-      d.cancel_policy = document.getElementById("s_cancel_policy").value.trim();
-      var u = await sb.from("settings").upsert({ id: 1, data: d, updated_at: new Date().toISOString() }); if (!fail(u)) U.toast("Configurações salvas. O site já mostra as mudanças.");
+      e.preventDefault();
+      var draft = readSiteFields(), hold = draft.reservation_hold_minutes, pct = draft.deposit_pct;
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100 || !document.getElementById("s_deposit_pct").value) return U.toast("Informe o sinal entre 0% e 100%.");
+      if (!Number.isInteger(hold) || hold < 5 || hold > 120) return U.toast("Informe um prazo inteiro de 5 a 120 minutos.");
+      var save = e.currentTarget.querySelector("button[type=submit]");
+      save.disabled = true;
+      var newest = await sb.from("settings").select("data").eq("id", 1).maybeSingle();
+      if (fail(newest)) { save.disabled = false; return; }
+      var fresh = Object.assign({}, newest.data && newest.data.data || {});
+      var pixChanged = draft.pix_key !== originalFields.pix_key || draft.pix_name !== originalFields.pix_name;
+      var verifyChanged = verified.checked !== (stored.pix_payment_verified === true);
+      if ((pixChanged || verifyChanged) && (String(fresh.pix_key || "").trim() !== originalFields.pix_key || String(fresh.pix_name || "").trim() !== originalFields.pix_name)) {
+        U.toast("Os dados Pix mudaram em outro acesso. Confira os dados atualizados."); render(); return;
+      }
+      if (verifyChanged && verified.checked && !pixChanged && (!draft.pix_key || !draft.pix_name)) {
+        save.disabled = false; return U.toast("Preencha a chave e o nome do destinatário antes de verificar.");
+      }
+      Object.keys(draft).forEach(function (key) {
+        if (JSON.stringify(draft[key]) !== JSON.stringify(originalFields[key])) fresh[key] = draft[key];
+      });
+      if (fresh.deposit_pct == null) fresh.deposit_pct = pct;
+      if (fresh.reservation_hold_minutes == null) fresh.reservation_hold_minutes = hold;
+      if (pixChanged) fresh.pix_payment_verified = false;
+      else if (verifyChanged) fresh.pix_payment_verified = verified.checked;
+      var u = await sb.from("settings").upsert({ id: 1, data: fresh, updated_at: new Date().toISOString() });
+      if (fail(u)) { save.disabled = false; return; }
+      U.toast(pixChanged ? "Dados Pix salvos. Confira o destinatário e verifique em seguida." : "Configurações salvas.");
+      render();
     });
     document.getElementById("bf").addEventListener("submit", async function (e) {
       e.preventDefault(); var d = Object.assign({}, BZ);
