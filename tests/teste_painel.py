@@ -38,9 +38,11 @@ DATA = {
     "bookings": [BOOK],
     "suppliers": [dict(id=7, name="Enseada Teste", whatsapp="5585911112222", contact_name="", pickup_notes="", msg_template="", active=True)],
     "tour_rates": [dict(id=3, tour_slug="cumbuco", supplier_id=7, net_adult=30, net_child=None, net_vehicle=None, preferred=True, active=True,
-                       updated_at="2025-01-01T01:30:00Z", notes="")],
+                       updated_at="2025-01-01T01:30:00Z", notes=""),
+                   dict(id=4, tour_slug="jeri", supplier_id=7, net_adult=90, net_child=None, net_vehicle=None, preferred=False, active=False)],
     "tours": [tour("cumbuco", "Cumbuco", 80, 1), tour("lagoinha", "Lagoinha", 100, 2), tour("aguas", "Águas Belas", 80, 3),
-              tour("jeri", "Jeri Economy", 220, 4), tour("jeri-vip", "Jeri VIP", 310, 5), tour("jeri-blue", "Jeri Blue", 350, 6)],
+              tour("jeri", "Jeri Economy", 220, 4), tour("jeri-vip", "Jeri VIP", 310, 5),
+              tour("jeri-blue", "Jeri Blue Day com Lagoa do Paraíso e passeio", 350, 6)],
     "settings": [dict(id=1, data=SETTINGS)],
     "biz_settings": [dict(id=1, data=dict(ad_cost_per_pax=5, min_margin_per_pax=10, partner_name="Bruno", owner_name="Pablo", partner_split_pct=50, card_fee_pct=5, notify_topic="maretur-teste", admin_url=BASE + "admin.html"))],
     "admin_emails": [dict(email="admin@teste.local")],
@@ -244,6 +246,29 @@ with sync_playwright() as pw:
             p.wait_for_selector('#sf button[type="submit"]:enabled')
             check(DATA["settings"][0]["data"]["pix_payment_verified"] is True, "dados Pix salvos podem ser verificados depois")
         if key == "passeios":
+            cards = p.locator('.tour-catalog-card')
+            for width in (320, 390, 420):
+                p.set_viewport_size({"width": width, "height": 900})
+                layout = cards.evaluate_all('cards => ({height: Math.max(...cards.map(c => c.getBoundingClientRect().height)), fits: cards.every(c => c.scrollWidth <= c.clientWidth), actions: cards.every(c => new Set([...c.querySelectorAll(".tour-card-actions button")].map(b => b.offsetTop)).size === 1)})')
+                check(layout["height"] <= 190 and layout["fits"] and layout["actions"], "cards compactos sem overflow em %d px" % width)
+            p.select_option('[data-fk="net"]', "com")
+            check(cards.filter(visible=True).count() == 1 and cards.filter(visible=True).first.get_attribute("data-slug") == "cumbuco", "Com net mostra passeios com tarifa ativa")
+            p.select_option('[data-fk="net"]', "sem")
+            check(cards.filter(visible=True).count() == 5 and p.locator('[data-slug="jeri"][data-net="sem"]').is_visible(), "Sem net inclui passeios sem tarifa ativa")
+            p.click('#tclear')
+            cumbuco = p.locator('.tour-catalog-card[data-slug="cumbuco"]')
+            more = cumbuco.get_by_role('button', name="Mais ações")
+            shortcut = cumbuco.get_by_role('button', name="Operadora e vagas")
+            check(not shortcut.is_visible(), "ações secundárias começam recolhidas")
+            more.click()
+            check(shortcut.is_visible() and more.get_attribute("aria-expanded") == "true" and cumbuco.get_by_role('link', name="Ver passeio").is_visible(), "Mais mostra os atalhos do mesmo passeio")
+            shortcut.click()
+            p.wait_for_selector('details[data-tour="cumbuco"][open]')
+            go("passeios")
+            p.click('[data-edit="cumbuco"]')
+            p.wait_for_selector('text=Editar: Cumbuco')
+            p.click('#back')
+            p.wait_for_selector('.tour-catalog-card')
             p.click("#tclear"); p.fill("#tq", "jeri"); p.wait_for_timeout(300)
             names = p.eval_on_selector_all("[data-row]:not([hidden])", "els => els.map(e => e.dataset.name)")
             check(len(names) >= 3 and all("jeri" in n.lower() for n in names), "busca 'jeri' filtra passeios (%d)" % len(names))
