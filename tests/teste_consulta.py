@@ -76,7 +76,11 @@ def fake_catalog(context, flags, calls):
             if flags.get("package_two") and payload:
                 payload.append(dict(next(t for t in SEED if t["slug"] == "3praias")))
             if flags.get("all_tours") and not flags.get("empty"):
-                payload = SEED
+                payload = list(SEED)
+                if flags.get("new_package"):
+                    payload.append(dict(CUMBUCO, slug="novo-combo", name="Roteiro de teste",
+                                        category="pacotes", location="Jericoacoara + Cumbuco",
+                                        departure_weekdays=[datetime.fromisoformat(DATE).isoweekday()]))
         elif endpoint == "settings":
             payload = [dict(data=dict(
                 brand="Maré Tur", whatsapp="5588999990000", pix_key="recebimento-anterior",
@@ -266,6 +270,66 @@ with sync_playwright() as pw:
     print("OK reserva sintética com cotação validada, protocolo, idempotência e campanha")
 
     flags.update(bookable=False, all_tours=True)
+    page.goto(BASE + "?lang=pt")
+    expect(page.locator("#cards .card")).to_have_count(len(SEED))
+    expect(page.locator("#dest option").first).to_have_text("Todos os destinos")
+    expect(page.locator("#dest option", has_text="Premium")).to_have_count(0)
+    assert page.locator("#dest").bounding_box()["width"] == page.locator("#when").bounding_box()["width"]
+    expect(page.locator("#cards .catalog-group-title").first).to_have_text("Jericoacoara")
+    page.locator("#dest").select_option("jericoacoara")
+    expect(page.locator("#catalogDest")).to_have_value("jericoacoara")
+    expect(page.locator("#listTitle")).to_have_text("Jericoacoara")
+    expect(page.locator("#cards .card")).to_have_count(9)
+    assert page.locator("#cards .catalog-group-title").all_inner_texts() == ["Passeios", "Pacotes", "Transfers"]
+    assert parse_qs(urlparse(page.url).query)["destino"] == ["jericoacoara"]
+    package_filter = page.locator('#filters [data-cat="pacotes"]')
+    package_filter.click()
+    expect(package_filter).to_have_attribute("aria-pressed", "true")
+    expect(package_filter.locator(".num")).to_have_text("2")
+    expect(page.locator("#cards .card")).to_have_count(2)
+    for scheme in ("light", "dark"):
+        page.emulate_media(color_scheme=scheme)
+        assert package_filter.locator(".num").evaluate("""badge => {
+            const color = getComputedStyle(badge);
+            const luminance = value => value.match(/\\d+/g).slice(0, 3).map(Number).map(channel => {
+                const c = channel / 255;
+                return c < .04045 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4;
+            }).reduce((sum, c, index) => sum + c * [.2126, .7152, .0722][index], 0);
+            const ratios = [luminance(color.color), luminance(color.backgroundColor)].sort();
+            return (ratios[1] + .05) / (ratios[0] + .05) >= 4.5;
+        }"""), scheme
+    page.emulate_media(color_scheme="light")
+    expect(page.locator("#cards").get_by_role("heading", name="Jericoacoara + 3 Praias · VIP com buggy")).to_be_visible()
+    for destination in ("3-praias", "morro-branco", "praia-das-fontes", "canoa-quebrada"):
+        page.locator("#catalogDest").select_option(destination)
+        expect(page.locator("#dest")).to_have_value(destination)
+        expect(page.locator("#cards .card")).to_have_count(2)
+        expect(page.locator("#cards .card-route").first).to_contain_text("Morro Branco · Praia das Fontes · Canoa Quebrada")
+    page.locator('#filters [data-cat="todos"]').click()
+    expect(page.locator("#cards .card")).to_have_count(5)
+    if os.environ.get("TURISMO_DESTINOS_SHOT"):
+        page.locator("#passeios").scroll_into_view_if_needed()
+        page.screenshot(path=os.environ["TURISMO_DESTINOS_SHOT"], animations="disabled")
+    page.locator("#catalogDest").select_option("flecheiras")
+    expect(page.locator("#cards").get_by_role("heading", name="Flecheiras e Mundaú com catamarã")).to_be_visible()
+    page.locator("#catalogDest").select_option("mundau")
+    expect(page.locator("#cards .card")).to_have_count(1)
+    page.goto(BASE + "?lang=es&destino=beach-park&tipo=transfers")
+    expect(page.locator("#dest option").first).to_have_text("Todos los destinos")
+    expect(page.locator("#listTitle")).to_have_text("Beach Park")
+    expect(page.locator("#cards .catalog-group-title")).to_have_text("Traslados")
+    expect(page.locator("#cards .card")).to_have_count(1)
+    flags["new_package"] = True
+    for destination in ("jericoacoara", "cumbuco"):
+        page.goto(BASE + "?lang=pt&tipo=pacotes&destino=" + destination + "&data=" + DATE)
+        expect(page.locator("#cards").get_by_role("heading", name="Roteiro de teste")).to_be_visible()
+        expect(page.locator("#when")).to_have_value(DATE)
+    page.locator("#when").fill((datetime.fromisoformat(DATE) + timedelta(days=1)).date().isoformat())
+    expect(page.locator("#cards .card")).to_have_count(0)
+    page.get_by_role("button", name="Limpar filtros").click()
+    expect(page.locator("#cards .card")).to_have_count(len(SEED) + 1)
+    del flags["new_package"]
+    print("OK agrupamento sem duplicação, combos nos destinos, data, contraste e novos roteiros")
     all_pages = sorted(SITE.glob("passeio-*.html"))
     for file in all_pages:
         page.goto(BASE + file.name + "?lang=pt", wait_until="domcontentloaded")
