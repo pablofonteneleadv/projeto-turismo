@@ -1,3 +1,5 @@
+/* Endereços antigos do Render levam ao domínio oficial */
+if (/\.onrender\.com$/i.test(location.hostname)) location.replace("https://maretur.com.br" + location.pathname + location.search + location.hash);
 /* Peças comuns das páginas públicas */
 (function () {
   var D = window.SiteData;

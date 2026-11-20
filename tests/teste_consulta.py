@@ -207,6 +207,7 @@ with sync_playwright() as pw:
     expect(cumbuco_card.locator(".fav")).to_have_attribute("aria-pressed", "true")
     assert "/passeio-cumbuco.html" not in page.url
     cumbuco_card.locator(".card-photo-link").click()
+    page.wait_for_url("**/passeio-cumbuco.html*")
     expect(page.get_by_role("heading", name="Cumbuco", exact=True)).to_be_visible()
     assert page.evaluate("UI.attribution().campaign") == "consulta-cumbuco"
     page.locator("#bar [data-open-book]").click()

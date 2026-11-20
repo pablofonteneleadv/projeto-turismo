@@ -27,11 +27,15 @@ Falta (depende do Pablo ou do Bruno):
 ## Domínio oficial
 
 - Usar [maretur.com.br](https://maretur.com.br/) em respostas, materiais, campanhas, compartilhamentos e links de afiliados. Publicar no serviço que atende o domínio oficial e validar a versão por esse domínio.
+- **Auditoria de 20/11/2026:** o domínio maretur.com.br está ligado ao serviço Render `passeios-fortaleza` (`srv-dbt7giu1egvs73fl2lqg`), não ao serviço `maretur`. **Não apagar `passeios-fortaleza`**: o site sairia do ar. Os dois serviços publicam o mesmo repositório; depois de cada publicação, disparar o deploy nos dois e conferir em https://maretur.com.br/.
+- Desde 20/11/2026, quem abre `maretur.onrender.com` ou `passeios-fortaleza.onrender.com` é levado ao mesmo endereço em maretur.com.br (redirecionamento no `assets/ui.js` e em `creditos.html`).
+- Para mover o domínio para o serviço `maretur` e depois desligar o antigo: painel do Render > maretur > Settings > Custom Domains (sem ferramenta de API disponível aqui).
 
 ## Reserva sob consulta e liberação por passeio
 
 - O site mostra consulta de disponibilidade enquanto a oferta não estiver pronta para receber uma reserva. O contato leva data, viajantes e referência de origem ao WhatsApp.
 - Aplicar `site-v2/supabase/migracao-vendas.sql` no projeto Supabase da Maré Tur após validar a migração em homologação. O script é incremental sobre `migracao-net.sql` e mantém as ofertas existentes em consulta.
+  - 20/11/2026: ensaio completo (migração + `teste-vendas.sql`) rodado no banco real dentro de transação desfeita no fim: **todos os testes passaram, nada gravado**. A aplicação definitiva foi barrada pelo modo automático do Claude Code e aguarda o Pablo autorizar a ferramenta `apply_migration` (ou o Codex aplicar). Sem ela o site segue normal, tudo sob consulta.
 - Para liberar uma oferta, conferir o net vigente com a operadora, selecionar a tarifa preferida, registrar os dias de saída e a capacidade no painel. Conferir o recebedor e o sinal percentual nas configurações. Usar os valores de Contatos Bruno com a operadora, a unidade e a vigência confirmadas.
 - O recebimento e a vaga têm conferências separadas no painel. O provedor de pagamento e o WhatsApp oficial são dependências para automatizar conciliação e entrega de mensagens. O cartão passa pelo atendimento até haver um link autorizado.
 - Testar a consulta e o checkout com dados sintéticos antes de habilitar a primeira oferta. Os materiais de consulta para Cumbuco ficam em `marketing/cumbuco-primeira-reserva/`.
