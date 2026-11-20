@@ -6,7 +6,7 @@ O site **maretur.com.br está no ar e funcionando**: 25 páginas abrem, nenhum l
 
 Achei **um risco grave**, que já está registrado: o domínio maretur.com.br está ligado ao serviço antigo **passeios-fortaleza** do Render, justamente o que estava anotado para ser apagado. Se fosse apagado, o site sairia do ar.
 
-Ficaram **3 coisas paradas**, porque o modo automático de segurança do Claude Code barrou ações no Render e no banco (veja "O que falta").
+**Atualização 20/11, 15h30:** com a sua autorização, as 3 pendências técnicas foram aplicadas e conferidas no ar: o site foi publicado, a migração de vendas e a correção do vazamento do net foram aplicadas.
 
 ## O que mudou ou foi corrigido
 
@@ -31,13 +31,15 @@ Publicado no GitHub: `passeios-fortaleza` (4a192c3) e `projeto-turismo` (58f6550
 - **Teste do painel** (dados simulados): 87 checagens, 0 falhas.
 - **Banco (Supabase)**: 12 tabelas, todas com proteção por linha ligada. 21 passeios no ar e 1 cupom (BRUNO, 5% de desconto, 8% de comissão).
 
-## O que falta e por quê
+## Aplicado depois da sua autorização (20/11, 15h30)
 
-1. **Publicar no Render.** O código novo está no GitHub, mas o Render não publica sozinho, e o deploy pela ferramenta foi barrado pelo modo automático. Basta disparar o deploy nos serviços **passeios-fortaleza** (é ele que atende maretur.com.br) e **maretur**. O site atual segue normal enquanto isso.
-2. **Aplicar a migração de vendas.** Já foi ensaiada e passou. A aplicação definitiva foi barrada pelo modo automático. Sem ela, nada quebra: todo passeio continua "sob consulta" pelo WhatsApp. Ela é necessária para ligar a reserva online com vaga e prazo de pagamento.
-3. **Fechar um vazamento do net.** A função do banco `tour_floor` devolve "net + R$ 15" para **qualquer pessoa que crie conta** no site, já que o cadastro está aberto. O site não usa essa função. A correção está pronta em `site-v2/supabase/correcao-auditoria-2026-11-20.sql`. Ela também troca o link do painel nos avisos de reserva, que ainda aponta para maretur.onrender.com. Foi barrada pelo mesmo motivo.
-
-**Como liberar os 3 itens:** autorize no Claude Code as ferramentas *Render trigger_deploy*, *Supabase apply_migration* e *Supabase execute_sql* para o turismo, ou peça ao Codex para rodar os dois arquivos SQL e disparar os deploys.
+| Item | Conferência no ar |
+|---|---|
+| Publicação nos dois serviços do Render | maretur.onrender.com/passeio-cumbuco.html e passeios-fortaleza.onrender.com/creditos.html levam a maretur.com.br no mesmo caminho e com a campanha preservada. Os créditos mostram a marca Maré Tur. As 25 páginas foram varridas de novo, sem erro |
+| Migração de vendas | Aplicada. Os 21 passeios continuam "sob consulta", e a cotação pública responde "Confirme a disponibilidade com nosso atendimento", como esperado. O painel já pode ligar a reserva online por passeio quando houver net, dias de saída e vagas |
+| Vazamento do net | Fechado. A chamada pública agora recebe "permissão negada" |
+| Link do painel nos avisos de reserva | Agora aponta para https://maretur.com.br/admin.html |
+| Teste no celular depois da publicação | Vitrine com 21 passeios, página do Cumbuco e painel abrindo, sem erro de JavaScript |
 
 ## Pendências do negócio (não são do site)
 

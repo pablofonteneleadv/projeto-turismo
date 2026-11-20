@@ -34,10 +34,10 @@ code{background:var(--mar-soft);padding:1px 6px;border-radius:6px;font-size:.88e
 footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px}
 </style></head><body>
 <header><div class="in"><small>Maré Tur · relatório</small><h1>Auditoria do site Maré Tur — 20/11/2026</h1><p>Atualizado em 20/11/2026</p></div></header>
-<main><nav class="toc"><b>Neste relatório</b><a href="#s1">Resumo</a><a href="#s2">O que mudou ou foi corrigido</a><a href="#s3">O que foi testado e como</a><a href="#s4">O que falta e por quê</a><a href="#s5">Pendências do negócio (não são do site)</a><a href="#s6">Links para conferir</a></nav><section class="card"><h2 id="s1">Resumo</h2>
+<main><nav class="toc"><b>Neste relatório</b><a href="#s1">Resumo</a><a href="#s2">O que mudou ou foi corrigido</a><a href="#s3">O que foi testado e como</a><a href="#s4">Aplicado depois da sua autorização (20/11, 15h30)</a><a href="#s5">Pendências do negócio (não são do site)</a><a href="#s6">Links para conferir</a></nav><section class="card"><h2 id="s1">Resumo</h2>
 <p>O site <strong>maretur.com.br está no ar e funcionando</strong>: 25 páginas abrem, nenhum link ou foto quebrado, e todo endereço público (canonical, sitemap, prévia do WhatsApp, Google) aponta para maretur.com.br. O teste do painel e o de consulta passaram por inteiro.</p>
 <p>Achei <strong>um risco grave</strong>, que já está registrado: o domínio maretur.com.br está ligado ao serviço antigo <strong>passeios-fortaleza</strong> do Render, justamente o que estava anotado para ser apagado. Se fosse apagado, o site sairia do ar.</p>
-<p>Ficaram <strong>3 coisas paradas</strong>, porque o modo automático de segurança do Claude Code barrou ações no Render e no banco (veja "O que falta").</p>
+<p><strong>Atualização 20/11, 15h30:</strong> com a sua autorização, as 3 pendências técnicas foram aplicadas e conferidas no ar: o site foi publicado, a migração de vendas e a correção do vazamento do net foram aplicadas.</p>
 </section><section class="card"><h2 id="s2">O que mudou ou foi corrigido</h2>
 <div class="tbl"><table>
 <thead>
@@ -95,13 +95,37 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px}
 <li><strong>Teste do painel</strong> (dados simulados): 87 checagens, 0 falhas.</li>
 <li><strong>Banco (Supabase)</strong>: 12 tabelas, todas com proteção por linha ligada. 21 passeios no ar e 1 cupom (BRUNO, 5% de desconto, 8% de comissão).</li>
 </ul>
-</section><section class="card"><h2 id="s4">O que falta e por quê</h2>
-<ol>
-<li><strong>Publicar no Render.</strong> O código novo está no GitHub, mas o Render não publica sozinho, e o deploy pela ferramenta foi barrado pelo modo automático. Basta disparar o deploy nos serviços <strong>passeios-fortaleza</strong> (é ele que atende maretur.com.br) e <strong>maretur</strong>. O site atual segue normal enquanto isso.</li>
-<li><strong>Aplicar a migração de vendas.</strong> Já foi ensaiada e passou. A aplicação definitiva foi barrada pelo modo automático. Sem ela, nada quebra: todo passeio continua "sob consulta" pelo WhatsApp. Ela é necessária para ligar a reserva online com vaga e prazo de pagamento.</li>
-<li><strong>Fechar um vazamento do net.</strong> A função do banco <code>tour_floor</code> devolve "net + R$ 15" para <strong>qualquer pessoa que crie conta</strong> no site, já que o cadastro está aberto. O site não usa essa função. A correção está pronta em <code>site-v2/supabase/correcao-auditoria-2026-11-20.sql</code>. Ela também troca o link do painel nos avisos de reserva, que ainda aponta para maretur.onrender.com. Foi barrada pelo mesmo motivo.</li>
-</ol>
-<p><strong>Como liberar os 3 itens:</strong> autorize no Claude Code as ferramentas <em>Render trigger_deploy</em>, <em>Supabase apply_migration</em> e <em>Supabase execute_sql</em> para o turismo, ou peça ao Codex para rodar os dois arquivos SQL e disparar os deploys.</p>
+</section><section class="card"><h2 id="s4">Aplicado depois da sua autorização (20/11, 15h30)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Conferência no ar</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Publicação nos dois serviços do Render</td>
+<td>maretur.onrender.com/passeio-cumbuco.html e passeios-fortaleza.onrender.com/creditos.html levam a maretur.com.br no mesmo caminho e com a campanha preservada. Os créditos mostram a marca Maré Tur. As 25 páginas foram varridas de novo, sem erro</td>
+</tr>
+<tr>
+<td>Migração de vendas</td>
+<td>Aplicada. Os 21 passeios continuam "sob consulta", e a cotação pública responde "Confirme a disponibilidade com nosso atendimento", como esperado. O painel já pode ligar a reserva online por passeio quando houver net, dias de saída e vagas</td>
+</tr>
+<tr>
+<td>Vazamento do net</td>
+<td>Fechado. A chamada pública agora recebe "permissão negada"</td>
+</tr>
+<tr>
+<td>Link do painel nos avisos de reserva</td>
+<td>Agora aponta para https://maretur.com.br/admin.html</td>
+</tr>
+<tr>
+<td>Teste no celular depois da publicação</td>
+<td>Vitrine com 21 passeios, página do Cumbuco e painel abrindo, sem erro de JavaScript</td>
+</tr>
+</tbody>
+</table></div>
 </section><section class="card"><h2 id="s5">Pendências do negócio (não são do site)</h2>
 <ul>
 <li><strong>12 dos 21 passeios no ar ainda não têm net cadastrado.</strong> Sem o net, o sistema não consegue garantir que o sinal não passe da margem.</li>
