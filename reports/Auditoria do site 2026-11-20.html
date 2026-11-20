@@ -1,0 +1,121 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Auditoria do site Maré Tur — 20/11/2026</title><style>
+:root{--bg:#F4F8F8;--card:#fff;--ink:#12303A;--muted:#5B7480;--mar:#0E7C86;--mar-soft:#DDF1F2;--sol:#F2B33D;--sol-soft:#FFF4DC;--line:#DCE7EA}
+@media (prefers-color-scheme:dark){:root{--bg:#0E1A1F;--card:#15252C;--ink:#E7F1F3;--muted:#9DB4BC;--mar:#4CC3CC;--mar-soft:#16393E;--sol-soft:#3A3018;--line:#24383F}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:linear-gradient(135deg,#0E7C86,#12303A);color:#fff;padding:28px 16px 22px}
+header .in,main{max-width:860px;margin:0 auto}
+header small{opacity:.8;letter-spacing:.08em;text-transform:uppercase;font-size:.75rem;font-weight:700}
+header h1{margin:6px 0 4px;font-size:1.65rem;line-height:1.2}
+header p{margin:0;opacity:.85;font-size:.92rem}
+main{padding:16px 16px 60px}
+nav.toc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 16px;margin:0 0 16px}
+nav.toc b{font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+nav.toc a{display:block;padding:6px 0;color:var(--mar);text-decoration:none;font-weight:600;border-bottom:1px solid var(--line)}
+nav.toc a:last-child{border:0}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 18px 14px;margin:0 0 14px}
+h2{font-size:1.3rem;margin:16px 0 8px;color:var(--mar)}
+h3{font-size:1.08rem;margin:16px 0 6px}
+p,li{margin:6px 0}ul,ol{padding-left:22px}
+strong{color:var(--ink)}
+a{color:var(--mar);word-break:break-word}
+blockquote{margin:10px 0;padding:10px 14px;background:var(--sol-soft);border-left:4px solid var(--sol);border-radius:10px}
+.tbl{overflow-x:auto;max-width:100%;margin:10px 0;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;min-width:100%;font-size:.9rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--mar-soft)}
+tr:nth-child(even) td{background:rgba(14,124,134,.04)}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--mar-soft);padding:12px;border-radius:10px;overflow-x:auto}
+pre code{background:none;padding:0}
+html,body{overflow-x:hidden;max-width:100%}
+code{background:var(--mar-soft);padding:1px 6px;border-radius:6px;font-size:.88em}
+.first{background:var(--mar-soft);border:0}
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:20px}
+</style></head><body>
+<header><div class="in"><small>Maré Tur · relatório</small><h1>Auditoria do site Maré Tur — 20/11/2026</h1><p>Atualizado em 20/11/2026</p></div></header>
+<main><nav class="toc"><b>Neste relatório</b><a href="#s1">Resumo</a><a href="#s2">O que mudou ou foi corrigido</a><a href="#s3">O que foi testado e como</a><a href="#s4">O que falta e por quê</a><a href="#s5">Pendências do negócio (não são do site)</a><a href="#s6">Links para conferir</a></nav><section class="card"><h2 id="s1">Resumo</h2>
+<p>O site <strong>maretur.com.br está no ar e funcionando</strong>: 25 páginas abrem, nenhum link ou foto quebrado, e todo endereço público (canonical, sitemap, prévia do WhatsApp, Google) aponta para maretur.com.br. O teste do painel e o de consulta passaram por inteiro.</p>
+<p>Achei <strong>um risco grave</strong>, que já está registrado: o domínio maretur.com.br está ligado ao serviço antigo <strong>passeios-fortaleza</strong> do Render, justamente o que estava anotado para ser apagado. Se fosse apagado, o site sairia do ar.</p>
+<p>Ficaram <strong>3 coisas paradas</strong>, porque o modo automático de segurança do Claude Code barrou ações no Render e no banco (veja "O que falta").</p>
+</section><section class="card"><h2 id="s2">O que mudou ou foi corrigido</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>O quê</th>
+<th>Antes</th>
+<th>Agora</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cópia do projeto no computador</td>
+<td>10 mudanças do Codex (19/11) faltando</td>
+<td>Igual ao GitHub</td>
+</tr>
+<tr>
+<td>Endereços antigos do Render</td>
+<td>maretur.onrender.com e passeios-fortaleza.onrender.com mostravam o site inteiro (o serviço "maretur" estava 3 versões atrás)</td>
+<td>Levam ao mesmo endereço em maretur.com.br (vale depois da próxima publicação no Render)</td>
+</tr>
+<tr>
+<td>Página de créditos das fotos</td>
+<td>Topo com a marca antiga "Passeios Fortaleza"</td>
+<td>Marca Maré Tur</td>
+</tr>
+<tr>
+<td>Teste de consulta</td>
+<td>Falhava às vezes: conferia a página do passeio antes de ela abrir</td>
+<td>Espera a página trocar; passa sempre</td>
+</tr>
+<tr>
+<td>Migração de vendas (reserva online com vaga e prazo)</td>
+<td>Escrita pelo Codex e nunca testada no banco</td>
+<td>Ensaiada no banco real com tudo desfeito no fim: <strong>todos os testes passaram, nada gravado</strong>. Versão sem comandos DROP salva no repositório</td>
+</tr>
+<tr>
+<td>Skill do projeto no Codex</td>
+<td><code>operar-mare-tur</code> só no GitHub</td>
+<td>Instalada no Codex para qualquer pasta (cópia idêntica)</td>
+</tr>
+<tr>
+<td>Registro de decisões</td>
+<td>Mandava apagar o serviço que segura o domínio</td>
+<td>Diz para <strong>não apagar</strong> e explica como mover o domínio</td>
+</tr>
+</tbody>
+</table></div>
+<p>Publicado no GitHub: <code>passeios-fortaleza</code> (4a192c3) e <code>projeto-turismo</code> (58f6550 e o commit deste relatório).</p>
+</section><section class="card"><h2 id="s3">O que foi testado e como</h2>
+<ul>
+<li><strong>Varredura do site no ar</strong>: um script abriu as 22 páginas do sitemap, mais o painel, os créditos e a página genérica. Conferiu se cada página, imagem e arquivo responde e se o canonical, o og:url e os dados para o Google batem com maretur.com.br. Resultado: nenhum problema.</li>
+<li><strong>Redirecionamentos</strong>: http → https, www → sem www e página inexistente → 404 funcionam.</li>
+<li><strong>Celular (Chrome, 390×844)</strong>: a vitrine mostra 21 passeios, o botão "+ Pacote" funciona e o clique no Cumbuco leva a campanha (UTM) até a página do passeio. Sem erro de JavaScript, no site no ar e na cópia local.</li>
+<li><strong>Teste de consulta</strong> (dados simulados, nada no banco real): 8 cenários OK, entre eles o pacote no Android em PT/ES, a consulta com origem até o WhatsApp, o espanhol, o catálogo vazio, a reserva simulada com protocolo e as 21 páginas no celular.</li>
+<li><strong>Teste do painel</strong> (dados simulados): 87 checagens, 0 falhas.</li>
+<li><strong>Banco (Supabase)</strong>: 12 tabelas, todas com proteção por linha ligada. 21 passeios no ar e 1 cupom (BRUNO, 5% de desconto, 8% de comissão).</li>
+</ul>
+</section><section class="card"><h2 id="s4">O que falta e por quê</h2>
+<ol>
+<li><strong>Publicar no Render.</strong> O código novo está no GitHub, mas o Render não publica sozinho, e o deploy pela ferramenta foi barrado pelo modo automático. Basta disparar o deploy nos serviços <strong>passeios-fortaleza</strong> (é ele que atende maretur.com.br) e <strong>maretur</strong>. O site atual segue normal enquanto isso.</li>
+<li><strong>Aplicar a migração de vendas.</strong> Já foi ensaiada e passou. A aplicação definitiva foi barrada pelo modo automático. Sem ela, nada quebra: todo passeio continua "sob consulta" pelo WhatsApp. Ela é necessária para ligar a reserva online com vaga e prazo de pagamento.</li>
+<li><strong>Fechar um vazamento do net.</strong> A função do banco <code>tour_floor</code> devolve "net + R$ 15" para <strong>qualquer pessoa que crie conta</strong> no site, já que o cadastro está aberto. O site não usa essa função. A correção está pronta em <code>site-v2/supabase/correcao-auditoria-2026-11-20.sql</code>. Ela também troca o link do painel nos avisos de reserva, que ainda aponta para maretur.onrender.com. Foi barrada pelo mesmo motivo.</li>
+</ol>
+<p><strong>Como liberar os 3 itens:</strong> autorize no Claude Code as ferramentas <em>Render trigger_deploy</em>, <em>Supabase apply_migration</em> e <em>Supabase execute_sql</em> para o turismo, ou peça ao Codex para rodar os dois arquivos SQL e disparar os deploys.</p>
+</section><section class="card"><h2 id="s5">Pendências do negócio (não são do site)</h2>
+<ul>
+<li><strong>12 dos 21 passeios no ar ainda não têm net cadastrado.</strong> Sem o net, o sistema não consegue garantir que o sinal não passe da margem.</li>
+<li>O Pix ainda cai na chave de pessoa física. O WhatsApp do site ainda é o número de teste do Pablo.</li>
+<li>O título da página inicial cita <strong>Canoa Quebrada</strong>, mas esse passeio está oculto. Vale trocar no painel (Configurações) por um destino que está à venda.</li>
+<li>Proteção contra senhas vazadas desligada no Supabase (Auth &gt; Senhas). É um ajuste de um clique.</li>
+<li>Para desligar o serviço antigo do Render no futuro: primeiro mover o domínio para o serviço "maretur" (Render &gt; maretur &gt; Settings &gt; Custom Domains). Só depois apagar o antigo.</li>
+</ul>
+</section><section class="card"><h2 id="s6">Links para conferir</h2>
+<ul>
+<li>Site: https://maretur.com.br/</li>
+<li>Um passeio: https://maretur.com.br/passeio-cumbuco.html</li>
+<li>Painel: https://maretur.com.br/admin.html</li>
+<li>Créditos das fotos: https://maretur.com.br/creditos.html (a marca nova aparece depois da publicação no Render)</li>
+<li>Sitemap: https://maretur.com.br/sitemap.xml</li>
+<li>Endereço antigo (deve levar a maretur.com.br depois da publicação): https://maretur.onrender.com/</li>
+</ul></section></main><footer>Maré Tur · Passeios em Fortaleza</footer></body></html>

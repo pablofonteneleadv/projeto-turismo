@@ -25,7 +25,7 @@ create unique index if not exists bookings_request_unique
 create index if not exists bookings_open_tour_day
   on public.bookings (tour_slug, tour_date) where status <> 'cancelado';
 
-drop policy if exists pub_insert on public.bookings;
+-- A regra pub_insert já não existe no banco (conferido em 20/11/2026); não é preciso removê-la.
 
 create or replace function public._booking_pix_ready(p_settings jsonb) returns boolean
 language sql immutable set search_path = public as $$
@@ -352,8 +352,7 @@ begin
 end $$;
 revoke execute on function public._booking_status_transition() from public, anon, authenticated;
 
-drop trigger if exists booking_status_transition on public.bookings;
-create trigger booking_status_transition before update of status on public.bookings
+create or replace trigger booking_status_transition before update of status on public.bookings
   for each row execute function public._booking_status_transition();
 
 commit;
